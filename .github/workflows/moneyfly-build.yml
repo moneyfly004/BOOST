@@ -122,7 +122,7 @@ jobs:
             keytool -genkeypair -v \
               -keystore android/moneyfly-ci-release.jks \
               -storepass moneyfly-ci-store-password \
-              -keypass moneyfly-ci-key-password \
+              -keypass moneyfly-ci-store-password \
               -alias moneyfly-ci \
               -keyalg RSA \
               -keysize 2048 \
@@ -131,7 +131,7 @@ jobs:
             {
               echo "storeFile=$(pwd)/android/moneyfly-ci-release.jks"
               echo "storePassword=moneyfly-ci-store-password"
-              echo "keyPassword=moneyfly-ci-key-password"
+              echo "keyPassword=moneyfly-ci-store-password"
               echo "keyAlias=moneyfly-ci"
             } > android/key.properties
             echo "Using generated CI Android signing key. Add ANDROID_SIGNING_* secrets for production signing."
