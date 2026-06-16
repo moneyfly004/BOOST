@@ -9,12 +9,17 @@ on:
         type: boolean
         default: true
       build_macos:
-        description: Build macOS app zip
+        description: Build macOS DMG
         required: true
         type: boolean
         default: true
       build_windows:
-        description: Build Windows portable zip
+        description: Build Windows portable ZIP
+        required: true
+        type: boolean
+        default: true
+      publish_release:
+        description: Publish build files to GitHub Releases
         required: true
         type: boolean
         default: true
@@ -25,11 +30,15 @@ on:
       - dev
       - moneyfly-build
 
+permissions:
+  contents: write
+
 concurrency:
   group: moneyfly-build-${{ github.ref }}
   cancel-in-progress: true
 
 env:
+  APP_NAME: "MoneyFly"
   FLUTTER_VERSION: "3.38.5"
   JAVA_VERSION: "17"
   ANDROID_NDK_VERSION: "28.2.13676358"
@@ -91,6 +100,44 @@ jobs:
           curl -L "${CORE_URL}/hiddify-lib-android.tar.gz" | tar xz -C android/app/libs
           ls -la android/app/libs
 
+      - name: Configure Android signing
+        shell: bash
+        env:
+          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${ANDROID_SIGNING_KEY:-}" && -n "${ANDROID_SIGNING_STORE_PASSWORD:-}" && -n "${ANDROID_SIGNING_KEY_PASSWORD:-}" && -n "${ANDROID_SIGNING_KEY_ALIAS:-}" ]]; then
+            echo "${ANDROID_SIGNING_KEY}" | base64 --decode > android/moneyfly-release.jks
+            {
+              echo "storeFile=$(pwd)/android/moneyfly-release.jks"
+              echo "storePassword=${ANDROID_SIGNING_STORE_PASSWORD}"
+              echo "keyPassword=${ANDROID_SIGNING_KEY_PASSWORD}"
+              echo "keyAlias=${ANDROID_SIGNING_KEY_ALIAS}"
+            } > android/key.properties
+            echo "Using Android signing key from repository secrets."
+          else
+            keytool -genkeypair -v \
+              -keystore android/moneyfly-ci-release.jks \
+              -storepass moneyfly-ci-store-password \
+              -keypass moneyfly-ci-key-password \
+              -alias moneyfly-ci \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=MoneyFly CI, OU=MoneyFly, O=MoneyFly, L=Shenzhen, ST=Guangdong, C=CN"
+            {
+              echo "storeFile=$(pwd)/android/moneyfly-ci-release.jks"
+              echo "storePassword=moneyfly-ci-store-password"
+              echo "keyPassword=moneyfly-ci-key-password"
+              echo "keyAlias=moneyfly-ci"
+            } > android/key.properties
+            echo "Using generated CI Android signing key. Add ANDROID_SIGNING_* secrets for production signing."
+          fi
+          chmod 600 android/*.jks android/key.properties
+
       - name: Build APK
         shell: bash
         run: |
@@ -115,8 +162,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/android
-          find build/app/outputs -type f \( -name "*.apk" -o -name "*.aab" \) -print -exec cp {} artifacts/android/ \;
-          test "$(find artifacts/android -type f | wc -l)" -gt 0
+          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/android/${APP_NAME}-Android-universal.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "artifacts/android/${APP_NAME}-Android.aab"
+          "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify --verbose "artifacts/android/${APP_NAME}-Android-universal.apk"
+          jarsigner -verify -certs "artifacts/android/${APP_NAME}-Android.aab"
           ls -la artifacts/android
 
       - name: Upload Android artifacts
@@ -125,6 +174,7 @@ jobs:
           name: moneyfly-android
           path: artifacts/android/*
           retention-days: 14
+          overwrite: true
 
   macos:
     name: macOS
@@ -176,11 +226,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          APP_PATH="build/macos/Build/Products/Release/Hiddify.app"
+          APP_PATH="build/macos/Build/Products/Release/${APP_NAME}.app"
+          if [[ ! -d "${APP_PATH}" ]]; then
+            APP_PATH="build/macos/Build/Products/Release/Hiddify.app"
+          fi
           test -d "${APP_PATH}"
           codesign --force --deep --sign - "${APP_PATH}" || true
           mkdir -p artifacts/macos
-          ditto -c -k --sequesterRsrc --keepParent "${APP_PATH}" artifacts/macos/Hiddify-macOS.zip
+          DMG_DIR="$(mktemp -d)"
+          ditto "${APP_PATH}" "${DMG_DIR}/${APP_NAME}.app"
+          ln -s /Applications "${DMG_DIR}/Applications"
+          hdiutil create \
+            -volname "${APP_NAME}" \
+            -srcfolder "${DMG_DIR}" \
+            -ov \
+            -format UDZO \
+            "artifacts/macos/${APP_NAME}-macOS.dmg"
           ls -la artifacts/macos
 
       - name: Upload macOS artifact
@@ -189,6 +250,7 @@ jobs:
           name: moneyfly-macos
           path: artifacts/macos/*
           retention-days: 14
+          overwrite: true
 
   windows:
     name: Windows
@@ -239,12 +301,13 @@ jobs:
         shell: pwsh
         run: |
           $releaseDir = "build\windows\x64\runner\Release"
-          if (!(Test-Path "$releaseDir\Hiddify.exe")) {
+          $exePath = Join-Path $releaseDir "${env:APP_NAME}.exe"
+          if (!(Test-Path $exePath)) {
             Get-ChildItem -Recurse build\windows | Select-Object FullName
             throw "Windows release executable was not generated."
           }
           New-Item -ItemType Directory -Path artifacts\windows -Force | Out-Null
-          Compress-Archive -Path "$releaseDir\*" -DestinationPath artifacts\windows\Hiddify-Windows-x64.zip -Force
+          Compress-Archive -Path "$releaseDir\*" -DestinationPath "artifacts\windows\${env:APP_NAME}-Windows-x64.zip" -Force
           Get-ChildItem artifacts\windows
 
       - name: Upload Windows artifact
@@ -253,3 +316,46 @@ jobs:
           name: moneyfly-windows
           path: artifacts/windows/*
           retention-days: 14
+          overwrite: true
+
+  publish:
+    name: Publish Release
+    needs:
+      - android
+      - macos
+      - windows
+    if: ${{ always() && !cancelled() && !failure() && (github.event_name != 'workflow_dispatch' || inputs.publish_release) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          find release-assets -maxdepth 2 -type f -print
+          TAG="moneyfly-build-${GITHUB_RUN_NUMBER}"
+          cat > release-notes.md <<EOF
+          MoneyFly automated build from commit ${GITHUB_SHA}.
+
+          Assets:
+          - MoneyFly-Android-universal.apk: direct Android installation package
+          - MoneyFly-Android.aab: Android App Bundle for store upload
+          - MoneyFly-macOS.dmg: macOS disk image
+          - MoneyFly-Windows-x64.zip: Windows portable package
+          EOF
+          gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || true
+          gh release create "${TAG}" \
+            release-assets/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "MoneyFly Build ${GITHUB_RUN_NUMBER}" \
+            --notes-file release-notes.md \
+            --latest
