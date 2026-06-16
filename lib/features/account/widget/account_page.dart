@@ -6,6 +6,7 @@ import 'package:gap/gap.dart';
 import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/features/account/data/account_api.dart';
 import 'package:hiddify/features/account/notifier/account_notifier.dart';
+import 'package:hiddify/utils/platform_utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -326,7 +327,7 @@ class _AccountWorkbench extends ConsumerWidget {
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () => ref.read(accountNotifierProvider.notifier).logout(),
+                    onPressed: () => _guard(context, ref.read(accountNotifierProvider.notifier).logout),
                     icon: const Icon(Icons.logout_rounded),
                     label: const Text('退出'),
                   ),
@@ -487,8 +488,17 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   bool _busy = false;
   bool _openingPayment = false;
 
-  String? get _paymentUrl =>
-      _payment?.paymentUrl ?? _payment?.paymentQrCode ?? _order?.paymentUrl ?? _order?.paymentQrCode;
+  String? get _qrCodeValue {
+    final value = _payment?.paymentQrCode ?? _order?.paymentQrCode ?? _payment?.paymentUrl ?? _order?.paymentUrl;
+    return value?.isEmpty ?? true ? null : value;
+  }
+
+  String? get _externalPaymentUrl {
+    final value = _payment?.paymentUrl ?? _order?.paymentUrl;
+    return value?.isEmpty ?? true ? null : value;
+  }
+
+  bool get _canOpenExternalPayment => PlatformUtils.isAndroid;
 
   @override
   void initState() {
@@ -506,7 +516,8 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final order = _payment ?? _order;
-    final paymentUrl = _paymentUrl;
+    final qrCodeValue = _qrCodeValue;
+    final externalPaymentUrl = _externalPaymentUrl;
     return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       title: const Text('确认购买'),
@@ -557,7 +568,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                     onTap: () => setState(() => _selectedMethod = method),
                   ),
                 ),
-              if (paymentUrl != null && paymentUrl.isNotEmpty) ...[
+              if (qrCodeValue != null) ...[
                 const Gap(12),
                 Center(
                   child: DecoratedBox(
@@ -568,13 +579,15 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(10),
-                      child: QrImageView(data: paymentUrl, size: 220),
+                      child: QrImageView(data: qrCodeValue, size: 220),
                     ),
                   ),
                 ),
                 const Gap(8),
                 Text(
-                  '用支付宝扫码，或点击“打开支付”跳转到支付页面。支付完成后本窗口会自动刷新状态。',
+                  _canOpenExternalPayment
+                      ? '用支付宝扫码，或点击“打开支付”跳转到手机支付应用。支付完成后本窗口会自动刷新状态。'
+                      : '电脑端请使用支付宝扫码支付，本软件不会自动打开浏览器。支付完成后本窗口会自动刷新状态。',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -589,7 +602,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
       ),
       actions: [
         TextButton(onPressed: _busy ? null : () => Navigator.of(context).pop(), child: const Text('关闭')),
-        if (paymentUrl != null && paymentUrl.isNotEmpty)
+        if (_canOpenExternalPayment && externalPaymentUrl != null)
           OutlinedButton.icon(
             onPressed: _openingPayment ? null : _openPaymentUrl,
             icon: _openingPayment
@@ -602,7 +615,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           icon: _busy
               ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.qr_code_2_rounded),
-          label: Text(paymentUrl == null || paymentUrl.isEmpty ? '生成支付二维码' : '重新生成'),
+          label: Text(qrCodeValue == null ? '生成支付二维码' : '重新生成'),
         ),
       ],
     );
@@ -615,9 +628,9 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     try {
       final notifier = ref.read(accountNotifierProvider.notifier);
       final order = _order?.id == 0 || _order == null ? await notifier.createPackageOrder(widget.package) : _order!;
-      final payment = (order.paymentUrl ?? '').isNotEmpty
-          ? order
-          : await notifier.createOrderPayment(orderId: order.id, paymentMethod: method);
+      final payment = order.id > 0
+          ? await notifier.createOrderPayment(orderId: order.id, paymentMethod: method)
+          : order;
       if (!mounted) return;
       setState(() {
         _order = order;
@@ -628,8 +641,8 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
         );
       });
       _startPolling(payment.orderNo);
-      final url = _paymentUrl;
-      if (url != null && url.isNotEmpty) {
+      final url = _externalPaymentUrl;
+      if (_canOpenExternalPayment && url != null) {
         await _launchPaymentUrl(url);
       }
     } on AccountApiException catch (error) {
@@ -668,8 +681,8 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   }
 
   Future<void> _openPaymentUrl() async {
-    final url = _paymentUrl;
-    if (url == null || url.isEmpty) return;
+    final url = _externalPaymentUrl;
+    if (url == null) return;
     setState(() => _openingPayment = true);
     try {
       await _launchPaymentUrl(url);
@@ -679,6 +692,10 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   }
 
   Future<void> _launchPaymentUrl(String url) async {
+    if (!_canOpenExternalPayment) {
+      if (mounted) _showSnack(context, '电脑端请使用二维码扫码支付');
+      return;
+    }
     final uri = Uri.tryParse(url);
     if (uri == null) {
       if (mounted) _showSnack(context, '支付链接无效');

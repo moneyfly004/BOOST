@@ -86,6 +86,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
 
   Future<void> login(String email, String password) async {
     await _run(() async {
+      await _subscriptionSync.clearAccountSubscriptions();
       final response = await _api.login(email: email.trim(), password: password);
       state = state.copyWith(token: response.accessToken, refreshToken: response.refreshToken, user: response.user);
       await _persistAuth(response.accessToken, response.refreshToken, response.user);
@@ -101,6 +102,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
     String? inviteCode,
   }) async {
     await _run(() async {
+      await _subscriptionSync.clearAccountSubscriptions();
       final response = await _api.register(
         username: username.trim(),
         email: email.trim(),
@@ -136,6 +138,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
       return;
     }
     await _run(() async {
+      await _subscriptionSync.clearAccountSubscriptions();
       final results = await Future.wait<Object>([
         _api.getDashboard(token),
         _api.getPackages(),
@@ -158,6 +161,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
   Future<void> syncSubscription() async {
     final token = _requireToken();
     await _run(() async {
+      await _subscriptionSync.clearAccountSubscriptions();
       final dashboard = await _api.getDashboard(token);
       state = state.copyWith(user: dashboard.user, dashboard: dashboard);
       await _persistAuth(token, state.refreshToken, dashboard.user);
@@ -166,9 +170,14 @@ class AccountNotifier extends StateNotifier<AccountState> {
   }
 
   Future<void> refreshActiveSubscription() async {
+    final token = _requireToken();
     await _run(() async {
       state = state.copyWith(syncingSubscription: true);
-      await _subscriptionSync.refreshActiveSubscription();
+      await _subscriptionSync.clearAccountSubscriptions();
+      final dashboard = await _api.getDashboard(token);
+      state = state.copyWith(user: dashboard.user, dashboard: dashboard);
+      await _persistAuth(token, state.refreshToken, dashboard.user);
+      await _subscriptionSync.refreshActiveSubscription(dashboard);
       state = state.copyWith(syncingSubscription: false, message: '订阅已更新');
     });
   }
@@ -238,18 +247,21 @@ class AccountNotifier extends StateNotifier<AccountState> {
     await refresh();
   }
 
-  void logout() {
-    _preferences.remove(_tokenKey);
-    _preferences.remove(_refreshTokenKey);
-    _preferences.remove(_userKey);
-    state = AccountState(packages: state.packages, paymentMethods: state.paymentMethods, message: '已退出登录');
+  Future<void> logout() async {
+    state = state.copyWith(loading: true);
+    try {
+      await _subscriptionSync.clearAccountSubscriptions();
+      await _preferences.remove(_tokenKey);
+      await _preferences.remove(_refreshTokenKey);
+      await _preferences.remove(_userKey);
+      state = AccountState(packages: state.packages, paymentMethods: state.paymentMethods, message: '已退出登录');
+    } catch (_) {
+      state = state.copyWith(loading: false);
+      rethrow;
+    }
   }
 
   Future<void> _syncSubscription(AccountDashboard dashboard, {String? successMessage}) async {
-    final subscription = dashboard.subscription;
-    if (subscription == null || subscription.importUrl.isEmpty) {
-      return;
-    }
     state = state.copyWith(syncingSubscription: true);
     try {
       await _subscriptionSync.sync(dashboard);
@@ -280,6 +292,11 @@ class AccountNotifier extends StateNotifier<AccountState> {
       Future.microtask(() => refresh());
     } else if (refreshToken != null && refreshToken.isNotEmpty) {
       Future.microtask(() => _refreshAccessToken(refreshToken));
+    } else {
+      Future.microtask(() async {
+        await _subscriptionSync.clearAccountSubscriptions();
+        await loadPublicData();
+      });
     }
   }
 

@@ -363,7 +363,29 @@ class AccountSubscription {
   final int onlineDevices;
   final bool isActive;
 
-  String get importUrl => universalUrl;
+  String get importUrl {
+    if (universalUrl.contains('/subscriptions/universal/')) {
+      return universalUrl;
+    }
+    if (subscriptionUrl.contains('/subscriptions/universal/')) {
+      return subscriptionUrl;
+    }
+    return '';
+  }
+
+  bool get canImport {
+    if (!isActive || importUrl.isEmpty) {
+      return false;
+    }
+    if (remainingDays < 0) {
+      return false;
+    }
+    final parsedExpireTime = DateTime.tryParse(expireTime.replaceFirst(' ', 'T'));
+    if (parsedExpireTime != null && parsedExpireTime.isBefore(DateTime.now())) {
+      return false;
+    }
+    return true;
+  }
 
   factory AccountSubscription.fromJson(Map<String, dynamic> json) {
     return AccountSubscription(

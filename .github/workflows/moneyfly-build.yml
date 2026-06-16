@@ -142,8 +142,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p build/moneyfly-apk-cache
           flutter build apk \
             --release \
+            --target "${BUILD_TARGET}" \
+            --target-platform android-arm,android-arm64,android-x64 \
+            --dart-define=sentry_dsn=
+          cp build/app/outputs/flutter-apk/app-release.apk build/moneyfly-apk-cache/app-release.apk
+          flutter build apk \
+            --release \
+            --split-per-abi \
             --target "${BUILD_TARGET}" \
             --target-platform android-arm,android-arm64,android-x64 \
             --dart-define=sentry_dsn=
@@ -162,9 +170,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/android
-          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/android/${APP_NAME}-Android-universal.apk"
+          cp build/moneyfly-apk-cache/app-release.apk "artifacts/android/${APP_NAME}-Android-universal.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "artifacts/android/${APP_NAME}-Android-armeabi-v7a.apk"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "artifacts/android/${APP_NAME}-Android-arm64-v8a.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk "artifacts/android/${APP_NAME}-Android-x86_64.apk"
           cp build/app/outputs/bundle/release/app-release.aab "artifacts/android/${APP_NAME}-Android.aab"
-          "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify --verbose "artifacts/android/${APP_NAME}-Android-universal.apk"
+          for apk in artifacts/android/*.apk; do
+            "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          done
           jarsigner -verify -certs "artifacts/android/${APP_NAME}-Android.aab"
           ls -la artifacts/android
 
@@ -222,7 +235,7 @@ jobs:
             --target "${BUILD_TARGET}" \
             --dart-define=sentry_dsn=
 
-      - name: Collect macOS artifact
+      - name: Collect macOS artifacts
         shell: bash
         run: |
           set -euo pipefail
@@ -241,7 +254,11 @@ jobs:
             -srcfolder "${DMG_DIR}" \
             -ov \
             -format UDZO \
-            "artifacts/macos/${APP_NAME}-macOS.dmg"
+            "artifacts/macos/${APP_NAME}-macOS-universal.dmg"
+          pkgbuild \
+            --install-location /Applications \
+            --component "${DMG_DIR}/${APP_NAME}.app" \
+            "artifacts/macos/${APP_NAME}-macOS-universal.pkg"
           ls -la artifacts/macos
 
       - name: Upload macOS artifact
@@ -297,7 +314,12 @@ jobs:
             --target "${env:BUILD_TARGET}" `
             --dart-define=sentry_dsn=
 
-      - name: Collect Windows artifact
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+
+      - name: Collect Windows artifacts
         shell: pwsh
         run: |
           $releaseDir = "build\windows\x64\runner\Release"
@@ -307,7 +329,70 @@ jobs:
             throw "Windows release executable was not generated."
           }
           New-Item -ItemType Directory -Path artifacts\windows -Force | Out-Null
-          Compress-Archive -Path "$releaseDir\*" -DestinationPath "artifacts\windows\${env:APP_NAME}-Windows-x64.zip" -Force
+          Compress-Archive -Path "$releaseDir\*" -DestinationPath "artifacts\windows\${env:APP_NAME}-Windows-x64-Portable.zip" -Force
+          $versionLine = Get-Content pubspec.yaml | Where-Object { $_ -match '^version:\s*(.+)$' } | Select-Object -First 1
+          $appVersion = ($versionLine -replace '^version:\s*', '') -replace '\+.*$', ''
+          $sourceDir = (Resolve-Path $releaseDir).Path
+          $outputDir = (Resolve-Path artifacts\windows).Path
+          $issPath = Join-Path $env:RUNNER_TEMP "moneyfly-installer.iss"
+          @"
+          [Setup]
+          AppId={{A826F4E6-E142-4B9D-9F9D-17304829F2B1}
+          AppName=${env:APP_NAME}
+          AppVersion=$appVersion
+          AppPublisher=MoneyFly
+          AppPublisherURL=https://dy.moneyfly.top
+          AppSupportURL=https://dy.moneyfly.top
+          AppUpdatesURL=https://dy.moneyfly.top
+          DefaultDirName={autopf64}\MoneyFly
+          DisableProgramGroupPage=yes
+          OutputDir=$outputDir
+          OutputBaseFilename=${env:APP_NAME}-Windows-x64-Setup
+          Compression=lzma2
+          SolidCompression=yes
+          WizardStyle=modern
+          SetupIconFile=windows\runner\resources\app_icon.ico
+          ArchitecturesAllowed=x64
+          ArchitecturesInstallIn64BitMode=x64
+          CloseApplications=force
+
+          [Languages]
+          Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+          Name: "english"; MessagesFile: "compiler:Default.isl"
+
+          [Tasks]
+          Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+
+          [Files]
+          Source: "$sourceDir\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+          [Icons]
+          Name: "{autoprograms}\${env:APP_NAME}"; Filename: "{app}\${env:APP_NAME}.exe"
+          Name: "{autodesktop}\${env:APP_NAME}"; Filename: "{app}\${env:APP_NAME}.exe"; Tasks: desktopicon
+
+          [Run]
+          Filename: "{app}\${env:APP_NAME}.exe"; Description: "{cm:LaunchProgram,${env:APP_NAME}}"; Flags: nowait postinstall skipifsilent
+
+          [UninstallDelete]
+          Type: filesandordirs; Name: "{userappdata}\MoneyFly"
+
+          [Code]
+          function InitializeSetup(): Boolean;
+          var
+            ResultCode: Integer;
+          begin
+            Exec('taskkill', '/F /IM MoneyFly.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('taskkill', '/F /IM hiddify.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('net', 'stop "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('sc.exe', 'delete "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Result := True;
+          end;
+          "@ | Set-Content -Path $issPath -Encoding UTF8
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) {
+            $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc $issPath
           Get-ChildItem artifacts\windows
 
       - name: Upload Windows artifact
@@ -347,11 +432,18 @@ jobs:
           MoneyFly automated build from commit ${GITHUB_SHA}.
 
           Assets:
-          - MoneyFly-Android-universal.apk: direct Android installation package
+          - MoneyFly-Android-arm64-v8a.apk: smaller Android package for most modern phones
+          - MoneyFly-Android-armeabi-v7a.apk: smaller Android package for older 32-bit phones
+          - MoneyFly-Android-x86_64.apk: Android package for x86_64 devices/emulators
+          - MoneyFly-Android-universal.apk: larger Android package containing all CPU architectures
           - MoneyFly-Android.aab: Android App Bundle for store upload
-          - MoneyFly-macOS.dmg: macOS disk image
-          - MoneyFly-Windows-x64.zip: Windows portable package
+          - MoneyFly-macOS-universal.dmg: macOS drag-and-drop installer for Intel and Apple Silicon when supported by the bundled core
+          - MoneyFly-macOS-universal.pkg: macOS package installer
+          - MoneyFly-Windows-x64-Setup.exe: Windows x64 installer
+          - MoneyFly-Windows-x64-Portable.zip: Windows x64 portable package
+          - SHA256SUMS.txt: checksums for all release assets
           EOF
+          (cd release-assets && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
           gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || true
           gh release create "${TAG}" \
             release-assets/* \
