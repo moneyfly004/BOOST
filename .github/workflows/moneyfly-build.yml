@@ -346,6 +346,7 @@ jobs:
           AppSupportURL=https://dy.moneyfly.top
           AppUpdatesURL=https://dy.moneyfly.top
           DefaultDirName={autopf64}\MoneyFly
+          MinVersion=10.0
           DisableProgramGroupPage=yes
           OutputDir=$outputDir
           OutputBaseFilename=${env:APP_NAME}-Windows-x64-Setup
@@ -439,9 +440,11 @@ jobs:
           - MoneyFly-Android.aab: Android App Bundle for store upload
           - MoneyFly-macOS-universal.dmg: macOS drag-and-drop installer for Intel and Apple Silicon when supported by the bundled core
           - MoneyFly-macOS-universal.pkg: macOS package installer
-          - MoneyFly-Windows-x64-Setup.exe: Windows x64 installer
-          - MoneyFly-Windows-x64-Portable.zip: Windows x64 portable package
+          - MoneyFly-Windows-x64-Setup.exe: Windows 10/11 x64 installer
+          - MoneyFly-Windows-x64-Portable.zip: Windows 10/11 x64 portable package
           - SHA256SUMS.txt: checksums for all release assets
+
+          Note: Windows 7/8 are not supported by the current Flutter 3.38.5 desktop toolchain.
           EOF
           (cd release-assets && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
           gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || true
