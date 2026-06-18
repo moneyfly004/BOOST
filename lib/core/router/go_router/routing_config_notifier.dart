@@ -37,6 +37,10 @@ final branchesScope = <String, FocusScopeNode>{
   'home': FocusScopeNode(),
   'profiles': FocusScopeNode(),
   'account': FocusScopeNode(),
+  'accountPackages': FocusScopeNode(),
+  'accountSubscription': FocusScopeNode(),
+  'accountProfile': FocusScopeNode(),
+  'accountOrders': FocusScopeNode(),
   'settings': FocusScopeNode(),
   'logs': FocusScopeNode(),
   'about': FocusScopeNode(),
@@ -49,11 +53,33 @@ final loadingConfig = RoutingConfig(
 
 String getNameOfBranch(bool isMobileBreakpoint, bool showProfilesAction, int index) => isMobileBreakpoint
     ? ['home', 'account', 'settings'][index]
-    : ['home', if (showProfilesAction) 'profiles', 'account', 'settings', 'logs', 'about'][index];
+    : [
+        'home',
+        if (showProfilesAction) 'profiles',
+        'account',
+        'accountPackages',
+        'accountSubscription',
+        'accountProfile',
+        'accountOrders',
+        'settings',
+        'logs',
+        'about',
+      ][index];
 
 int getIndexOfBranch(bool isMobileBreakpoint, bool showProfilesAction, String name) => isMobileBreakpoint
     ? ['home', 'account', 'settings'].indexOf(name)
-    : ['home', if (showProfilesAction) 'profiles', 'account', 'settings', 'logs', 'about'].indexOf(name);
+    : [
+        'home',
+        if (showProfilesAction) 'profiles',
+        'account',
+        'accountPackages',
+        'accountSubscription',
+        'accountProfile',
+        'accountOrders',
+        'settings',
+        'logs',
+        'about',
+      ].indexOf(name);
 
 @Riverpod(keepAlive: true)
 class RoutingConfigNotifier extends _$RoutingConfigNotifier {
@@ -157,9 +183,99 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                   name: 'account',
                   path: '/account',
                   builder: (_, _) => FocusScope(node: branchesScope['account'], child: const AccountPage()),
+                  routes: <GoRoute>[
+                    if (isMobileBreakpoint) ...[
+                      GoRoute(
+                        name: 'accountPackages',
+                        path: 'packages',
+                        pageBuilder: (_, state) => customTransition(
+                          TransitionType.slide,
+                          state.pageKey,
+                          const AccountPage(section: AccountSection.packages),
+                        ),
+                      ),
+                      GoRoute(
+                        name: 'accountSubscription',
+                        path: 'subscription',
+                        pageBuilder: (_, state) => customTransition(
+                          TransitionType.slide,
+                          state.pageKey,
+                          const AccountPage(section: AccountSection.subscription),
+                        ),
+                      ),
+                      GoRoute(
+                        name: 'accountProfile',
+                        path: 'profile',
+                        pageBuilder: (_, state) => customTransition(
+                          TransitionType.slide,
+                          state.pageKey,
+                          const AccountPage(section: AccountSection.profile),
+                        ),
+                      ),
+                      GoRoute(
+                        name: 'accountOrders',
+                        path: 'orders',
+                        pageBuilder: (_, state) => customTransition(
+                          TransitionType.slide,
+                          state.pageKey,
+                          const AccountPage(section: AccountSection.orders),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
+            if (!isMobileBreakpoint) ...[
+              StatefulShellBranch(
+                routes: <GoRoute>[
+                  GoRoute(
+                    name: 'accountPackages',
+                    path: '/account/packages',
+                    builder: (_, _) => FocusScope(
+                      node: branchesScope['accountPackages'],
+                      child: const AccountPage(section: AccountSection.packages),
+                    ),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: <GoRoute>[
+                  GoRoute(
+                    name: 'accountSubscription',
+                    path: '/account/subscription',
+                    builder: (_, _) => FocusScope(
+                      node: branchesScope['accountSubscription'],
+                      child: const AccountPage(section: AccountSection.subscription),
+                    ),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: <GoRoute>[
+                  GoRoute(
+                    name: 'accountProfile',
+                    path: '/account/profile',
+                    builder: (_, _) => FocusScope(
+                      node: branchesScope['accountProfile'],
+                      child: const AccountPage(section: AccountSection.profile),
+                    ),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: <GoRoute>[
+                  GoRoute(
+                    name: 'accountOrders',
+                    path: '/account/orders',
+                    builder: (_, _) => FocusScope(
+                      node: branchesScope['accountOrders'],
+                      child: const AccountPage(section: AccountSection.orders),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             StatefulShellBranch(
               routes: <GoRoute>[
                 GoRoute(

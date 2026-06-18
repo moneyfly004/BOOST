@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/features/account/data/account_api.dart';
 import 'package:hiddify/features/account/notifier/account_notifier.dart';
@@ -11,8 +12,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+enum AccountSection { overview, packages, subscription, profile, orders }
+
 class AccountPage extends ConsumerStatefulWidget {
-  const AccountPage({super.key});
+  const AccountPage({super.key, this.section = AccountSection.overview});
+
+  final AccountSection section;
 
   @override
   ConsumerState<AccountPage> createState() => _AccountPageState();
@@ -34,7 +39,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     final state = ref.watch(accountNotifierProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('账户中心'),
+        title: Text(_accountSectionTitle(widget.section)),
         actions: [
           IconButton(
             tooltip: '刷新',
@@ -57,7 +62,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   children: [
                     AnimatedSwitcher(
                       duration: kAnimationDuration,
-                      child: state.isAuthenticated ? const _AccountWorkbench() : const _AuthPanel(),
+                      child: state.isAuthenticated ? _AccountSectionBody(section: widget.section) : const _AuthPanel(),
                     ),
                   ],
                 ),
@@ -263,261 +268,69 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
   }
 }
 
-enum _AccountSection { overview, packages, subscription, profile, orders }
-
-String _sectionTitle(_AccountSection section) {
+String _accountSectionTitle(AccountSection section) {
   return switch (section) {
-    _AccountSection.overview => '账户概览',
-    _AccountSection.packages => '套餐购买',
-    _AccountSection.subscription => '订阅同步',
-    _AccountSection.profile => '个人资料',
-    _AccountSection.orders => '订单记录',
+    AccountSection.overview => '账户概览',
+    AccountSection.packages => '套餐购买',
+    AccountSection.subscription => '订阅同步',
+    AccountSection.profile => '个人资料',
+    AccountSection.orders => '订单记录',
   };
 }
 
-String _sectionSubtitle(_AccountSection section) {
+IconData accountSectionIcon(AccountSection section) {
   return switch (section) {
-    _AccountSection.overview => '余额、订阅和设备状态',
-    _AccountSection.packages => '选择并开通套餐',
-    _AccountSection.subscription => '写入和刷新本机配置',
-    _AccountSection.profile => '资料和密码管理',
-    _AccountSection.orders => '最近购买记录',
+    AccountSection.overview => Icons.account_circle_rounded,
+    AccountSection.packages => Icons.inventory_2_rounded,
+    AccountSection.subscription => Icons.cloud_sync_rounded,
+    AccountSection.profile => Icons.badge_rounded,
+    AccountSection.orders => Icons.receipt_long_rounded,
   };
 }
 
-IconData _sectionIcon(_AccountSection section) {
+String accountSectionRouteName(AccountSection section) {
   return switch (section) {
-    _AccountSection.overview => Icons.dashboard_rounded,
-    _AccountSection.packages => Icons.inventory_2_rounded,
-    _AccountSection.subscription => Icons.cloud_sync_rounded,
-    _AccountSection.profile => Icons.badge_rounded,
-    _AccountSection.orders => Icons.receipt_long_rounded,
+    AccountSection.overview => 'account',
+    AccountSection.packages => 'accountPackages',
+    AccountSection.subscription => 'accountSubscription',
+    AccountSection.profile => 'accountProfile',
+    AccountSection.orders => 'accountOrders',
   };
 }
 
-class _AccountWorkbench extends ConsumerStatefulWidget {
-  const _AccountWorkbench();
+class _AccountSectionBody extends ConsumerWidget {
+  const _AccountSectionBody({required this.section});
+
+  final AccountSection section;
 
   @override
-  ConsumerState<_AccountWorkbench> createState() => _AccountWorkbenchState();
-}
-
-class _AccountWorkbenchState extends ConsumerState<_AccountWorkbench> {
-  _AccountSection _section = _AccountSection.overview;
-
-  void _selectSection(_AccountSection section) {
-    if (_section == section) return;
-    setState(() => _section = section);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(accountNotifierProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (state.authExpired) ...[const _AuthExpiredBanner(), const Gap(14)],
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 820;
-            final nav = _AccountSectionNav(selected: _section, wide: wide, onSelected: _selectSection);
-            final content = AnimatedSwitcher(
-              duration: kAnimationDuration,
-              child: KeyedSubtree(key: ValueKey(_section), child: _sectionContent(_section)),
-            );
-
-            if (!wide) {
-              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [nav, const Gap(12), content]);
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(width: 232, child: nav),
-                const Gap(14),
-                Expanded(child: content),
-              ],
-            );
-          },
+        AnimatedSwitcher(
+          duration: kAnimationDuration,
+          child: KeyedSubtree(key: ValueKey(section), child: _sectionContent(section)),
         ),
       ],
     );
   }
 
-  Widget _sectionContent(_AccountSection section) {
+  Widget _sectionContent(AccountSection section) {
     return switch (section) {
-      _AccountSection.overview => _AccountOverviewPanel(onNavigate: _selectSection),
-      _AccountSection.packages => const _PackagesPanel(),
-      _AccountSection.subscription => const _SubscriptionPanel(),
-      _AccountSection.profile => const _ProfilePanel(),
-      _AccountSection.orders => const _OrdersPanel(),
+      AccountSection.overview => const _AccountOverviewPanel(),
+      AccountSection.packages => const _PackagesPanel(),
+      AccountSection.subscription => const _SubscriptionPanel(),
+      AccountSection.profile => const _ProfilePanel(),
+      AccountSection.orders => const _OrdersPanel(),
     };
   }
 }
 
-class _AccountSectionNav extends ConsumerWidget {
-  const _AccountSectionNav({required this.selected, required this.wide, required this.onSelected});
-
-  final _AccountSection selected;
-  final bool wide;
-  final ValueChanged<_AccountSection> onSelected;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(accountNotifierProvider);
-    final user = state.user;
-    final theme = Theme.of(context);
-    const sections = _AccountSection.values;
-
-    if (!wide) {
-      return _Surface(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _CompactAccountHeader(user: user),
-            const Gap(12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final section in sections) ...[
-                    ChoiceChip(
-                      avatar: Icon(_sectionIcon(section), size: 18),
-                      label: Text(_sectionTitle(section)),
-                      selected: selected == section,
-                      onSelected: (_) => onSelected(section),
-                    ),
-                    if (section != sections.last) const Gap(8),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return _Surface(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _CompactAccountHeader(user: user),
-          const Gap(12),
-          Divider(height: 1, color: theme.colorScheme.outlineVariant),
-          const Gap(8),
-          for (final section in sections)
-            _AccountNavItem(section: section, selected: selected == section, onTap: () => onSelected(section)),
-          const Gap(8),
-          Divider(height: 1, color: theme.colorScheme.outlineVariant),
-          const Gap(12),
-          OutlinedButton.icon(
-            onPressed: state.loading ? null : () => _guard(context, ref.read(accountNotifierProvider.notifier).logout),
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('退出登录'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CompactAccountHeader extends StatelessWidget {
-  const _CompactAccountHeader({required this.user});
-
-  final AccountUser? user;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final name = user?.name.isNotEmpty == true ? user!.name : '用户';
-    final initial = name.characters.first.toUpperCase();
-    return Row(
-      children: [
-        CircleAvatar(radius: 22, child: Text(initial)),
-        const Gap(10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
-              const Gap(2),
-              Text(
-                user?.email ?? '',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AccountNavItem extends StatelessWidget {
-  const _AccountNavItem({required this.section, required this.selected, required this.onTap});
-
-  final _AccountSection section;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Material(
-        color: selected ? theme.colorScheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            child: Row(
-              children: [
-                Icon(
-                  _sectionIcon(section),
-                  size: 20,
-                  color: selected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-                ),
-                const Gap(10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _sectionTitle(section),
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: selected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const Gap(1),
-                      Text(
-                        _sectionSubtitle(section),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _AccountOverviewPanel extends ConsumerWidget {
-  const _AccountOverviewPanel({required this.onNavigate});
-
-  final ValueChanged<_AccountSection> onNavigate;
+  const _AccountOverviewPanel();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -597,7 +410,7 @@ class _AccountOverviewPanel extends ConsumerWidget {
               _OverviewSubscriptionStrip(
                 subscription: subscription,
                 syncing: state.syncingSubscription,
-                onOpenSubscription: () => onNavigate(_AccountSection.subscription),
+                onOpenSubscription: () => context.goNamed(accountSectionRouteName(AccountSection.subscription)),
               ),
             ],
           ),
@@ -612,14 +425,14 @@ class _AccountOverviewPanel extends ConsumerWidget {
                 title: '购买套餐',
                 subtitle: state.packages.isEmpty ? '暂无可售套餐' : '${state.packages.length} 个套餐可选',
                 buttonLabel: '去购买',
-                onPressed: () => onNavigate(_AccountSection.packages),
+                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.packages)),
               ),
               _OverviewAction(
                 icon: Icons.receipt_long_rounded,
                 title: '订单记录',
                 subtitle: state.orders.isEmpty ? '暂无订单' : '最近 ${state.orders.length} 条订单',
                 buttonLabel: '查看订单',
-                onPressed: () => onNavigate(_AccountSection.orders),
+                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.orders)),
               ),
             ];
             if (!twoColumns) {
@@ -929,7 +742,6 @@ class _SubscriptionPanel extends ConsumerWidget {
     final theme = Theme.of(context);
     final syncing = state.syncingSubscription;
     final canImport = subscription?.canImport == true;
-    final importUrl = subscription?.importUrl ?? '';
 
     return _Surface(
       child: Column(
@@ -995,11 +807,6 @@ class _SubscriptionPanel extends ConsumerWidget {
                 ),
               ),
             ),
-            if (importUrl.isNotEmpty) ...[const Gap(12), _UrlBox(label: '通用订阅链接', value: importUrl)],
-            if (subscription.clashUrl.isNotEmpty) ...[
-              const Gap(10),
-              _UrlBox(label: 'Clash 订阅链接', value: subscription.clashUrl),
-            ],
             const Gap(14),
             _SubscriptionSyncStatus(syncing: syncing),
           ],
@@ -1033,57 +840,6 @@ class _SubscriptionPanel extends ConsumerWidget {
             },
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _UrlBox extends StatelessWidget {
-  const _UrlBox({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: theme.colorScheme.surface,
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: theme.textTheme.labelLarge),
-                  const Gap(4),
-                  Text(
-                    value,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-            const Gap(8),
-            IconButton(
-              tooltip: '复制',
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: value));
-                if (context.mounted) _showSnack(context, '已复制订阅链接');
-              },
-              icon: const Icon(Icons.copy_rounded),
-            ),
-          ],
-        ),
       ),
     );
   }

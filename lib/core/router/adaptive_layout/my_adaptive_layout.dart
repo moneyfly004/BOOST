@@ -7,6 +7,7 @@ import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/router/adaptive_layout/shell_route_action.dart';
 import 'package:hiddify/core/router/go_router/helper/active_breakpoint_notifier.dart';
 import 'package:hiddify/core/router/go_router/routing_config_notifier.dart';
+import 'package:hiddify/features/account/widget/account_page.dart';
 import 'package:hiddify/features/stats/widget/side_bar_stats_overview.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -101,11 +102,27 @@ class MyAdaptiveLayout extends HookConsumerWidget {
   List<ShellRouteAction> _actions(Translations t, bool showProfilesAction, bool isMobileBreakpoint) => [
     ShellRouteAction(Icons.power_settings_new_rounded, t.pages.home.title),
     if (showProfilesAction && !isMobileBreakpoint) ShellRouteAction(Icons.view_list_rounded, t.pages.profiles.title),
-    ShellRouteAction(Icons.account_circle_rounded, '账户'),
+    ShellRouteAction(accountSectionIcon(AccountSection.overview), _accountTitle(AccountSection.overview)),
+    if (!isMobileBreakpoint) ...[
+      ShellRouteAction(accountSectionIcon(AccountSection.packages), _accountTitle(AccountSection.packages)),
+      ShellRouteAction(accountSectionIcon(AccountSection.subscription), _accountTitle(AccountSection.subscription)),
+      ShellRouteAction(accountSectionIcon(AccountSection.profile), _accountTitle(AccountSection.profile)),
+      ShellRouteAction(accountSectionIcon(AccountSection.orders), _accountTitle(AccountSection.orders)),
+    ],
     ShellRouteAction(Icons.settings_rounded, t.pages.settings.title),
     if (!isMobileBreakpoint) ShellRouteAction(Icons.description_rounded, t.pages.logs.title),
     if (!isMobileBreakpoint) ShellRouteAction(Icons.info_rounded, t.pages.about.title),
   ];
+
+  String _accountTitle(AccountSection section) {
+    return switch (section) {
+      AccountSection.overview => '账户',
+      AccountSection.packages => '套餐购买',
+      AccountSection.subscription => '订阅同步',
+      AccountSection.profile => '个人资料',
+      AccountSection.orders => '订单记录',
+    };
+  }
 
   List<NavigationDestination> _navDests(List<ShellRouteAction> actions) =>
       actions.map((e) => NavigationDestination(icon: Icon(e.icon), label: e.title)).toList();
