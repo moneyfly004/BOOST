@@ -3,32 +3,32 @@
     <channel>
         <title>MoneyFly Release</title>
         <item>
-            <title>Version 4.1.2</title>
+            <title>Version 1.0.0</title>
             <pubDate>Thu, 18 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
                 url="https://github.com/moneyfly004/cboard/releases/latest/download/MoneyFly-Android-universal.apk"
-                sparkle:version="4.1.2" sparkle:os="android" />
+                sparkle:version="1.0.0" sparkle:os="android" />
         </item>
         <item>
-            <title>Version 4.1.2</title>
+            <title>Version 1.0.0</title>
             <pubDate>Thu, 18 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
                 url="https://github.com/moneyfly004/cboard/releases/latest/download/MoneyFly-Windows-x64-Setup.exe"
-                sparkle:version="4.1.2" sparkle:os="windows" />
+                sparkle:version="1.0.0" sparkle:os="windows" />
         </item>
         <item>
-            <title>Version 4.1.2</title>
+            <title>Version 1.0.0</title>
             <pubDate>Thu, 18 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
                 url="https://github.com/moneyfly004/cboard/releases/latest/download/MoneyFly-macOS-universal.dmg"
-                sparkle:version="4.1.2" sparkle:os="macos" />
+                sparkle:version="1.0.0" sparkle:os="macos" />
         </item>
         <item>
-            <title>Version 4.1.2</title>
+            <title>Version 1.0.0</title>
             <pubDate>Thu, 18 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
                 url="https://github.com/moneyfly004/cboard/releases/latest"
-                sparkle:version="4.1.2" sparkle:os="linux" />
+                sparkle:version="1.0.0" sparkle:os="linux" />
         </item>
     </channel>
 </rss>

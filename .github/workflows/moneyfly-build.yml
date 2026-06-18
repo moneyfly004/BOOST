@@ -283,6 +283,9 @@ jobs:
             APP_PATH="build/macos/Build/Products/Release/Hiddify.app"
           fi
           test -d "${APP_PATH}"
+          ICONSET_DIR="$(mktemp -d)"
+          iconutil -c iconset -o "${ICONSET_DIR}/AppIcon.iconset" "${APP_PATH}/Contents/Resources/AppIcon.icns"
+          test -f "${ICONSET_DIR}/AppIcon.iconset/icon_512x512@2x.png"
           codesign --force --deep --sign - "${APP_PATH}" || true
           mkdir -p artifacts/macos
           DMG_DIR="$(mktemp -d)"
@@ -456,6 +459,9 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -469,9 +475,10 @@ jobs:
         run: |
           set -euo pipefail
           find release-assets -maxdepth 2 -type f -print
-          TAG="moneyfly-build-${GITHUB_RUN_NUMBER}"
+          APP_VERSION="$(grep '^version:' pubspec.yaml | sed -E 's/^version:[[:space:]]*//')"
+          TAG="v${APP_VERSION}"
           cat > release-notes.md <<EOF
-          MoneyFly automated build from commit ${GITHUB_SHA}.
+          MoneyFly ${APP_VERSION} automated build from commit ${GITHUB_SHA}.
 
           Assets:
           - MoneyFly-Android-arm64-v8a.apk: smaller Android package for most modern phones
@@ -492,6 +499,6 @@ jobs:
           gh release create "${TAG}" \
             release-assets/* \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "MoneyFly Build ${GITHUB_RUN_NUMBER}" \
+            --title "MoneyFly ${APP_VERSION}" \
             --notes-file release-notes.md \
             --latest

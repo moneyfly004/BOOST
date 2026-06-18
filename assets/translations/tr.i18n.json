@@ -1,6 +1,6 @@
 {
   "common": {
-    "appTitle": "Hiddify",
+    "appTitle": "MoneyFly",
     "start": "Başlat",
     "version": "Sürüm",
     "ok": "Tamam",
@@ -94,7 +94,7 @@
   "intro": {
     "banner": "Sınırsız bir internet için ihtiyacınız olan her şey",
     "termsAndPolicyCaution(rich)": "Devam ederek ${tap(@:pages.about.termsAndConditions)} kabul etmiş olursunuz",
-    "info(rich)": "Hiddify tarafından ❤️ ile yapıldı - ${tap_source(Açık Kaynak)} (${tap_license(Licence)})"
+    "info(rich)": "MoneyFly tarafından ❤️ ile yapıldı - ${tap_source(Açık Kaynak)} (${tap_license(Licence)})"
   },
   "pages": {
     "home": {
