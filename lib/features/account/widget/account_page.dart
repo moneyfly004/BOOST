@@ -263,26 +263,285 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
   }
 }
 
-class _AccountWorkbench extends ConsumerWidget {
+enum _AccountSection { overview, packages, subscription, profile, orders }
+
+String _sectionTitle(_AccountSection section) {
+  return switch (section) {
+    _AccountSection.overview => '账户概览',
+    _AccountSection.packages => '套餐购买',
+    _AccountSection.subscription => '订阅同步',
+    _AccountSection.profile => '个人资料',
+    _AccountSection.orders => '订单记录',
+  };
+}
+
+String _sectionSubtitle(_AccountSection section) {
+  return switch (section) {
+    _AccountSection.overview => '余额、订阅和设备状态',
+    _AccountSection.packages => '选择并开通套餐',
+    _AccountSection.subscription => '写入和刷新本机配置',
+    _AccountSection.profile => '资料和密码管理',
+    _AccountSection.orders => '最近购买记录',
+  };
+}
+
+IconData _sectionIcon(_AccountSection section) {
+  return switch (section) {
+    _AccountSection.overview => Icons.dashboard_rounded,
+    _AccountSection.packages => Icons.inventory_2_rounded,
+    _AccountSection.subscription => Icons.cloud_sync_rounded,
+    _AccountSection.profile => Icons.badge_rounded,
+    _AccountSection.orders => Icons.receipt_long_rounded,
+  };
+}
+
+class _AccountWorkbench extends ConsumerStatefulWidget {
   const _AccountWorkbench();
+
+  @override
+  ConsumerState<_AccountWorkbench> createState() => _AccountWorkbenchState();
+}
+
+class _AccountWorkbenchState extends ConsumerState<_AccountWorkbench> {
+  _AccountSection _section = _AccountSection.overview;
+
+  void _selectSection(_AccountSection section) {
+    if (_section == section) return;
+    setState(() => _section = section);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(accountNotifierProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (state.authExpired) ...[const _AuthExpiredBanner(), const Gap(14)],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 820;
+            final nav = _AccountSectionNav(selected: _section, wide: wide, onSelected: _selectSection);
+            final content = AnimatedSwitcher(
+              duration: kAnimationDuration,
+              child: KeyedSubtree(key: ValueKey(_section), child: _sectionContent(_section)),
+            );
+
+            if (!wide) {
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [nav, const Gap(12), content]);
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(width: 232, child: nav),
+                const Gap(14),
+                Expanded(child: content),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionContent(_AccountSection section) {
+    return switch (section) {
+      _AccountSection.overview => _AccountOverviewPanel(onNavigate: _selectSection),
+      _AccountSection.packages => const _PackagesPanel(),
+      _AccountSection.subscription => const _SubscriptionPanel(),
+      _AccountSection.profile => const _ProfilePanel(),
+      _AccountSection.orders => const _OrdersPanel(),
+    };
+  }
+}
+
+class _AccountSectionNav extends ConsumerWidget {
+  const _AccountSectionNav({required this.selected, required this.wide, required this.onSelected});
+
+  final _AccountSection selected;
+  final bool wide;
+  final ValueChanged<_AccountSection> onSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(accountNotifierProvider);
     final user = state.user;
+    final theme = Theme.of(context);
+    const sections = _AccountSection.values;
+
+    if (!wide) {
+      return _Surface(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _CompactAccountHeader(user: user),
+            const Gap(12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final section in sections) ...[
+                    ChoiceChip(
+                      avatar: Icon(_sectionIcon(section), size: 18),
+                      label: Text(_sectionTitle(section)),
+                      selected: selected == section,
+                      onSelected: (_) => onSelected(section),
+                    ),
+                    if (section != sections.last) const Gap(8),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _Surface(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _CompactAccountHeader(user: user),
+          const Gap(12),
+          Divider(height: 1, color: theme.colorScheme.outlineVariant),
+          const Gap(8),
+          for (final section in sections)
+            _AccountNavItem(section: section, selected: selected == section, onTap: () => onSelected(section)),
+          const Gap(8),
+          Divider(height: 1, color: theme.colorScheme.outlineVariant),
+          const Gap(12),
+          OutlinedButton.icon(
+            onPressed: state.loading ? null : () => _guard(context, ref.read(accountNotifierProvider.notifier).logout),
+            icon: const Icon(Icons.logout_rounded),
+            label: const Text('退出登录'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactAccountHeader extends StatelessWidget {
+  const _CompactAccountHeader({required this.user});
+
+  final AccountUser? user;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final name = user?.name.isNotEmpty == true ? user!.name : '用户';
+    final initial = name.characters.first.toUpperCase();
+    return Row(
+      children: [
+        CircleAvatar(radius: 22, child: Text(initial)),
+        const Gap(10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
+              const Gap(2),
+              Text(
+                user?.email ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AccountNavItem extends StatelessWidget {
+  const _AccountNavItem({required this.section, required this.selected, required this.onTap});
+
+  final _AccountSection section;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Material(
+        color: selected ? theme.colorScheme.primaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  _sectionIcon(section),
+                  size: 20,
+                  color: selected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                ),
+                const Gap(10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _sectionTitle(section),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: selected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const Gap(1),
+                      Text(
+                        _sectionSubtitle(section),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountOverviewPanel extends ConsumerWidget {
+  const _AccountOverviewPanel({required this.onNavigate});
+
+  final ValueChanged<_AccountSection> onNavigate;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(accountNotifierProvider);
+    final theme = Theme.of(context);
+    final user = state.user;
     final subscription = state.dashboard?.subscription;
+    final hasSubscription = subscription != null && subscription.status.isNotEmpty;
+    final deviceText =
+        '${subscription?.onlineDevices ?? subscription?.currentDevices ?? 0}/${subscription?.deviceLimit ?? 0}';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _Surface(
           padding: const EdgeInsets.all(18),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
-                    radius: 24,
+                    radius: 26,
                     child: Text((user?.name.isNotEmpty ?? false) ? user!.name.characters.first.toUpperCase() : 'U'),
                   ),
                   const Gap(12),
@@ -290,16 +549,35 @@ class _AccountWorkbench extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.name ?? '用户', style: Theme.of(context).textTheme.titleLarge),
+                        Text(user?.name ?? '用户', style: theme.textTheme.titleLarge),
                         const Gap(2),
-                        Text(user?.email ?? '', style: Theme.of(context).textTheme.bodyMedium),
+                        Text(
+                          user?.email ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                        const Gap(8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _Tag(text: user?.isVerified == true ? '已验证' : '未验证'),
+                            _Tag(text: user?.isActive == false ? '已停用' : '账号正常'),
+                          ],
+                        ),
                       ],
                     ),
                   ),
+                  const Gap(12),
                   OutlinedButton.icon(
-                    onPressed: () => _guard(context, ref.read(accountNotifierProvider.notifier).logout),
-                    icon: const Icon(Icons.logout_rounded),
-                    label: const Text('退出'),
+                    onPressed: state.loading
+                        ? null
+                        : () => _guard(context, ref.read(accountNotifierProvider.notifier).refresh),
+                    icon: state.loading
+                        ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.refresh_rounded),
+                    label: const Text('刷新'),
                   ),
                 ],
               ),
@@ -311,43 +589,163 @@ class _AccountWorkbench extends ConsumerWidget {
                   _Metric(label: '余额', value: '¥${(user?.balance ?? 0).toStringAsFixed(2)}'),
                   _Metric(label: '订阅状态', value: _statusText(subscription?.status ?? 'none')),
                   _Metric(label: '到期时间', value: subscription?.expireTime ?? '未开通'),
-                  _Metric(
-                    label: '在线设备',
-                    value:
-                        '${subscription?.onlineDevices ?? subscription?.currentDevices ?? 0}/${subscription?.deviceLimit ?? 0}',
-                  ),
+                  _Metric(label: '在线设备', value: deviceText),
                   _Metric(label: '累计消费', value: '¥${(state.dashboard?.totalSpent ?? 0).toStringAsFixed(2)}'),
                 ],
               ),
-              if ((subscription?.subscriptionUrl ?? '').isNotEmpty) ...[
-                const Gap(14),
-                _SubscriptionSyncStatus(syncing: state.syncingSubscription),
-              ],
+              const Gap(16),
+              _OverviewSubscriptionStrip(
+                subscription: subscription,
+                syncing: state.syncingSubscription,
+                onOpenSubscription: () => onNavigate(_AccountSection.subscription),
+              ),
             ],
           ),
         ),
-        if (state.authExpired) ...[const Gap(14), const _AuthExpiredBanner()],
         const Gap(14),
         LayoutBuilder(
           builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 760;
-            if (!wide) {
-              return const Column(
+            final twoColumns = constraints.maxWidth >= 680;
+            final children = [
+              _OverviewAction(
+                icon: Icons.inventory_2_rounded,
+                title: '购买套餐',
+                subtitle: state.packages.isEmpty ? '暂无可售套餐' : '${state.packages.length} 个套餐可选',
+                buttonLabel: '去购买',
+                onPressed: () => onNavigate(_AccountSection.packages),
+              ),
+              _OverviewAction(
+                icon: Icons.receipt_long_rounded,
+                title: '订单记录',
+                subtitle: state.orders.isEmpty ? '暂无订单' : '最近 ${state.orders.length} 条订单',
+                buttonLabel: '查看订单',
+                onPressed: () => onNavigate(_AccountSection.orders),
+              ),
+            ];
+            if (!twoColumns) {
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [_PackagesPanel(), Gap(14), _ProfilePanel(), Gap(14), _OrdersPanel()],
+                children: [children[0], const Gap(12), children[1]],
               );
             }
-            return const Row(
+            return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 6, child: _PackagesPanel()),
-                Gap(14),
-                Expanded(flex: 4, child: Column(children: [_ProfilePanel(), Gap(14), _OrdersPanel()])),
+                Expanded(child: children[0]),
+                const Gap(12),
+                Expanded(child: children[1]),
               ],
             );
           },
         ),
+        if (!hasSubscription) ...[
+          const Gap(14),
+          _Surface(child: _EmptyLine(text: state.packages.isEmpty ? '当前没有开通中的订阅，可刷新或稍后查看套餐。' : '当前没有开通中的订阅，可先购买套餐。')),
+        ],
       ],
+    );
+  }
+}
+
+class _OverviewSubscriptionStrip extends ConsumerWidget {
+  const _OverviewSubscriptionStrip({
+    required this.subscription,
+    required this.syncing,
+    required this.onOpenSubscription,
+  });
+
+  final AccountSubscription? subscription;
+  final bool syncing;
+  final VoidCallback onOpenSubscription;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final subscription = this.subscription;
+    final active = subscription?.canImport == true;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: active
+            ? theme.colorScheme.primaryContainer.withValues(alpha: .42)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: .42),
+        border: Border.all(color: active ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(
+              active ? Icons.check_circle_rounded : Icons.info_rounded,
+              color: active ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+            ),
+            const Gap(10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(active ? '订阅可同步' : '订阅未就绪', style: theme.textTheme.titleSmall),
+                  const Gap(2),
+                  Text(
+                    subscription == null
+                        ? '购买套餐后可写入本机配置'
+                        : '${subscription.packageName.isEmpty ? '当前套餐' : subscription.packageName} · ${_statusText(subscription.status)}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            const Gap(10),
+            OutlinedButton.icon(
+              onPressed: syncing ? null : onOpenSubscription,
+              icon: syncing
+                  ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.tune_rounded),
+              label: const Text('管理'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OverviewAction extends StatelessWidget {
+  const _OverviewAction({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.buttonLabel,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const Gap(10),
+          Text(title, style: theme.textTheme.titleMedium),
+          const Gap(4),
+          Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          const Gap(14),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.tonal(onPressed: onPressed, child: Text(buttonLabel)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -397,12 +795,19 @@ class _PackagesPanel extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SectionHeader(icon: Icons.inventory_2_rounded, title: '套餐购买', subtitle: '从网站同步可售套餐'),
+          _SectionHeader(
+            icon: Icons.inventory_2_rounded,
+            title: '套餐购买',
+            subtitle: state.paymentMethods.isEmpty ? '暂无可用支付方式' : '支持 ${state.paymentMethods.length} 种支付方式',
+          ),
           const Gap(12),
           if (state.packages.isEmpty)
             const _EmptyLine(text: '暂无套餐，请确认网站后台已启用套餐。')
           else
-            ...state.packages.map((package) => _PackageTile(package: package)),
+            for (final package in state.packages) ...[
+              _PackageTile(package: package),
+              if (package != state.packages.last) const Gap(10),
+            ],
         ],
       ),
     );
@@ -419,56 +824,265 @@ class _PackageTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final methods = ref.watch(accountNotifierProvider).paymentMethods;
     final loading = ref.watch(accountNotifierProvider).loading;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: package.isRecommended ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
-          ),
-          color: package.isRecommended
-              ? theme.colorScheme.primaryContainer.withValues(alpha: .36)
-              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: .34),
+    final buyButton = FilledButton.tonalIcon(
+      onPressed: loading ? null : () => _showPaymentSheet(context, package: package, paymentMethods: methods),
+      icon: const Icon(Icons.shopping_bag_rounded),
+      label: const Text('购买'),
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: package.isRecommended ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
+        color: package.isRecommended
+            ? theme.colorScheme.primaryContainer.withValues(alpha: .36)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: .34),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 520;
+            final details = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(child: Text(package.name, style: theme.textTheme.titleMedium)),
+                    if (package.isRecommended) ...[const Gap(8), const _Tag(text: '推荐')],
+                  ],
+                ),
+                const Gap(6),
+                Text(
+                  package.description.isEmpty
+                      ? '${package.durationDays} 天 · ${package.deviceLimit} 台设备'
+                      : package.description,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                const Gap(10),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      '¥${package.price.toStringAsFixed(2)}',
+                      style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.primary),
+                    ),
+                    _InlineFact(icon: Icons.schedule_rounded, text: '${package.durationDays} 天'),
+                    _InlineFact(icon: Icons.devices_rounded, text: '${package.deviceLimit} 台设备'),
+                  ],
+                ),
+              ],
+            );
+
+            if (compact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [details, const Gap(12), buyButton],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: details),
+                const Gap(12),
+                buyButton,
+              ],
+            );
+          },
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
+      ),
+    );
+  }
+}
+
+class _InlineFact extends StatelessWidget {
+  const _InlineFact({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+        const Gap(4),
+        Text(text, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      ],
+    );
+  }
+}
+
+class _SubscriptionPanel extends ConsumerWidget {
+  const _SubscriptionPanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(accountNotifierProvider);
+    final subscription = state.dashboard?.subscription;
+    final theme = Theme.of(context);
+    final syncing = state.syncingSubscription;
+    final canImport = subscription?.canImport == true;
+    final importUrl = subscription?.importUrl ?? '';
+
+    return _Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _SectionHeader(icon: Icons.cloud_sync_rounded, title: '订阅同步', subtitle: '写入本机配置并刷新当前订阅'),
+          const Gap(14),
+          if (subscription == null)
+            const _EmptyLine(text: '当前没有可同步的订阅，购买套餐后会自动生成订阅信息。')
+          else ...[
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .36),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Flexible(child: Text(package.name, style: theme.textTheme.titleMedium)),
-                        if (package.isRecommended) ...[const Gap(8), const _Tag(text: '推荐')],
+                        Icon(
+                          canImport ? Icons.verified_rounded : Icons.info_rounded,
+                          color: canImport ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const Gap(10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                subscription.packageName.isEmpty ? '当前订阅' : subscription.packageName,
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const Gap(2),
+                              Text(
+                                canImport ? '订阅可写入本机配置' : '订阅暂不可导入，请检查状态或到期时间',
+                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
-                    const Gap(6),
-                    Text(
-                      package.description.isEmpty
-                          ? '${package.durationDays} 天 · ${package.deviceLimit} 台设备'
-                          : package.description,
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                    const Gap(8),
-                    Text(
-                      '¥${package.price.toStringAsFixed(2)}',
-                      style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.primary),
+                    const Gap(14),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        _Metric(label: '状态', value: _statusText(subscription.status)),
+                        _Metric(label: '到期时间', value: subscription.expireTime.isEmpty ? '未知' : subscription.expireTime),
+                        _Metric(label: '剩余天数', value: '${subscription.remainingDays} 天'),
+                        _Metric(
+                          label: '设备',
+                          value:
+                              '${subscription.onlineDevices == 0 ? subscription.currentDevices : subscription.onlineDevices}/${subscription.deviceLimit}',
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const Gap(12),
-              FilledButton.tonalIcon(
-                onPressed: loading ? null : () => _showPaymentSheet(context, package: package, paymentMethods: methods),
-                icon: const Icon(Icons.shopping_bag_rounded),
-                label: const Text('购买'),
-              ),
+            ),
+            if (importUrl.isNotEmpty) ...[const Gap(12), _UrlBox(label: '通用订阅链接', value: importUrl)],
+            if (subscription.clashUrl.isNotEmpty) ...[
+              const Gap(10),
+              _UrlBox(label: 'Clash 订阅链接', value: subscription.clashUrl),
             ],
+            const Gap(14),
+            _SubscriptionSyncStatus(syncing: syncing),
+          ],
+          const Gap(14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 520;
+              final syncButton = FilledButton.icon(
+                onPressed: syncing
+                    ? null
+                    : () => _guard(context, ref.read(accountNotifierProvider.notifier).syncSubscription),
+                icon: syncing
+                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.cloud_upload_rounded),
+                label: const Text('同步到本机'),
+              );
+              final refreshButton = OutlinedButton.icon(
+                onPressed: syncing
+                    ? null
+                    : () => _guard(context, ref.read(accountNotifierProvider.notifier).refreshActiveSubscription),
+                icon: const Icon(Icons.update_rounded),
+                label: const Text('刷新当前订阅'),
+              );
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [syncButton, const Gap(8), refreshButton],
+                );
+              }
+              return Row(children: [syncButton, const Gap(10), refreshButton]);
+            },
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UrlBox extends StatelessWidget {
+  const _UrlBox({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: theme.textTheme.labelLarge),
+                  const Gap(4),
+                  Text(
+                    value,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            const Gap(8),
+            IconButton(
+              tooltip: '复制',
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: value));
+                if (context.mounted) _showSnack(context, '已复制订阅链接');
+              },
+              icon: const Icon(Icons.copy_rounded),
+            ),
+          ],
         ),
       ),
     );
@@ -902,6 +1516,7 @@ class _OrdersPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final orders = ref.watch(accountNotifierProvider).orders;
+    final recentOrders = orders.take(20).toList(growable: false);
     return _Surface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -911,24 +1526,76 @@ class _OrdersPanel extends ConsumerWidget {
           if (orders.isEmpty)
             const _EmptyLine(text: '暂无订单')
           else
-            ...orders
-                .take(6)
-                .map(
-                  (order) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(order.packageName),
-                    subtitle: Text('${order.orderNo} · ${order.createdAt}'),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('¥${order.amount.toStringAsFixed(2)}'),
-                        Text(_statusText(order.status), style: Theme.of(context).textTheme.bodySmall),
-                      ],
-                    ),
-                  ),
-                ),
+            for (final order in recentOrders) ...[
+              _OrderTile(order: order),
+              if (order != recentOrders.last) const Gap(8),
+            ],
         ],
+      ),
+    );
+  }
+}
+
+class _OrderTile extends StatelessWidget {
+  const _OrderTile({required this.order});
+
+  final AccountOrder order;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .3),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 480;
+            final info = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  order.packageName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall,
+                ),
+                const Gap(4),
+                Text(
+                  [order.orderNo, order.createdAt].where((value) => value.isNotEmpty).join(' · '),
+                  maxLines: compact ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            );
+            final amount = Column(
+              crossAxisAlignment: compact ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+              children: [
+                Text('¥${order.amount.toStringAsFixed(2)}', style: theme.textTheme.titleSmall),
+                const Gap(4),
+                _StatusPill(status: order.status),
+              ],
+            );
+
+            if (compact) {
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [info, const Gap(10), amount]);
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: info),
+                const Gap(12),
+                amount,
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1195,6 +1862,46 @@ class _Tag extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         child: Text(text, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onPrimary)),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final paid = status == 'paid' || status == 'active';
+    final failed = status == 'failed' || status == 'expired' || status == 'cancelled';
+    final background = paid
+        ? theme.colorScheme.primaryContainer
+        : failed
+        ? theme.colorScheme.errorContainer
+        : theme.colorScheme.surface;
+    final foreground = paid
+        ? theme.colorScheme.onPrimaryContainer
+        : failed
+        ? theme.colorScheme.onErrorContainer
+        : theme.colorScheme.onSurfaceVariant;
+    final border = paid
+        ? theme.colorScheme.primary.withValues(alpha: .35)
+        : failed
+        ? theme.colorScheme.error.withValues(alpha: .35)
+        : theme.colorScheme.outlineVariant;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        child: Text(_statusText(status), style: theme.textTheme.labelSmall?.copyWith(color: foreground)),
       ),
     );
   }
