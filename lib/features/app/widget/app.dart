@@ -75,6 +75,18 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
       });
       return null;
     }, [activeBreakpoint]);
+
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          await ref.read(appUpdateNotifierProvider.notifier).check();
+        } catch (error, stackTrace) {
+          loggy.warning("background update check failed", error, stackTrace);
+        }
+      });
+      return null;
+    }, const []);
+
     return WindowWrapper(
       ShortcutWrapper(
         ToastificationWrapper(

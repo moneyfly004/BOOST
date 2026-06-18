@@ -1568,7 +1568,7 @@ packages:
     source: hosted
     version: "8.14.2"
   sentry_dart_plugin:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: sentry_dart_plugin
       sha256: "84436958fa9231e2e716be117a3b31695e54458b9f27039f76d14515e24248a6"
@@ -2029,7 +2029,7 @@ packages:
     source: hosted
     version: "0.1.3"
   vector_graphics:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: vector_graphics
       sha256: "44cc7104ff32563122a929e4620cf3efd584194eec6d1d913eb5ba593dbcf6de"

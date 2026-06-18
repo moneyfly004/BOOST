@@ -15,7 +15,16 @@ class RemoteVersionEntity with _$RemoteVersionEntity {
     required String url,
     required DateTime publishedAt,
     required Environment flavor,
+    String? downloadUrl,
+    int? automatedBuildNumber,
   }) = _RemoteVersionEntity;
 
-  String get presentVersion => flavor == Environment.prod ? version : "$version ${flavor.name}";
+  String get presentVersion {
+    if (automatedBuildNumber != null) return "Build $automatedBuildNumber";
+    return flavor == Environment.prod ? version : "$version ${flavor.name}";
+  }
+
+  String get updateUrl => downloadUrl ?? url;
+
+  String get ignoreKey => releaseTag.isNotEmpty ? releaseTag : version;
 }

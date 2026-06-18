@@ -45,9 +45,43 @@ env:
   BUILD_TARGET: "lib/main.dart"
 
 jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Validate Flutter sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter --version
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+          flutter test
+          flutter analyze --no-fatal-infos
+
   android:
     name: Android
     if: github.event_name != 'workflow_dispatch' || inputs.build_android
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -147,6 +181,7 @@ jobs:
             --release \
             --target "${BUILD_TARGET}" \
             --target-platform android-arm,android-arm64,android-x64 \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
           cp build/app/outputs/flutter-apk/app-release.apk build/moneyfly-apk-cache/app-release.apk
           flutter build apk \
@@ -154,6 +189,7 @@ jobs:
             --split-per-abi \
             --target "${BUILD_TARGET}" \
             --target-platform android-arm,android-arm64,android-x64 \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Build AAB
@@ -163,6 +199,7 @@ jobs:
           flutter build appbundle \
             --release \
             --target "${BUILD_TARGET}" \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Collect Android artifacts
@@ -192,6 +229,7 @@ jobs:
   macos:
     name: macOS
     if: github.event_name != 'workflow_dispatch' || inputs.build_macos
+    needs: quality
     runs-on: macos-15
     timeout-minutes: 90
 
@@ -233,6 +271,7 @@ jobs:
           flutter build macos \
             --release \
             --target "${BUILD_TARGET}" \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Collect macOS artifacts
@@ -272,6 +311,7 @@ jobs:
   windows:
     name: Windows
     if: github.event_name != 'workflow_dispatch' || inputs.build_windows
+    needs: quality
     runs-on: windows-latest
     timeout-minutes: 90
 
@@ -312,6 +352,7 @@ jobs:
           flutter build windows `
             --release `
             --target "${env:BUILD_TARGET}" `
+            --dart-define="moneyfly_build_number=${env:GITHUB_RUN_NUMBER}" `
             --dart-define=sentry_dsn=
 
       - name: Install Inno Setup

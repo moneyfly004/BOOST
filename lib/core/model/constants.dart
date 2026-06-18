@@ -8,7 +8,7 @@ abstract class Constants {
   static const licenseUrl = "https://github.com/moneyfly004/cboard";
   static const githubReleasesApiUrl = "https://api.github.com/repos/moneyfly004/cboard/releases";
   static const githubLatestReleaseUrl = "https://github.com/moneyfly004/cboard/releases/latest";
-  static const appCastUrl = "https://raw.githubusercontent.com/hiddify/hiddify-next/main/appcast.xml";
+  static const appCastUrl = "https://raw.githubusercontent.com/moneyfly004/cboard/main/appcast.xml";
   static const telegramChannelUrl = "https://t.me/hiddify";
   static const privacyPolicyUrl = "https://hiddify.com/privacy-policy/";
   static const termsAndConditionsUrl = "https://hiddify.com/terms/";

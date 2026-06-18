@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:hiddify/core/app_info/app_info_provider.dart';
 import 'package:hiddify/core/localization/locale_preferences.dart';
 import 'package:hiddify/core/model/constants.dart';
-import 'package:hiddify/core/model/environment.dart';
 import 'package:hiddify/core/preferences/preferences_provider.dart';
 import 'package:hiddify/core/utils/preferences_utils.dart';
 import 'package:hiddify/features/app_update/data/app_update_data_providers.dart';
@@ -17,7 +16,7 @@ import 'package:version/version.dart';
 
 part 'app_update_notifier.g.dart';
 
-const _debugUpgrader = true;
+const _moneyflyBuildNumber = int.fromEnvironment("moneyfly_build_number");
 
 @riverpod
 Upgrader upgrader(Ref ref) => Upgrader(
@@ -31,7 +30,7 @@ Upgrader upgrader(Ref ref) => Upgrader(
     onMacOS: () => UpgraderAppcastStore(appcastURL: Constants.appCastUrl),
     onWeb: () => UpgraderAppcastStore(appcastURL: Constants.appCastUrl),
   ),
-  debugLogging: false && _debugUpgrader && kDebugMode,
+  debugLogging: kDebugMode,
   // durationUntilAlertAgain: const Duration(hours: 12),
   messages: UpgraderMessages(code: ref.watch(localePreferencesProvider).languageCode),
 );
@@ -43,7 +42,7 @@ class AppUpdateNotifier extends _$AppUpdateNotifier with AppLogger {
 
   PreferencesEntry<String?, dynamic> get _ignoreReleasePref => PreferencesEntry(
     preferences: ref.read(sharedPreferencesProvider).requireValue,
-    key: 'ignored_release_version',
+    key: 'ignored_release_tag',
     defaultValue: null,
   );
 
@@ -65,17 +64,15 @@ class AppUpdateNotifier extends _$AppUpdateNotifier with AppLogger {
           },
           (remote) {
             try {
-              final latestVersion = Version.parse(remote.version);
-              final currentVersion = Version.parse(appInfo.version);
-              if (latestVersion > currentVersion) {
-                if (remote.version == _ignoreReleasePref.read()) {
-                  loggy.debug("ignored release [${remote.version}]");
-                  return state = AppUpdateStateIgnored(remote);
+              if (_isRemoteNewer(remote, appInfo.version, appInfo.buildNumber)) {
+                if (remote.ignoreKey == _ignoreReleasePref.read()) {
+                  loggy.debug("ignored release [${remote.ignoreKey}]");
+                  return state = AppUpdateState.ignored(remote);
                 }
                 loggy.debug("new version available: $remote");
                 return state = AppUpdateState.available(remote);
               }
-              loggy.info("already using latest version[$currentVersion], remote: [${remote.version}]");
+              loggy.info("already using latest version[${appInfo.presentVersion}], remote: [${remote.presentVersion}]");
               return state = const AppUpdateState.notAvailable();
             } catch (error, stackTrace) {
               loggy.warning("error parsing versions", error, stackTrace);
@@ -87,8 +84,27 @@ class AppUpdateNotifier extends _$AppUpdateNotifier with AppLogger {
   }
 
   Future<void> ignoreRelease(RemoteVersionEntity version) async {
-    loggy.debug("ignoring release [${version.version}]");
-    await _ignoreReleasePref.write(version.version);
+    loggy.debug("ignoring release [${version.ignoreKey}]");
+    await _ignoreReleasePref.write(version.ignoreKey);
     state = AppUpdateStateIgnored(version);
+  }
+
+  bool _isRemoteNewer(RemoteVersionEntity remote, String currentVersion, String currentBuildNumber) {
+    if (remote.automatedBuildNumber case final int automatedBuildNumber) {
+      final installedAutomatedBuild = _moneyflyBuildNumber > 0
+          ? _moneyflyBuildNumber
+          : int.tryParse(currentBuildNumber);
+      if (installedAutomatedBuild == null || installedAutomatedBuild <= 0) return true;
+      return automatedBuildNumber > installedAutomatedBuild;
+    }
+
+    final latestVersion = Version.parse(remote.version);
+    final installedVersion = Version.parse(currentVersion);
+    if (latestVersion != installedVersion) return latestVersion > installedVersion;
+
+    final latestBuild = int.tryParse(remote.buildNumber);
+    final installedBuild = int.tryParse(currentBuildNumber);
+    if (latestBuild != null && installedBuild != null) return latestBuild > installedBuild;
+    return false;
   }
 }

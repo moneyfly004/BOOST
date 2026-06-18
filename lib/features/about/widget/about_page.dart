@@ -42,10 +42,7 @@ class AboutPage extends HookConsumerWidget {
       if (appInfo.release.allowCustomUpdateChecker)
         ListTile(
           title: Text(t.pages.about.checkForUpdate),
-          trailing: switch (appUpdate) {
-            AppUpdateStateChecking() => const SizedBox(width: 24, height: 24, child: CircularProgressIndicator()),
-            _ => const Icon(FluentIcons.arrow_sync_24_regular),
-          },
+          trailing: _AppUpdateTrailing(appUpdate),
           onTap: () async {
             await ref.read(appUpdateNotifierProvider.notifier).check();
           },
@@ -140,5 +137,24 @@ class AboutPage extends HookConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _AppUpdateTrailing extends StatelessWidget {
+  const _AppUpdateTrailing(this.state);
+
+  final AppUpdateState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (state) {
+      AppUpdateStateChecking() => const SizedBox(width: 24, height: 24, child: CircularProgressIndicator()),
+      AppUpdateStateAvailable() => const Badge(
+        smallSize: 10,
+        backgroundColor: Colors.red,
+        child: Icon(FluentIcons.arrow_download_24_regular),
+      ),
+      _ => const Icon(FluentIcons.arrow_sync_24_regular),
+    };
   }
 }
