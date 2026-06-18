@@ -12,7 +12,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-enum AccountSection { overview, packages, subscription, profile, orders }
+enum AccountSection { overview, packages, subscription, devices, password, orders }
 
 class AccountPage extends ConsumerStatefulWidget {
   const AccountPage({super.key, this.section = AccountSection.overview});
@@ -129,7 +129,7 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
           ),
           const Gap(20),
           Text(switch (_mode) {
-            0 => '登录后可以购买套餐、查看订阅和同步个人信息。',
+            0 => '登录后可以购买套餐、查看订阅和管理设备。',
             1 => '注册会直接对接你的网站账号系统。',
             _ => '通过邮箱验证码重置网站账号密码。',
           }, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
@@ -273,7 +273,8 @@ String _accountSectionTitle(AccountSection section) {
     AccountSection.overview => '账户概览',
     AccountSection.packages => '套餐购买',
     AccountSection.subscription => '订阅同步',
-    AccountSection.profile => '个人资料',
+    AccountSection.devices => '设备管理',
+    AccountSection.password => '密码修改',
     AccountSection.orders => '订单记录',
   };
 }
@@ -283,7 +284,8 @@ IconData accountSectionIcon(AccountSection section) {
     AccountSection.overview => Icons.account_circle_rounded,
     AccountSection.packages => Icons.inventory_2_rounded,
     AccountSection.subscription => Icons.cloud_sync_rounded,
-    AccountSection.profile => Icons.badge_rounded,
+    AccountSection.devices => Icons.devices_rounded,
+    AccountSection.password => Icons.password_rounded,
     AccountSection.orders => Icons.receipt_long_rounded,
   };
 }
@@ -293,7 +295,8 @@ String accountSectionRouteName(AccountSection section) {
     AccountSection.overview => 'account',
     AccountSection.packages => 'accountPackages',
     AccountSection.subscription => 'accountSubscription',
-    AccountSection.profile => 'accountProfile',
+    AccountSection.devices => 'accountDevices',
+    AccountSection.password => 'accountPassword',
     AccountSection.orders => 'accountOrders',
   };
 }
@@ -323,7 +326,8 @@ class _AccountSectionBody extends ConsumerWidget {
       AccountSection.overview => const _AccountOverviewPanel(),
       AccountSection.packages => const _PackagesPanel(),
       AccountSection.subscription => const _SubscriptionPanel(),
-      AccountSection.profile => const _ProfilePanel(),
+      AccountSection.devices => const _DevicesPanel(),
+      AccountSection.password => const _PasswordPanel(),
       AccountSection.orders => const _OrdersPanel(),
     };
   }
@@ -428,6 +432,20 @@ class _AccountOverviewPanel extends ConsumerWidget {
                 onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.packages)),
               ),
               _OverviewAction(
+                icon: Icons.devices_rounded,
+                title: '设备管理',
+                subtitle: state.deviceTotal == 0 ? '暂无设备记录' : '${state.deviceTotal} 台设备记录',
+                buttonLabel: '管理设备',
+                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.devices)),
+              ),
+              _OverviewAction(
+                icon: Icons.password_rounded,
+                title: '密码修改',
+                subtitle: '修改当前网站账号密码',
+                buttonLabel: '去修改',
+                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.password)),
+              ),
+              _OverviewAction(
                 icon: Icons.receipt_long_rounded,
                 title: '订单记录',
                 subtitle: state.orders.isEmpty ? '暂无订单' : '最近 ${state.orders.length} 条订单',
@@ -438,15 +456,36 @@ class _AccountOverviewPanel extends ConsumerWidget {
             if (!twoColumns) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [children[0], const Gap(12), children[1]],
+                children: [
+                  children[0],
+                  const Gap(12),
+                  children[1],
+                  const Gap(12),
+                  children[2],
+                  const Gap(12),
+                  children[3],
+                ],
               );
             }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            return Column(
               children: [
-                Expanded(child: children[0]),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: children[0]),
+                    const Gap(12),
+                    Expanded(child: children[1]),
+                  ],
+                ),
                 const Gap(12),
-                Expanded(child: children[1]),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: children[2]),
+                    const Gap(12),
+                    Expanded(child: children[3]),
+                  ],
+                ),
               ],
             );
           },
@@ -742,6 +781,7 @@ class _SubscriptionPanel extends ConsumerWidget {
     final theme = Theme.of(context);
     final syncing = state.syncingSubscription;
     final canImport = subscription?.canImport == true;
+    final hasSyncUrl = subscription?.hasImportUrl == true;
 
     return _Surface(
       child: Column(
@@ -780,7 +820,11 @@ class _SubscriptionPanel extends ConsumerWidget {
                               ),
                               const Gap(2),
                               Text(
-                                canImport ? '订阅可写入本机配置' : '订阅暂不可导入，请检查状态或到期时间',
+                                canImport
+                                    ? '订阅可写入本机配置'
+                                    : hasSyncUrl
+                                    ? '同步后会写入服务端返回的状态配置'
+                                    : '订阅暂不可导入，请检查状态或到期时间',
                                 style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                               ),
                             ],
@@ -815,7 +859,7 @@ class _SubscriptionPanel extends ConsumerWidget {
             builder: (context, constraints) {
               final compact = constraints.maxWidth < 520;
               final syncButton = FilledButton.icon(
-                onPressed: syncing
+                onPressed: syncing || !hasSyncUrl
                     ? null
                     : () => _guard(context, ref.read(accountNotifierProvider.notifier).syncSubscription),
                 icon: syncing
@@ -824,7 +868,7 @@ class _SubscriptionPanel extends ConsumerWidget {
                 label: const Text('同步到本机'),
               );
               final refreshButton = OutlinedButton.icon(
-                onPressed: syncing
+                onPressed: syncing || !hasSyncUrl
                     ? null
                     : () => _guard(context, ref.read(accountNotifierProvider.notifier).refreshActiveSubscription),
                 icon: const Icon(Icons.update_rounded),
@@ -1181,26 +1225,244 @@ class _PaymentMethodOption extends StatelessWidget {
   }
 }
 
-class _ProfilePanel extends ConsumerStatefulWidget {
-  const _ProfilePanel();
+class _DevicesPanel extends ConsumerWidget {
+  const _DevicesPanel();
 
   @override
-  ConsumerState<_ProfilePanel> createState() => _ProfilePanelState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(accountNotifierProvider);
+    final devices = state.devices;
+    return _Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final header = _SectionHeader(
+                icon: Icons.devices_rounded,
+                title: '设备管理',
+                subtitle: devices.isEmpty ? '查看并移除订阅设备记录' : '最近访问的设备排在前面',
+              );
+              final refreshButton = OutlinedButton.icon(
+                onPressed: state.loading
+                    ? null
+                    : () => _guard(context, ref.read(accountNotifierProvider.notifier).refreshDevices),
+                icon: state.loading
+                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.refresh_rounded),
+                label: const Text('刷新'),
+              );
+              if (constraints.maxWidth < 480) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [header, const Gap(12), refreshButton],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: header),
+                  const Gap(12),
+                  refreshButton,
+                ],
+              );
+            },
+          ),
+          const Gap(14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _Metric(label: '总设备', value: '${state.deviceTotal}'),
+              _Metric(label: '近 24 小时', value: '${state.deviceOnline}'),
+              _Metric(label: '移动设备', value: '${state.deviceMobile}'),
+              _Metric(label: '桌面设备', value: '${state.deviceDesktop}'),
+            ],
+          ),
+          const Gap(14),
+          if (devices.isEmpty)
+            const _EmptyLine(text: '暂无设备记录。设备首次拉取订阅配置后会显示在这里。')
+          else
+            for (final device in devices) ...[_DeviceTile(device: device), if (device != devices.last) const Gap(10)],
+        ],
+      ),
+    );
+  }
 }
 
-class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
-  final _displayName = TextEditingController();
-  final _phone = TextEditingController();
-  final _bio = TextEditingController();
+class _DeviceTile extends ConsumerWidget {
+  const _DeviceTile({required this.device});
+
+  final AccountDevice device;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final subtitle = [
+      device.softwareLabel,
+      device.osLabel,
+      device.modelLabel,
+    ].where((value) => value.isNotEmpty).join(' · ');
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .3),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 620;
+            final info = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(_deviceIcon(device.deviceType), color: theme.colorScheme.primary),
+                    const Gap(10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            device.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          const Gap(3),
+                          Text(
+                            subtitle.isEmpty ? _truncateText(device.userAgent, 80) : subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Gap(8),
+                    _DeviceStatusPill(device: device),
+                  ],
+                ),
+                const Gap(10),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 6,
+                  children: [
+                    _InlineFact(icon: Icons.category_rounded, text: _deviceTypeText(device.deviceType)),
+                    if (device.ipAddress.isNotEmpty) _InlineFact(icon: Icons.public_rounded, text: device.ipAddress),
+                    if (device.location.isNotEmpty) _InlineFact(icon: Icons.location_on_rounded, text: device.location),
+                    if (device.accessLabel.isNotEmpty)
+                      _InlineFact(icon: Icons.schedule_rounded, text: device.accessLabel),
+                    if (device.accessCount > 0)
+                      _InlineFact(icon: Icons.query_stats_rounded, text: '${device.accessCount} 次访问'),
+                  ],
+                ),
+                if (device.remark.isNotEmpty) ...[
+                  const Gap(8),
+                  Text(
+                    device.remark,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ],
+            );
+            final actions = _DeviceActions(device: device);
+
+            if (compact) {
+              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [info, const Gap(12), actions]);
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: info),
+                const Gap(12),
+                actions,
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _DeviceActions extends ConsumerWidget {
+  const _DeviceActions({required this.device});
+
+  final AccountDevice device;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(accountNotifierProvider);
+    final theme = Theme.of(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.end,
+      children: [
+        OutlinedButton.icon(
+          onPressed: state.loading ? null : () => _showDeviceRemarkDialog(context, ref, device),
+          icon: const Icon(Icons.edit_note_rounded),
+          label: Text(device.remark.isEmpty ? '备注' : '改备注'),
+        ),
+        OutlinedButton.icon(
+          onPressed: state.loading ? null : () => _confirmDeleteDevice(context, ref, device),
+          style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
+          icon: const Icon(Icons.delete_outline_rounded),
+          label: const Text('移除'),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeviceStatusPill extends StatelessWidget {
+  const _DeviceStatusPill({required this.device});
+
+  final AccountDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final normal = device.isActive && device.isAllowed;
+    final background = normal ? theme.colorScheme.primaryContainer : theme.colorScheme.errorContainer;
+    final foreground = normal ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onErrorContainer;
+    final border = normal
+        ? theme.colorScheme.primary.withValues(alpha: .35)
+        : theme.colorScheme.error.withValues(alpha: .35);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        child: Text(normal ? '允许' : '受限', style: theme.textTheme.labelSmall?.copyWith(color: foreground)),
+      ),
+    );
+  }
+}
+
+class _PasswordPanel extends ConsumerStatefulWidget {
+  const _PasswordPanel();
+
+  @override
+  ConsumerState<_PasswordPanel> createState() => _PasswordPanelState();
+}
+
+class _PasswordPanelState extends ConsumerState<_PasswordPanel> {
   final _oldPassword = TextEditingController();
   final _newPassword = TextEditingController();
-  int? _loadedUserId;
 
   @override
   void dispose() {
-    _displayName.dispose();
-    _phone.dispose();
-    _bio.dispose();
     _oldPassword.dispose();
     _newPassword.dispose();
     super.dispose();
@@ -1209,45 +1471,17 @@ class _ProfilePanelState extends ConsumerState<_ProfilePanel> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(accountNotifierProvider);
-    final user = state.user;
-    if (user != null && user.id != _loadedUserId) {
-      _loadedUserId = user.id;
-      _displayName.text = user.displayName;
-      _phone.text = user.phone;
-      _bio.text = user.bio;
-    }
     return _Surface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SectionHeader(icon: Icons.badge_rounded, title: '个人信息', subtitle: '同步网站个人资料'),
-          const Gap(12),
-          _TextField(controller: _displayName, label: '显示名称', icon: Icons.person_rounded),
-          const Gap(10),
-          _TextField(controller: _phone, label: '手机号', icon: Icons.phone_rounded, keyboardType: TextInputType.phone),
-          const Gap(10),
-          _TextField(controller: _bio, label: '简介', icon: Icons.notes_rounded, maxLines: 2),
-          const Gap(12),
-          FilledButton.icon(
-            onPressed: state.loading
-                ? null
-                : () => _guard(
-                    context,
-                    () => ref
-                        .read(accountNotifierProvider.notifier)
-                        .updateProfile(displayName: _displayName.text, phone: _phone.text, bio: _bio.text),
-                  ),
-            icon: const Icon(Icons.save_rounded),
-            label: const Text('保存资料'),
-          ),
-          const Gap(18),
-          const Divider(height: 1),
+          const _SectionHeader(icon: Icons.password_rounded, title: '密码修改', subtitle: '修改当前网站账号密码'),
           const Gap(14),
           _TextField(controller: _oldPassword, label: '当前密码', icon: Icons.lock_open_rounded, obscureText: true),
           const Gap(10),
           _TextField(controller: _newPassword, label: '新密码', icon: Icons.lock_reset_rounded, obscureText: true),
           const Gap(12),
-          OutlinedButton.icon(
+          FilledButton.icon(
             onPressed: state.loading
                 ? null
                 : () => _guard(context, () async {
@@ -1491,7 +1725,6 @@ class _TextField extends StatelessWidget {
     required this.icon,
     this.obscureText = false,
     this.keyboardType,
-    this.maxLines = 1,
     this.inputFormatters,
     this.textInputAction,
     this.autofillHints,
@@ -1505,7 +1738,6 @@ class _TextField extends StatelessWidget {
   final IconData icon;
   final bool obscureText;
   final TextInputType? keyboardType;
-  final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
@@ -1519,7 +1751,6 @@ class _TextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      maxLines: maxLines,
       inputFormatters: inputFormatters,
       textInputAction: textInputAction,
       autofillHints: autofillHints,
@@ -1699,6 +1930,67 @@ Future<void> _showPaymentSheet(
   );
 }
 
+Future<void> _confirmDeleteDevice(BuildContext context, WidgetRef ref, AccountDevice device) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('移除设备'),
+      content: Text('确定移除“${device.displayName}”吗？移除后该设备需要重新拉取订阅配置才会再次登记。'),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).pop(true),
+          icon: const Icon(Icons.delete_outline_rounded),
+          label: const Text('移除'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) {
+    return;
+  }
+  await _guard(context, () => ref.read(accountNotifierProvider.notifier).deleteDevice(device.id));
+}
+
+Future<void> _showDeviceRemarkDialog(BuildContext context, WidgetRef ref, AccountDevice device) async {
+  final controller = TextEditingController(text: device.remark);
+  final remark = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('设备备注'),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 200,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: '备注',
+            prefixIcon: Icon(Icons.edit_note_rounded),
+            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).pop(controller.text),
+          icon: const Icon(Icons.save_rounded),
+          label: const Text('保存'),
+        ),
+      ],
+    ),
+  ).whenComplete(controller.dispose);
+  if (remark == null || !context.mounted || remark.trim() == device.remark.trim()) {
+    return;
+  }
+  await _guard(
+    context,
+    () => ref.read(accountNotifierProvider.notifier).updateDeviceRemark(id: device.id, remark: remark),
+  );
+}
+
 void _showSnack(BuildContext context, String message) {
   ScaffoldMessenger.of(context).clearSnackBars();
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -1714,4 +2006,38 @@ String _statusText(String status) {
     'failed' => '失败',
     _ => status.isEmpty || status == 'none' ? '未开通' : status,
   };
+}
+
+IconData _deviceIcon(String type) {
+  return switch (type) {
+    'mobile' => Icons.phone_android_rounded,
+    'tablet' => Icons.tablet_mac_rounded,
+    'desktop' => Icons.desktop_windows_rounded,
+    'router' => Icons.router_rounded,
+    'tv_box' => Icons.tv_rounded,
+    'server' => Icons.dns_rounded,
+    _ => Icons.devices_other_rounded,
+  };
+}
+
+String _deviceTypeText(String type) {
+  return switch (type) {
+    'mobile' => '手机',
+    'tablet' => '平板',
+    'desktop' => '桌面端',
+    'router' => '路由器',
+    'tv_box' => '电视盒子',
+    'server' => '服务器',
+    _ => type.isEmpty || type == 'unknown' ? '未知类型' : type,
+  };
+}
+
+String _truncateText(String value, int maxLength) {
+  if (value.isEmpty) {
+    return '未知';
+  }
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return '${value.substring(0, maxLength)}...';
 }

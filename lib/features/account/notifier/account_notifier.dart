@@ -25,6 +25,11 @@ class AccountState {
     this.packages = const [],
     this.paymentMethods = const [],
     this.orders = const [],
+    this.devices = const [],
+    this.deviceTotal = 0,
+    this.deviceOnline = 0,
+    this.deviceMobile = 0,
+    this.deviceDesktop = 0,
     this.loading = false,
     this.syncingSubscription = false,
     this.authExpired = false,
@@ -38,6 +43,11 @@ class AccountState {
   final List<AccountPackage> packages;
   final List<PaymentMethod> paymentMethods;
   final List<AccountOrder> orders;
+  final List<AccountDevice> devices;
+  final int deviceTotal;
+  final int deviceOnline;
+  final int deviceMobile;
+  final int deviceDesktop;
   final bool loading;
   final bool syncingSubscription;
   final bool authExpired;
@@ -54,6 +64,11 @@ class AccountState {
     List<AccountPackage>? packages,
     List<PaymentMethod>? paymentMethods,
     List<AccountOrder>? orders,
+    List<AccountDevice>? devices,
+    int? deviceTotal,
+    int? deviceOnline,
+    int? deviceMobile,
+    int? deviceDesktop,
     bool? loading,
     bool? syncingSubscription,
     bool? authExpired,
@@ -68,6 +83,11 @@ class AccountState {
       packages: packages ?? this.packages,
       paymentMethods: paymentMethods ?? this.paymentMethods,
       orders: orders ?? this.orders,
+      devices: clearAuth ? const [] : devices ?? this.devices,
+      deviceTotal: clearAuth ? 0 : deviceTotal ?? this.deviceTotal,
+      deviceOnline: clearAuth ? 0 : deviceOnline ?? this.deviceOnline,
+      deviceMobile: clearAuth ? 0 : deviceMobile ?? this.deviceMobile,
+      deviceDesktop: clearAuth ? 0 : deviceDesktop ?? this.deviceDesktop,
       loading: loading ?? this.loading,
       syncingSubscription: syncingSubscription ?? this.syncingSubscription,
       authExpired: !clearAuth && (authExpired ?? this.authExpired),
@@ -184,18 +204,6 @@ class AccountNotifier extends StateNotifier<AccountState> {
     });
   }
 
-  Future<void> updateProfile({required String displayName, required String phone, required String bio}) async {
-    await _run(() async {
-      final user = await _withAuthenticatedToken(
-        (token) =>
-            _api.updateProfile(token: token, displayName: displayName.trim(), phone: phone.trim(), bio: bio.trim()),
-      );
-      state = state.copyWith(user: user, authExpired: false, message: '个人信息已更新');
-      await _persistAuth(state.token, state.refreshToken, user);
-      await _runAccountRefresh(_refreshAccountData);
-    });
-  }
-
   Future<void> changePassword({required String oldPassword, required String newPassword}) async {
     final message = await _runWithResult(
       () => _withAuthenticatedToken(
@@ -239,6 +247,30 @@ class AccountNotifier extends StateNotifier<AccountState> {
     return _withAuthenticatedToken((token) => _api.getOrderStatus(token: token, orderNo: orderNo));
   }
 
+  Future<void> refreshDevices() async {
+    await _runAccountRefresh(_refreshDevicesOnly);
+  }
+
+  Future<void> deleteDevice(int id) async {
+    final message = await _runWithResult(() async {
+      final result = await _withAuthenticatedToken((token) => _api.deleteDevice(token: token, id: id));
+      await _refreshAccountSummaryAndDevices();
+      return result;
+    });
+    state = state.copyWith(message: message);
+  }
+
+  Future<void> updateDeviceRemark({required int id, required String remark}) async {
+    final message = await _runWithResult(() async {
+      final result = await _withAuthenticatedToken(
+        (token) => _api.updateDeviceRemark(token: token, id: id, remark: remark),
+      );
+      await _refreshDevicesOnly();
+      return result;
+    });
+    state = state.copyWith(message: message);
+  }
+
   Future<void> refreshAfterPayment() async {
     await refresh();
   }
@@ -275,19 +307,57 @@ class AccountNotifier extends StateNotifier<AccountState> {
         _api.getPackages(),
         _api.getPaymentMethods(),
         _api.getOrders(token),
+        _api.getDevices(token),
       ]),
     );
     final dashboard = results[0] as AccountDashboard;
+    final devices = results[4] as AccountDevicesResult;
     state = state.copyWith(
       user: dashboard.user,
       dashboard: dashboard,
       packages: results[1] as List<AccountPackage>,
       paymentMethods: results[2] as List<PaymentMethod>,
       orders: results[3] as List<AccountOrder>,
+      devices: devices.devices,
+      deviceTotal: devices.total,
+      deviceOnline: devices.online,
+      deviceMobile: devices.mobile,
+      deviceDesktop: devices.desktop,
       authExpired: false,
     );
     await _persistAuth(state.token, state.refreshToken, dashboard.user);
     await _syncSubscription(dashboard);
+  }
+
+  Future<void> _refreshAccountSummaryAndDevices() async {
+    final results = await _withAuthenticatedToken(
+      (token) => Future.wait<Object>([_api.getDashboard(token), _api.getDevices(token)]),
+    );
+    final dashboard = results[0] as AccountDashboard;
+    final devices = results[1] as AccountDevicesResult;
+    state = state.copyWith(
+      user: dashboard.user,
+      dashboard: dashboard,
+      devices: devices.devices,
+      deviceTotal: devices.total,
+      deviceOnline: devices.online,
+      deviceMobile: devices.mobile,
+      deviceDesktop: devices.desktop,
+      authExpired: false,
+    );
+    await _persistAuth(state.token, state.refreshToken, dashboard.user);
+  }
+
+  Future<void> _refreshDevicesOnly() async {
+    final devices = await _withAuthenticatedToken((token) => _api.getDevices(token));
+    state = state.copyWith(
+      devices: devices.devices,
+      deviceTotal: devices.total,
+      deviceOnline: devices.online,
+      deviceMobile: devices.mobile,
+      deviceDesktop: devices.desktop,
+      authExpired: false,
+    );
   }
 
   void _restore() {

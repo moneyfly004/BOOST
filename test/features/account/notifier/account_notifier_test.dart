@@ -28,6 +28,9 @@ void main() {
     expect(api.refreshTokens, ['valid-refresh-token']);
     expect(sync.syncCalls, 1);
     expect(sync.clearCalls, 0);
+    expect(api.deviceTokens, ['expired-access-token', 'fresh-access-token']);
+    expect(notifier.state.deviceTotal, 1);
+    expect(notifier.state.devices.single.deviceName, 'MacBook');
     expect(notifier.state.isAuthenticated, isTrue);
     expect(notifier.state.token, 'fresh-access-token');
     expect(notifier.state.refreshToken, 'fresh-refresh-token');
@@ -59,6 +62,7 @@ void main() {
     expect(api.dashboardTokens, ['fresh-access-token', 'fresh-access-token']);
     expect(api.refreshTokenCalls, 1);
     expect(api.refreshTokens, ['fresh-refresh-token']);
+    expect(api.deviceTokens, isEmpty);
     expect(sync.syncCalls, 1);
     expect(sync.clearCalls, 0);
     expect(notifier.state.isAuthenticated, isTrue);
@@ -122,6 +126,7 @@ class _RefreshingAccountApi extends AccountApi {
   _RefreshingAccountApi() : super(baseUrl: 'https://example.invalid');
 
   final List<String> dashboardTokens = [];
+  final List<String> deviceTokens = [];
   final List<String> refreshTokens = [];
   int refreshTokenCalls = 0;
   bool _expireFreshTokenOnce = false;
@@ -131,6 +136,7 @@ class _RefreshingAccountApi extends AccountApi {
 
   void reset() {
     dashboardTokens.clear();
+    deviceTokens.clear();
     refreshTokens.clear();
     refreshTokenCalls = 0;
     _expireFreshTokenOnce = false;
@@ -192,6 +198,14 @@ class _RefreshingAccountApi extends AccountApi {
   @override
   Future<List<AccountOrder>> getOrders(String token) async {
     return const [];
+  }
+
+  @override
+  Future<AccountDevicesResult> getDevices(String token, {int page = 1, int size = 100}) async {
+    deviceTokens.add(token);
+    return AccountDevicesResult(
+      devices: const [AccountDevice(id: 1, deviceName: 'MacBook', deviceType: 'desktop')],
+    );
   }
 }
 

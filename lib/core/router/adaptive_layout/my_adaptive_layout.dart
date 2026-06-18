@@ -106,7 +106,8 @@ class MyAdaptiveLayout extends HookConsumerWidget {
     if (!isMobileBreakpoint) ...[
       ShellRouteAction(accountSectionIcon(AccountSection.packages), _accountTitle(AccountSection.packages)),
       ShellRouteAction(accountSectionIcon(AccountSection.subscription), _accountTitle(AccountSection.subscription)),
-      ShellRouteAction(accountSectionIcon(AccountSection.profile), _accountTitle(AccountSection.profile)),
+      ShellRouteAction(accountSectionIcon(AccountSection.devices), _accountTitle(AccountSection.devices)),
+      ShellRouteAction(accountSectionIcon(AccountSection.password), _accountTitle(AccountSection.password)),
       ShellRouteAction(accountSectionIcon(AccountSection.orders), _accountTitle(AccountSection.orders)),
     ],
     ShellRouteAction(Icons.settings_rounded, t.pages.settings.title),
@@ -119,7 +120,8 @@ class MyAdaptiveLayout extends HookConsumerWidget {
       AccountSection.overview => '账户',
       AccountSection.packages => '套餐购买',
       AccountSection.subscription => '订阅同步',
-      AccountSection.profile => '个人资料',
+      AccountSection.devices => '设备管理',
+      AccountSection.password => '密码修改',
       AccountSection.orders => '订单记录',
     };
   }

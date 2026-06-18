@@ -39,7 +39,8 @@ final branchesScope = <String, FocusScopeNode>{
   'account': FocusScopeNode(),
   'accountPackages': FocusScopeNode(),
   'accountSubscription': FocusScopeNode(),
-  'accountProfile': FocusScopeNode(),
+  'accountDevices': FocusScopeNode(),
+  'accountPassword': FocusScopeNode(),
   'accountOrders': FocusScopeNode(),
   'settings': FocusScopeNode(),
   'logs': FocusScopeNode(),
@@ -59,7 +60,8 @@ String getNameOfBranch(bool isMobileBreakpoint, bool showProfilesAction, int ind
         'account',
         'accountPackages',
         'accountSubscription',
-        'accountProfile',
+        'accountDevices',
+        'accountPassword',
         'accountOrders',
         'settings',
         'logs',
@@ -74,7 +76,8 @@ int getIndexOfBranch(bool isMobileBreakpoint, bool showProfilesAction, String na
         'account',
         'accountPackages',
         'accountSubscription',
-        'accountProfile',
+        'accountDevices',
+        'accountPassword',
         'accountOrders',
         'settings',
         'logs',
@@ -204,12 +207,21 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
                         ),
                       ),
                       GoRoute(
-                        name: 'accountProfile',
-                        path: 'profile',
+                        name: 'accountDevices',
+                        path: 'devices',
                         pageBuilder: (_, state) => customTransition(
                           TransitionType.slide,
                           state.pageKey,
-                          const AccountPage(section: AccountSection.profile),
+                          const AccountPage(section: AccountSection.devices),
+                        ),
+                      ),
+                      GoRoute(
+                        name: 'accountPassword',
+                        path: 'password',
+                        pageBuilder: (_, state) => customTransition(
+                          TransitionType.slide,
+                          state.pageKey,
+                          const AccountPage(section: AccountSection.password),
                         ),
                       ),
                       GoRoute(
@@ -254,11 +266,23 @@ class RoutingConfigNotifier extends _$RoutingConfigNotifier {
               StatefulShellBranch(
                 routes: <GoRoute>[
                   GoRoute(
-                    name: 'accountProfile',
-                    path: '/account/profile',
+                    name: 'accountDevices',
+                    path: '/account/devices',
                     builder: (_, _) => FocusScope(
-                      node: branchesScope['accountProfile'],
-                      child: const AccountPage(section: AccountSection.profile),
+                      node: branchesScope['accountDevices'],
+                      child: const AccountPage(section: AccountSection.devices),
+                    ),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: <GoRoute>[
+                  GoRoute(
+                    name: 'accountPassword',
+                    path: '/account/password',
+                    builder: (_, _) => FocusScope(
+                      node: branchesScope['accountPassword'],
+                      child: const AccountPage(section: AccountSection.password),
                     ),
                   ),
                 ],

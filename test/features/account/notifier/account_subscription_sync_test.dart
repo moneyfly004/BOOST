@@ -74,6 +74,30 @@ void main() {
     expect(repo.profiles.map((profile) => profile.id), contains('manual-universal'));
     expect(repo.upsertedUrls, [accountUrl]);
   });
+
+  test('sync imports expired account subscription url to refresh local error config', () async {
+    const expiredAccountUrl = 'https://dy.moneyfly.top/api/v1/subscriptions/universal/expired-token';
+    final repo = _FakeProfileRepository([]);
+    final container = ProviderContainer(
+      overrides: [profileRepositoryProvider.overrideWith((ref) => Future.value(repo))],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(accountSubscriptionSyncProvider)
+        .sync(
+          const AccountDashboard(
+            subscription: AccountSubscription(
+              id: 1,
+              packageName: 'Expired',
+              universalUrl: expiredAccountUrl,
+              status: 'expired',
+            ),
+          ),
+        );
+
+    expect(repo.upsertedUrls, [expiredAccountUrl]);
+  });
 }
 
 class _FakeProfileRepository implements ProfileRepository {

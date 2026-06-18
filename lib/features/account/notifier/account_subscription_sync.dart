@@ -25,7 +25,7 @@ class AccountSubscriptionSync {
     final url = subscription?.importUrl ?? '';
     final repo = await _ref.read(profileRepositoryProvider.future);
     await _deleteAccountProfiles(repo, activeUrl: url);
-    if (subscription == null || !subscription.canImport || !_isUniversalSubscriptionUrl(url)) {
+    if (subscription == null || !subscription.hasImportUrl || !_isUniversalSubscriptionUrl(url)) {
       return;
     }
 
@@ -40,7 +40,7 @@ class AccountSubscriptionSync {
     final subscription = dashboard?.subscription;
     final activeUrl = subscription?.importUrl ?? '';
     await _deleteAccountProfiles(repo, activeUrl: activeUrl);
-    if (subscription == null || !subscription.canImport || !_isUniversalSubscriptionUrl(activeUrl)) {
+    if (subscription == null || !subscription.hasImportUrl || !_isUniversalSubscriptionUrl(activeUrl)) {
       return;
     }
     await repo

@@ -85,16 +85,6 @@ class AccountApi {
     return AccountUser.fromJson(_payload(data));
   }
 
-  Future<AccountUser> updateProfile({
-    required String token,
-    required String displayName,
-    required String phone,
-    required String bio,
-  }) async {
-    final data = await _put('/users/me', token: token, data: {'display_name': displayName, 'phone': phone, 'bio': bio});
-    return AccountUser.fromJson(_payload(data));
-  }
-
   Future<String> changePassword({
     required String token,
     required String oldPassword,
@@ -165,6 +155,21 @@ class AccountApi {
     return OrderResult.fromJson(_payload(data));
   }
 
+  Future<AccountDevicesResult> getDevices(String token, {int page = 1, int size = 100}) async {
+    final data = await _get('/subscriptions/devices', token: token, queryParameters: {'page': page, 'size': size});
+    return AccountDevicesResult.fromJson(data);
+  }
+
+  Future<String> deleteDevice({required String token, required int id}) async {
+    final data = await _delete('/subscriptions/devices/$id', token: token);
+    return _messageFromData(data, fallback: '设备已删除');
+  }
+
+  Future<String> updateDeviceRemark({required String token, required int id, required String remark}) async {
+    final data = await _put('/subscriptions/devices/$id/remark', token: token, data: {'remark': remark.trim()});
+    return _messageFromData(data, fallback: '备注已更新');
+  }
+
   Future<Map<String, dynamic>> _get(String path, {String? token, Map<String, dynamic>? queryParameters}) {
     return _request(
       () => _dio.get<Map<String, dynamic>>(path, queryParameters: queryParameters, options: _options(token)),
@@ -177,6 +182,10 @@ class AccountApi {
 
   Future<Map<String, dynamic>> _put(String path, {Object? data, String? token}) {
     return _request(() => _dio.put<Map<String, dynamic>>(path, data: data, options: _options(token)));
+  }
+
+  Future<Map<String, dynamic>> _delete(String path, {String? token}) {
+    return _request(() => _dio.delete<Map<String, dynamic>>(path, options: _options(token)));
   }
 
   Options _options(String? token) {
@@ -387,6 +396,8 @@ class AccountSubscription {
     return true;
   }
 
+  bool get hasImportUrl => importUrl.isNotEmpty;
+
   factory AccountSubscription.fromJson(Map<String, dynamic> json) {
     return AccountSubscription(
       id: _asInt(json['id'] ?? json['subscription_id']),
@@ -401,6 +412,172 @@ class AccountSubscription {
       currentDevices: _asInt(json['current_devices'] ?? json['currentDevices']),
       onlineDevices: _asInt(json['online_devices'] ?? json['currentDevices']),
       isActive: json['is_active'] == true || json['status'] == 'active',
+    );
+  }
+}
+
+class AccountDevicesResult {
+  AccountDevicesResult({this.devices = const [], int? total, int? online, int? mobile, int? desktop})
+    : total = total ?? devices.length,
+      online = online ?? devices.where((device) => device.isRecentlySeen).length,
+      mobile = mobile ?? devices.where((device) => device.isMobile).length,
+      desktop = desktop ?? devices.where((device) => device.isDesktop).length;
+
+  final List<AccountDevice> devices;
+  final int total;
+  final int online;
+  final int mobile;
+  final int desktop;
+
+  factory AccountDevicesResult.fromJson(Map<String, dynamic> json) {
+    final payload = json['data'];
+    List<dynamic> rawDevices = const [];
+    Map<String, dynamic>? statsSource;
+    if (payload is List) {
+      rawDevices = payload;
+    } else if (payload is Map) {
+      final payloadMap = payload.cast<String, dynamic>();
+      statsSource = payloadMap;
+      rawDevices =
+          (payloadMap['devices'] as List?) ??
+          (payloadMap['items'] as List?) ??
+          (payloadMap['records'] as List?) ??
+          const [];
+    } else if (json['devices'] is List) {
+      rawDevices = json['devices'] as List;
+      statsSource = json;
+    }
+
+    final devices = rawDevices
+        .whereType<Map>()
+        .map((device) => AccountDevice.fromJson(device.cast<String, dynamic>()))
+        .toList();
+    statsSource ??= json;
+    return AccountDevicesResult(
+      devices: devices,
+      total: _readOptionalInt(statsSource, const ['total', 'total_devices', 'device_count']),
+      online: _readOptionalInt(statsSource, const ['total_online', 'online', 'online_devices']),
+      mobile: _readOptionalInt(statsSource, const ['total_mobile', 'mobile', 'mobile_devices']),
+      desktop: _readOptionalInt(statsSource, const ['total_desktop', 'desktop', 'desktop_devices']),
+    );
+  }
+}
+
+class AccountDevice {
+  const AccountDevice({
+    required this.id,
+    this.subscriptionId = 0,
+    this.deviceName = '',
+    this.deviceType = '',
+    this.deviceModel = '',
+    this.deviceBrand = '',
+    this.ipAddress = '',
+    this.location = '',
+    this.userAgent = '',
+    this.softwareName = '',
+    this.softwareVersion = '',
+    this.osName = '',
+    this.osVersion = '',
+    this.subscriptionType = '',
+    this.isActive = true,
+    this.isAllowed = true,
+    this.firstSeen = '',
+    this.lastAccess = '',
+    this.lastSeen = '',
+    this.accessCount = 0,
+    this.remark = '',
+  });
+
+  final int id;
+  final int subscriptionId;
+  final String deviceName;
+  final String deviceType;
+  final String deviceModel;
+  final String deviceBrand;
+  final String ipAddress;
+  final String location;
+  final String userAgent;
+  final String softwareName;
+  final String softwareVersion;
+  final String osName;
+  final String osVersion;
+  final String subscriptionType;
+  final bool isActive;
+  final bool isAllowed;
+  final String firstSeen;
+  final String lastAccess;
+  final String lastSeen;
+  final int accessCount;
+  final String remark;
+
+  String get displayName {
+    for (final value in [deviceName, deviceModel, softwareName, remark]) {
+      if (value.trim().isNotEmpty) {
+        return value.trim();
+      }
+    }
+    return id > 0 ? '设备 #$id' : '未知设备';
+  }
+
+  String get softwareLabel {
+    return [softwareName, softwareVersion].where((value) => value.isNotEmpty).join(' ');
+  }
+
+  String get osLabel {
+    return [osName, osVersion].where((value) => value.isNotEmpty).join(' ');
+  }
+
+  String get modelLabel {
+    if (deviceModel.isEmpty) {
+      return deviceBrand;
+    }
+    if (deviceBrand.isEmpty || deviceBrand == 'Apple') {
+      return deviceModel;
+    }
+    return '$deviceModel ($deviceBrand)';
+  }
+
+  String get accessLabel => lastSeen.isNotEmpty ? lastSeen : lastAccess;
+
+  bool get isMobile => deviceType == 'mobile' || deviceType == 'tablet';
+
+  bool get isDesktop => deviceType == 'desktop' || deviceType == 'server';
+
+  bool get isRecentlySeen {
+    final raw = accessLabel;
+    if (raw.isEmpty) {
+      return false;
+    }
+    final parsed = DateTime.tryParse(raw.replaceFirst(' ', 'T'));
+    if (parsed == null) {
+      return false;
+    }
+    return DateTime.now().difference(parsed).inHours < 24;
+  }
+
+  factory AccountDevice.fromJson(Map<String, dynamic> json) {
+    return AccountDevice(
+      id: _asInt(json['id']),
+      subscriptionId: _asInt(json['subscription_id']),
+      deviceName: json['device_name']?.toString() ?? '',
+      deviceType: json['device_type']?.toString() ?? '',
+      deviceModel: json['device_model']?.toString() ?? '',
+      deviceBrand: json['device_brand']?.toString() ?? '',
+      ipAddress: json['ip_address']?.toString() ?? '',
+      location: json['location']?.toString() ?? '',
+      userAgent: json['user_agent']?.toString() ?? json['device_ua']?.toString() ?? '',
+      softwareName: json['software_name']?.toString() ?? '',
+      softwareVersion: json['software_version']?.toString() ?? '',
+      osName: json['os_name']?.toString() ?? '',
+      osVersion: json['os_version']?.toString() ?? '',
+      subscriptionType: json['subscription_type']?.toString() ?? '',
+      isActive: _asBool(json['is_active'], fallback: true),
+      isAllowed: _asBool(json['is_allowed'], fallback: true),
+      firstSeen: json['first_seen']?.toString() ?? '',
+      lastAccess: json['last_access']?.toString() ?? '',
+      lastSeen: json['last_seen']?.toString() ?? '',
+      accessCount: _asInt(json['access_count']),
+      remark: json['remark']?.toString() ?? '',
     );
   }
 }
@@ -571,4 +748,32 @@ double _asDouble(Object? value) {
     return double.tryParse(value) ?? 0;
   }
   return 0;
+}
+
+bool _asBool(Object? value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
+int? _readOptionalInt(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    if (json.containsKey(key)) {
+      return _asInt(json[key]);
+    }
+  }
+  return null;
 }
