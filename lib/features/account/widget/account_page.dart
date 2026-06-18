@@ -22,7 +22,11 @@ class _AccountPageState extends ConsumerState<AccountPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(accountNotifierProvider.notifier).loadPublicData());
+    Future.microtask(() {
+      if (!ref.read(accountNotifierProvider).isAuthenticated) {
+        ref.read(accountNotifierProvider.notifier).loadPublicData();
+      }
+    });
   }
 
   @override
@@ -322,6 +326,7 @@ class _AccountWorkbench extends ConsumerWidget {
             ],
           ),
         ),
+        if (state.authExpired) ...[const Gap(14), const _AuthExpiredBanner()],
         const Gap(14),
         LayoutBuilder(
           builder: (context, constraints) {
@@ -343,6 +348,41 @@ class _AccountWorkbench extends ConsumerWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+class _AuthExpiredBanner extends ConsumerWidget {
+  const _AuthExpiredBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.error.withValues(alpha: .45)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(Icons.lock_clock_rounded, color: theme.colorScheme.onErrorContainer),
+            const Gap(8),
+            Expanded(
+              child: Text(
+                '登录授权已失效，请重新登录后同步订阅。本地配置不会自动删除。',
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onErrorContainer),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _guard(context, ref.read(accountNotifierProvider.notifier).logout),
+              child: const Text('退出'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -446,11 +486,15 @@ class _PaymentSheet extends ConsumerStatefulWidget {
 }
 
 class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
+  static const _paymentPollInterval = Duration(seconds: 3);
+  static const _paymentPollTimeout = Duration(minutes: 10);
+
   PaymentMethod? _selectedMethod;
   OrderResult? _order;
   OrderResult? _payment;
   AccountOrderStatus? _status;
   Timer? _pollTimer;
+  DateTime? _pollStartedAt;
   bool _busy = false;
   bool _openingPayment = false;
 
@@ -588,6 +632,7 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   }
 
   Future<void> _startPayment() async {
+    if (_busy) return;
     final method = _selectedMethod;
     if (method == null) return;
     setState(() => _busy = true);
@@ -623,11 +668,18 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   void _startPolling(String orderNo) {
     _pollTimer?.cancel();
     if (orderNo.isEmpty) return;
-    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) => _checkStatus(orderNo));
+    _pollStartedAt = DateTime.now();
+    _pollTimer = Timer.periodic(_paymentPollInterval, (_) => _checkStatus(orderNo));
     unawaited(_checkStatus(orderNo));
   }
 
   Future<void> _checkStatus(String orderNo) async {
+    final startedAt = _pollStartedAt;
+    if (startedAt != null && DateTime.now().difference(startedAt) >= _paymentPollTimeout) {
+      _pollTimer?.cancel();
+      if (mounted) _showSnack(context, '支付状态查询超时，请稍后在订单列表刷新查看');
+      return;
+    }
     try {
       final status = await ref.read(accountNotifierProvider.notifier).checkOrderStatus(orderNo);
       if (!mounted) return;
