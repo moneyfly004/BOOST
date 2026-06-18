@@ -29,6 +29,42 @@ abstract class UriUtils {
     }
   }
 
+  static Future<bool> tryOpenDirectory(Directory dir) async {
+    try {
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+
+      if (Platform.isMacOS) {
+        return _tryRunOpenCommand("/usr/bin/open", [dir.path]);
+      }
+      if (Platform.isWindows) {
+        return _tryRunOpenCommand("explorer.exe", [dir.path]);
+      }
+      if (Platform.isLinux) {
+        return _tryRunOpenCommand("xdg-open", [dir.path]);
+      }
+
+      return tryLaunch(dir.uri);
+    } catch (e, stackTrace) {
+      loggy.warning("error opening directory [${dir.path}]", e, stackTrace);
+      return false;
+    }
+  }
+
+  static Future<bool> _tryRunOpenCommand(String executable, List<String> arguments) async {
+    try {
+      loggy.debug("running [$executable ${arguments.join(' ')}]");
+      final result = await Process.run(executable, arguments);
+      if (result.exitCode == 0) return true;
+      loggy.warning("failed running [$executable], exitCode: ${result.exitCode}, stderr: ${result.stderr}");
+      return false;
+    } catch (e, stackTrace) {
+      loggy.warning("error running [$executable]", e, stackTrace);
+      return false;
+    }
+  }
+
   static Future<bool> tryShareFile(Uri uri, {String? mimeType}) async {
     try {
       loggy.debug("sharing [$uri]");

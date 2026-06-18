@@ -54,5 +54,41 @@ void main() {
       expect(release.automatedBuildNumber, isNull);
       expect(release.updateUrl, release.url);
     });
+
+    test("parses MoneyFly semantic release version", () {
+      final release = GithubReleaseParser.parse({
+        "tag_name": "v1.0.0+1",
+        "prerelease": false,
+        "html_url": "https://github.com/moneyfly004/cboard/releases/tag/v1.0.0+1",
+        "published_at": "2026-06-18T00:00:00Z",
+        "assets": [
+          {
+            "name": "MoneyFly-Android-universal.apk",
+            "browser_download_url": "https://example.com/MoneyFly-Android-universal.apk",
+          },
+          {
+            "name": "MoneyFly-macOS-universal.dmg",
+            "browser_download_url": "https://example.com/MoneyFly-macOS-universal.dmg",
+          },
+          {
+            "name": "MoneyFly-Windows-x64-Setup.exe",
+            "browser_download_url": "https://example.com/MoneyFly-Windows-x64-Setup.exe",
+          },
+          {
+            "name": "MoneyFly-Linux-x64.AppImage",
+            "browser_download_url": "https://example.com/MoneyFly-Linux-x64.AppImage",
+          },
+        ],
+      });
+
+      expect(release.version, "1.0.0");
+      expect(release.buildNumber, "1");
+      expect(release.releaseTag, "v1.0.0+1");
+      expect(release.flavor, Environment.prod);
+      expect(release.automatedBuildNumber, isNull);
+      expect(release.presentVersion, "1.0.0 (1)");
+      expect(release.downloadUrl, isNotNull);
+      expect(release.updateUrl, contains("MoneyFly-"));
+    });
   });
 }

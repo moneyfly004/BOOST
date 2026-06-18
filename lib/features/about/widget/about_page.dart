@@ -52,8 +52,11 @@ class AboutPage extends HookConsumerWidget {
           title: Text(t.pages.about.openWorkingDir),
           trailing: const Icon(FluentIcons.open_folder_24_regular),
           onTap: () async {
-            final path = ref.watch(appDirectoriesProvider).requireValue.workingDir.uri;
-            await UriUtils.tryLaunch(path);
+            final workingDir = ref.read(appDirectoriesProvider).requireValue.workingDir;
+            final success = await UriUtils.tryOpenDirectory(workingDir);
+            if (!success && context.mounted) {
+              CustomToast.error(t.errors.unexpected).show(context);
+            }
           },
         ),
     ];
@@ -109,27 +112,6 @@ class AboutPage extends HookConsumerWidget {
                 trailing: const Icon(FluentIcons.open_24_regular),
                 onTap: () async {
                   await UriUtils.tryLaunch(Uri.parse(Constants.githubUrl));
-                },
-              ),
-              ListTile(
-                title: Text(t.pages.about.telegramChannel),
-                trailing: const Icon(FluentIcons.open_24_regular),
-                onTap: () async {
-                  await UriUtils.tryLaunch(Uri.parse(Constants.telegramChannelUrl));
-                },
-              ),
-              ListTile(
-                title: Text(t.pages.about.termsAndConditions),
-                trailing: const Icon(FluentIcons.open_24_regular),
-                onTap: () async {
-                  await UriUtils.tryLaunch(Uri.parse(Constants.termsAndConditionsUrl));
-                },
-              ),
-              ListTile(
-                title: Text(t.pages.about.privacyPolicy),
-                trailing: const Icon(FluentIcons.open_24_regular),
-                onTap: () async {
-                  await UriUtils.tryLaunch(Uri.parse(Constants.privacyPolicyUrl));
                 },
               ),
             ]),

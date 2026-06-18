@@ -91,9 +91,7 @@ class AppUpdateNotifier extends _$AppUpdateNotifier with AppLogger {
 
   bool _isRemoteNewer(RemoteVersionEntity remote, String currentVersion, String currentBuildNumber) {
     if (remote.automatedBuildNumber case final int automatedBuildNumber) {
-      final installedAutomatedBuild = _moneyflyBuildNumber > 0
-          ? _moneyflyBuildNumber
-          : int.tryParse(currentBuildNumber);
+      final installedAutomatedBuild = _installedBuildNumber(currentBuildNumber);
       if (installedAutomatedBuild == null || installedAutomatedBuild <= 0) return true;
       return automatedBuildNumber > installedAutomatedBuild;
     }
@@ -103,8 +101,12 @@ class AppUpdateNotifier extends _$AppUpdateNotifier with AppLogger {
     if (latestVersion != installedVersion) return latestVersion > installedVersion;
 
     final latestBuild = int.tryParse(remote.buildNumber);
-    final installedBuild = int.tryParse(currentBuildNumber);
+    final installedBuild = _installedBuildNumber(currentBuildNumber);
     if (latestBuild != null && installedBuild != null) return latestBuild > installedBuild;
     return false;
+  }
+
+  int? _installedBuildNumber(String currentBuildNumber) {
+    return _moneyflyBuildNumber > 0 ? _moneyflyBuildNumber : int.tryParse(currentBuildNumber);
   }
 }

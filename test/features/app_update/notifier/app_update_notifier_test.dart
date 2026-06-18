@@ -1,0 +1,82 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:hiddify/core/app_info/app_info_provider.dart';
+import 'package:hiddify/core/model/app_info_entity.dart';
+import 'package:hiddify/core/model/environment.dart';
+import 'package:hiddify/core/preferences/preferences_provider.dart';
+import 'package:hiddify/features/app_update/data/app_update_data_providers.dart';
+import 'package:hiddify/features/app_update/data/app_update_repository.dart';
+import 'package:hiddify/features/app_update/model/app_update_failure.dart';
+import 'package:hiddify/features/app_update/model/remote_version_entity.dart';
+import 'package:hiddify/features/app_update/notifier/app_update_notifier.dart';
+import 'package:hiddify/features/app_update/notifier/app_update_state.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  test('check reports an available update for a newer semantic build number', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final remoteVersion = RemoteVersionEntity(
+      version: '1.0.0',
+      buildNumber: '15',
+      releaseTag: 'v1.0.0+15',
+      preRelease: false,
+      url: 'https://github.com/moneyfly004/cboard/releases/tag/v1.0.0+15',
+      publishedAt: DateTime(2026, 6, 18),
+      flavor: Environment.prod,
+      downloadUrl: 'https://github.com/moneyfly004/cboard/releases/latest/download/MoneyFly-macOS-universal.dmg',
+    );
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWith((ref) => preferences),
+        appInfoProvider.overrideWith(
+          () => _FakeAppInfo(
+            const AppInfoEntity(
+              name: 'MoneyFly',
+              version: '1.0.0',
+              buildNumber: '14',
+              release: Release.general,
+              operatingSystem: 'macos',
+              operatingSystemVersion: 'Version 15.0',
+              environment: Environment.prod,
+            ),
+          ),
+        ),
+        appUpdateRepositoryProvider.overrideWith((ref) => _FakeAppUpdateRepository(remoteVersion)),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(appInfoProvider.future);
+    await container.read(sharedPreferencesProvider.future);
+    final state = await container.read(appUpdateNotifierProvider.notifier).check();
+
+    expect(state, isA<AppUpdateStateAvailable>());
+    expect((state as AppUpdateStateAvailable).versionInfo.releaseTag, 'v1.0.0+15');
+    expect(state.versionInfo.presentVersion, '1.0.0 (15)');
+  });
+}
+
+class _FakeAppInfo extends AppInfo {
+  _FakeAppInfo(this.info);
+
+  final AppInfoEntity info;
+
+  @override
+  Future<AppInfoEntity> build() async => info;
+}
+
+class _FakeAppUpdateRepository implements AppUpdateRepository {
+  const _FakeAppUpdateRepository(this.version);
+
+  final RemoteVersionEntity version;
+
+  @override
+  TaskEither<AppUpdateFailure, RemoteVersionEntity> getLatestVersion({
+    bool includePreReleases = false,
+    Release release = Release.general,
+  }) {
+    return TaskEither.right(version);
+  }
+}

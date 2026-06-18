@@ -39,6 +39,7 @@ concurrency:
 
 env:
   APP_NAME: "MoneyFly"
+  APP_VERSION: "1.0.0"
   FLUTTER_VERSION: "3.38.5"
   JAVA_VERSION: "17"
   ANDROID_NDK_VERSION: "28.2.13676358"
@@ -181,6 +182,8 @@ jobs:
             --release \
             --target "${BUILD_TARGET}" \
             --target-platform android-arm,android-arm64,android-x64 \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
             --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
           cp build/app/outputs/flutter-apk/app-release.apk build/moneyfly-apk-cache/app-release.apk
@@ -189,6 +192,8 @@ jobs:
             --split-per-abi \
             --target "${BUILD_TARGET}" \
             --target-platform android-arm,android-arm64,android-x64 \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
             --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
 
@@ -199,6 +204,8 @@ jobs:
           flutter build appbundle \
             --release \
             --target "${BUILD_TARGET}" \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
             --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
 
@@ -271,6 +278,8 @@ jobs:
           flutter build macos \
             --release \
             --target "${BUILD_TARGET}" \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
             --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
             --dart-define=sentry_dsn=
 
@@ -355,6 +364,8 @@ jobs:
           flutter build windows `
             --release `
             --target "${env:BUILD_TARGET}" `
+            --build-name="${env:APP_VERSION}" `
+            --build-number="${env:GITHUB_RUN_NUMBER}" `
             --dart-define="moneyfly_build_number=${env:GITHUB_RUN_NUMBER}" `
             --dart-define=sentry_dsn=
 
@@ -374,8 +385,7 @@ jobs:
           }
           New-Item -ItemType Directory -Path artifacts\windows -Force | Out-Null
           Compress-Archive -Path "$releaseDir\*" -DestinationPath "artifacts\windows\${env:APP_NAME}-Windows-x64-Portable.zip" -Force
-          $versionLine = Get-Content pubspec.yaml | Where-Object { $_ -match '^version:\s*(.+)$' } | Select-Object -First 1
-          $appVersion = ($versionLine -replace '^version:\s*', '') -replace '\+.*$', ''
+          $appVersion = "${env:APP_VERSION}"
           $sourceDir = (Resolve-Path $releaseDir).Path
           $outputDir = (Resolve-Path artifacts\windows).Path
           $iconPath = (Resolve-Path "windows\runner\resources\app_icon.ico").Path
@@ -475,10 +485,10 @@ jobs:
         run: |
           set -euo pipefail
           find release-assets -maxdepth 2 -type f -print
-          APP_VERSION="$(grep '^version:' pubspec.yaml | sed -E 's/^version:[[:space:]]*//')"
-          TAG="v${APP_VERSION}"
+          RELEASE_VERSION="${APP_VERSION}+${GITHUB_RUN_NUMBER}"
+          TAG="v${RELEASE_VERSION}"
           cat > release-notes.md <<EOF
-          MoneyFly ${APP_VERSION} automated build from commit ${GITHUB_SHA}.
+          MoneyFly ${RELEASE_VERSION} automated build from commit ${GITHUB_SHA}.
 
           Assets:
           - MoneyFly-Android-arm64-v8a.apk: smaller Android package for most modern phones
@@ -494,11 +504,27 @@ jobs:
 
           Note: Windows 7/8 are not supported by the current Flutter 3.38.5 desktop toolchain.
           EOF
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          app_version = os.environ["APP_VERSION"]
+          build_number = os.environ["GITHUB_RUN_NUMBER"]
+          major, minor, _ = app_version.split(".", 2)
+          version = f"{major}.{minor}.{build_number}"
+          appcast = Path("appcast.xml")
+          text = appcast.read_text()
+          import re
+          text = re.sub(r"<title>Version [^<]+</title>", f"<title>Version {version}</title>", text)
+          text = re.sub(r'sparkle:version="[^"]+"', f'sparkle:version="{version}"', text)
+          appcast.write_text(text)
+          PY
+          cp appcast.xml release-assets/appcast.xml
           (cd release-assets && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
           gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || true
           gh release create "${TAG}" \
             release-assets/* \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "MoneyFly ${APP_VERSION}" \
+            --title "MoneyFly ${RELEASE_VERSION}" \
             --notes-file release-notes.md \
             --latest

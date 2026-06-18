@@ -21,7 +21,8 @@ class RemoteVersionEntity with _$RemoteVersionEntity {
 
   String get presentVersion {
     if (automatedBuildNumber != null) return "Build $automatedBuildNumber";
-    return flavor == Environment.prod ? version : "$version ${flavor.name}";
+    final label = buildNumber.isEmpty ? version : "$version ($buildNumber)";
+    return flavor == Environment.prod ? label : "$label ${flavor.name}";
   }
 
   String get updateUrl => downloadUrl ?? url;
