@@ -1,1 +1,563 @@
-bmFtZTogTW9uZXlGbHkgQnVpbGQKCm9uOgogIHdvcmtmbG93X2Rpc3BhdGNoOgogICAgaW5wdXRzOgogICAgICBidWlsZF9hbmRyb2lkOgogICAgICAgIGRlc2NyaXB0aW9uOiBCdWlsZCBBbmRyb2lkIEFQSyBhbmQgQUFCCiAgICAgICAgcmVxdWlyZWQ6IHRydWUKICAgICAgICB0eXBlOiBib29sZWFuCiAgICAgICAgZGVmYXVsdDogdHJ1ZQogICAgICBidWlsZF9tYWNvczoKICAgICAgICBkZXNjcmlwdGlvbjogQnVpbGQgbWFjT1MgRE1HCiAgICAgICAgcmVxdWlyZWQ6IHRydWUKICAgICAgICB0eXBlOiBib29sZWFuCiAgICAgICAgZGVmYXVsdDogdHJ1ZQogICAgICBidWlsZF93aW5kb3dzOgogICAgICAgIGRlc2NyaXB0aW9uOiBCdWlsZCBXaW5kb3dzIHBvcnRhYmxlIFpJUAogICAgICAgIHJlcXVpcmVkOiB0cnVlCiAgICAgICAgdHlwZTogYm9vbGVhbgogICAgICAgIGRlZmF1bHQ6IHRydWUKICAgICAgcHVibGlzaF9yZWxlYXNlOgogICAgICAgIGRlc2NyaXB0aW9uOiBQdWJsaXNoIGJ1aWxkIGZpbGVzIHRvIEdpdEh1YiBSZWxlYXNlcwogICAgICAgIHJlcXVpcmVkOiB0cnVlCiAgICAgICAgdHlwZTogYm9vbGVhbgogICAgICAgIGRlZmF1bHQ6IHRydWUKICBwdXNoOgogICAgYnJhbmNoZXM6CiAgICAgIC0gbWFpbgogICAgICAtIG1hc3RlcgogICAgICAtIGRldgogICAgICAtIG1vbmV5Zmx5LWJ1aWxkCgpwZXJtaXNzaW9uczoKICBjb250ZW50czogd3JpdGUKCmNvbmN1cnJlbmN5OgogIGdyb3VwOiBtb25leWZseS1idWlsZC0ke3sgZ2l0aHViLnJlZiB9fQogIGNhbmNlbC1pbi1wcm9ncmVzczogdHJ1ZQoKZW52OgogIEFQUF9OQU1FOiAiTW9uZXlGbHkiCiAgQVBQX1ZFUlNJT046ICIxLjAuMCIKICBGTFVUVEVSX1ZFUlNJT046ICIzLjM4LjUiCiAgSkFWQV9WRVJTSU9OOiAiMTciCiAgQU5EUk9JRF9OREtfVkVSU0lPTjogIjI4LjIuMTM2NzYzNTgiCiAgQlVJTERfVEFSR0VUOiAibGliL21haW4uZGFydCIKCmpvYnM6CiAgcXVhbGl0eToKICAgIG5hbWU6IFF1YWxpdHkKICAgIHJ1bnMtb246IHVidW50dS1sYXRlc3QKICAgIHRpbWVvdXQtbWludXRlczogMzAKCiAgICBzdGVwczoKICAgICAgLSBuYW1lOiBDaGVja291dAogICAgICAgIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKCiAgICAgIC0gbmFtZTogU2V0dXAgSmF2YQogICAgICAgIHVzZXM6IGFjdGlvbnMvc2V0dXAtamF2YUB2NAogICAgICAgIHdpdGg6CiAgICAgICAgICBkaXN0cmlidXRpb246IHp1bHUKICAgICAgICAgIGphdmEtdmVyc2lvbjogJHt7IGVudi5KQVZBX1ZFUlNJT04gfX0KCiAgICAgIC0gbmFtZTogU2V0dXAgRmx1dHRlcgogICAgICAgIHVzZXM6IHN1Ym9zaXRvL2ZsdXR0ZXItYWN0aW9uQHYyCiAgICAgICAgd2l0aDoKICAgICAgICAgIGZsdXR0ZXItdmVyc2lvbjogJHt7IGVudi5GTFVUVEVSX1ZFUlNJT04gfX0KICAgICAgICAgIGNoYW5uZWw6IHN0YWJsZQogICAgICAgICAgY2FjaGU6IHRydWUKCiAgICAgIC0gbmFtZTogVmFsaWRhdGUgRmx1dHRlciBzb3VyY2VzCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCiAgICAgICAgICBmbHV0dGVyIC0tdmVyc2lvbgogICAgICAgICAgZmx1dHRlciBwdWIgZ2V0CiAgICAgICAgICBkYXJ0IHJ1biBidWlsZF9ydW5uZXIgYnVpbGQgLS1kZWxldGUtY29uZmxpY3Rpbmctb3V0cHV0cwogICAgICAgICAgZGFydCBydW4gc2xhbmcKICAgICAgICAgIGZsdXR0ZXIgdGVzdAogICAgICAgICAgZmx1dHRlciBhbmFseXplIC0tbm8tZmF0YWwtaW5mb3MKCiAgYW5kcm9pZDoKICAgIG5hbWU6IEFuZHJvaWQKICAgIGlmOiBnaXRodWIuZXZlbnRfbmFtZSAhPSAnd29ya2Zsb3dfZGlzcGF0Y2gnIHx8IGlucHV0cy5idWlsZF9hbmRyb2lkCiAgICBuZWVkczogcXVhbGl0eQogICAgcnVucy1vbjogdWJ1bnR1LWxhdGVzdAogICAgdGltZW91dC1taW51dGVzOiA5MAoKICAgIHN0ZXBzOgogICAgICAtIG5hbWU6IENoZWNrb3V0CiAgICAgICAgdXNlczogYWN0aW9ucy9jaGVja291dEB2NAoKICAgICAgLSBuYW1lOiBTZXR1cCBKYXZhCiAgICAgICAgdXNlczogYWN0aW9ucy9zZXR1cC1qYXZhQHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIGRpc3RyaWJ1dGlvbjogenVsdQogICAgICAgICAgamF2YS12ZXJzaW9uOiAke3sgZW52LkpBVkFfVkVSU0lPTiB9fQoKICAgICAgLSBuYW1lOiBTZXR1cCBBbmRyb2lkIFNESwogICAgICAgIHVzZXM6IGFuZHJvaWQtYWN0aW9ucy9zZXR1cC1hbmRyb2lkQHYzCgogICAgICAtIG5hbWU6IEluc3RhbGwgQW5kcm9pZCBTREsgcGFja2FnZXMKICAgICAgICBzaGVsbDogYmFzaAogICAgICAgIHJ1bjogfAogICAgICAgICAgc2V0IC1ldW8gcGlwZWZhaWwKICAgICAgICAgIHNka21hbmFnZXIgXAogICAgICAgICAgICAicGxhdGZvcm1zO2FuZHJvaWQtMzYiIFwKICAgICAgICAgICAgImJ1aWxkLXRvb2xzOzM2LjAuMCIgXAogICAgICAgICAgICAibmRrOyR7QU5EUk9JRF9OREtfVkVSU0lPTn0iCiAgICAgICAgICB5ZXMgfCBzZGttYW5hZ2VyIC0tbGljZW5zZXMgPi9kZXYvbnVsbCB8fCB0cnVlCgogICAgICAtIG5hbWU6IFNldHVwIEZsdXR0ZXIKICAgICAgICB1c2VzOiBzdWJvc2l0by9mbHV0dGVyLWFjdGlvbkB2MgogICAgICAgIHdpdGg6CiAgICAgICAgICBmbHV0dGVyLXZlcnNpb246ICR7eyBlbnYuRkxVVFRFUl9WRVJTSU9OIH19CiAgICAgICAgICBjaGFubmVsOiBzdGFibGUKICAgICAgICAgIGNhY2hlOiB0cnVlCgogICAgICAtIG5hbWU6IFByZXBhcmUgRmx1dHRlciBzb3VyY2VzCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCiAgICAgICAgICBmbHV0dGVyIC0tdmVyc2lvbgogICAgICAgICAgZmx1dHRlciBwdWIgZ2V0CiAgICAgICAgICBkYXJ0IHJ1biBidWlsZF9ydW5uZXIgYnVpbGQgLS1kZWxldGUtY29uZmxpY3Rpbmctb3V0cHV0cwogICAgICAgICAgZGFydCBydW4gc2xhbmcKCiAgICAgIC0gbmFtZTogRG93bmxvYWQgQW5kcm9pZCBjb3JlCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCiAgICAgICAgICBDT1JFX1ZFUlNJT049IiQoZ3JlcCAnXmNvcmUudmVyc2lvbj0nIGRlcGVuZGVuY2llcy5wcm9wZXJ0aWVzIHwgY3V0IC1kPSAtZjIpIgogICAgICAgICAgQ09SRV9VUkw9Imh0dHBzOi8vZ2l0aHViLmNvbS9oaWRkaWZ5L2hpZGRpZnktbmV4dC1jb3JlL3JlbGVhc2VzL2Rvd25sb2FkL3Yke0NPUkVfVkVSU0lPTn0iCiAgICAgICAgICBta2RpciAtcCBhbmRyb2lkL2FwcC9saWJzCiAgICAgICAgICBjdXJsIC1MICIke0NPUkVfVVJMfS9oaWRkaWZ5LWxpYi1hbmRyb2lkLnRhci5neiIgfCB0YXIgeHogLUMgYW5kcm9pZC9hcHAvbGlicwogICAgICAgICAgU1RSSVA9IiR7QU5EUk9JRF9IT01FfS9uZGsvJHtBTkRST0lEX05ES19WRVJTSU9OfS90b29sY2hhaW5zL2xsdm0vcHJlYnVpbHQvbGludXgteDg2XzY0L2Jpbi9sbHZtLXN0cmlwIgogICAgICAgICAgZmluZCBhbmRyb2lkL2FwcC9saWJzIC1uYW1lICcqLnNvJyAtcHJpbnQgLWV4ZWMgIiR7U1RSSVB9IiAtLXN0cmlwLXVubmVlZGVkIHt9IFw7CiAgICAgICAgICBscyAtbGEgYW5kcm9pZC9hcHAvbGlicwoKICAgICAgLSBuYW1lOiBDb25maWd1cmUgQW5kcm9pZCBzaWduaW5nCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBlbnY6CiAgICAgICAgICBBTkRST0lEX1NJR05JTkdfS0VZOiAke3sgc2VjcmV0cy5BTkRST0lEX1NJR05JTkdfS0VZIH19CiAgICAgICAgICBBTkRST0lEX1NJR05JTkdfU1RPUkVfUEFTU1dPUkQ6ICR7eyBzZWNyZXRzLkFORFJPSURfU0lHTklOR19TVE9SRV9QQVNTV09SRCB9fQogICAgICAgICAgQU5EUk9JRF9TSUdOSU5HX0tFWV9QQVNTV09SRDogJHt7IHNlY3JldHMuQU5EUk9JRF9TSUdOSU5HX0tFWV9QQVNTV09SRCB9fQogICAgICAgICAgQU5EUk9JRF9TSUdOSU5HX0tFWV9BTElBUzogJHt7IHNlY3JldHMuQU5EUk9JRF9TSUdOSU5HX0tFWV9BTElBUyB9fQogICAgICAgIHJ1bjogfAogICAgICAgICAgc2V0IC1ldW8gcGlwZWZhaWwKICAgICAgICAgIGlmIFtbIC1uICIke0FORFJPSURfU0lHTklOR19LRVk6LX0iICYmIC1uICIke0FORFJPSURfU0lHTklOR19TVE9SRV9QQVNTV09SRDotfSIgJiYgLW4gIiR7QU5EUk9JRF9TSUdOSU5HX0tFWV9QQVNTV09SRDotfSIgJiYgLW4gIiR7QU5EUk9JRF9TSUdOSU5HX0tFWV9BTElBUzotfSIgXV07IHRoZW4KICAgICAgICAgICAgZWNobyAiJHtBTkRST0lEX1NJR05JTkdfS0VZfSIgfCBiYXNlNjQgLS1kZWNvZGUgPiBhbmRyb2lkL21vbmV5Zmx5LXJlbGVhc2UuamtzCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICBlY2hvICJzdG9yZUZpbGU9JChwd2QpL2FuZHJvaWQvbW9uZXlmbHktcmVsZWFzZS5qa3MiCiAgICAgICAgICAgICAgZWNobyAic3RvcmVQYXNzd29yZD0ke0FORFJPSURfU0lHTklOR19TVE9SRV9QQVNTV09SRH0iCiAgICAgICAgICAgICAgZWNobyAia2V5UGFzc3dvcmQ9JHtBTkRST0lEX1NJR05JTkdfS0VZX1BBU1NXT1JEfSIKICAgICAgICAgICAgICBlY2hvICJrZXlBbGlhcz0ke0FORFJPSURfU0lHTklOR19LRVlfQUxJQVN9IgogICAgICAgICAgICB9ID4gYW5kcm9pZC9rZXkucHJvcGVydGllcwogICAgICAgICAgICBlY2hvICJVc2luZyBBbmRyb2lkIHNpZ25pbmcga2V5IGZyb20gcmVwb3NpdG9yeSBzZWNyZXRzLiIKICAgICAgICAgIGVsc2UKICAgICAgICAgICAga2V5dG9vbCAtZ2Vua2V5cGFpciAtdiBcCiAgICAgICAgICAgICAgLWtleXN0b3JlIGFuZHJvaWQvbW9uZXlmbHktY2ktcmVsZWFzZS5qa3MgXAogICAgICAgICAgICAgIC1zdG9yZXBhc3MgbW9uZXlmbHktY2ktc3RvcmUtcGFzc3dvcmQgXAogICAgICAgICAgICAgIC1rZXlwYXNzIG1vbmV5Zmx5LWNpLXN0b3JlLXBhc3N3b3JkIFwKICAgICAgICAgICAgICAtYWxpYXMgbW9uZXlmbHktY2kgXAogICAgICAgICAgICAgIC1rZXlhbGcgUlNBIFwKICAgICAgICAgICAgICAta2V5c2l6ZSAyMDQ4IFwKICAgICAgICAgICAgICAtdmFsaWRpdHkgMTAwMDAgXAogICAgICAgICAgICAgIC1kbmFtZSAiQ049TW9uZXlGbHkgQ0ksIE9VPU1vbmV5Rmx5LCBPPU1vbmV5Rmx5LCBMPVNoZW56aGVuLCBTVD1HdWFuZ2RvbmcsIEM9Q04iCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICBlY2hvICJzdG9yZUZpbGU9JChwd2QpL2FuZHJvaWQvbW9uZXlmbHktY2ktcmVsZWFzZS5qa3MiCiAgICAgICAgICAgICAgZWNobyAic3RvcmVQYXNzd29yZD1tb25leWZseS1jaS1zdG9yZS1wYXNzd29yZCIKICAgICAgICAgICAgICBlY2hvICJrZXlQYXNzd29yZD1tb25leWZseS1jaS1zdG9yZS1wYXNzd29yZCIKICAgICAgICAgICAgICBlY2hvICJrZXlBbGlhcz1tb25leWZseS1jaSIKICAgICAgICAgICAgfSA+IGFuZHJvaWQva2V5LnByb3BlcnRpZXMKICAgICAgICAgICAgZWNobyAiVXNpbmcgZ2VuZXJhdGVkIENJIEFuZHJvaWQgc2lnbmluZyBrZXkuIEFkZCBBTkRST0lEX1NJR05JTkdfKiBzZWNyZXRzIGZvciBwcm9kdWN0aW9uIHNpZ25pbmcuIgogICAgICAgICAgZmkKICAgICAgICAgIGNobW9kIDYwMCBhbmRyb2lkLyouamtzIGFuZHJvaWQva2V5LnByb3BlcnRpZXMKCiAgICAgIC0gbmFtZTogQnVpbGQgQVBLCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBydW46IHwKICAgICAgICAgIHNldCAtZXVvIHBpcGVmYWlsCiAgICAgICAgICBta2RpciAtcCBidWlsZC9tb25leWZseS1hcGstY2FjaGUKICAgICAgICAgIGZsdXR0ZXIgYnVpbGQgYXBrIFwKICAgICAgICAgICAgLS1yZWxlYXNlIFwKICAgICAgICAgICAgLS10YXJnZXQgIiR7QlVJTERfVEFSR0VUfSIgXAogICAgICAgICAgICAtLXRhcmdldC1wbGF0Zm9ybSBhbmRyb2lkLWFybSxhbmRyb2lkLWFybTY0LGFuZHJvaWQteDY0IFwKICAgICAgICAgICAgLS1idWlsZC1uYW1lPSIke0FQUF9WRVJTSU9OfSIgXAogICAgICAgICAgICAtLWJ1aWxkLW51bWJlcj0iJHtHSVRIVUJfUlVOX05VTUJFUn0iIFwKICAgICAgICAgICAgLS1zcGxpdC1kZWJ1Zy1pbmZvPWJ1aWxkL2RlYnVnLWluZm8vYW5kcm9pZC91bml2ZXJzYWwgXAogICAgICAgICAgICAtLWRhcnQtZGVmaW5lPSJtb25leWZseV9idWlsZF9udW1iZXI9JHtHSVRIVUJfUlVOX05VTUJFUn0iIFwKICAgICAgICAgICAgLS1kYXJ0LWRlZmluZT1zZW50cnlfZHNuPQogICAgICAgICAgY3AgYnVpbGQvYXBwL291dHB1dHMvZmx1dHRlci1hcGsvYXBwLXJlbGVhc2UuYXBrIGJ1aWxkL21vbmV5Zmx5LWFway1jYWNoZS9hcHAtcmVsZWFzZS5hcGsKICAgICAgICAgIGZsdXR0ZXIgYnVpbGQgYXBrIFwKICAgICAgICAgICAgLS1yZWxlYXNlIFwKICAgICAgICAgICAgLS1zcGxpdC1wZXItYWJpIFwKICAgICAgICAgICAgLS10YXJnZXQgIiR7QlVJTERfVEFSR0VUfSIgXAogICAgICAgICAgICAtLXRhcmdldC1wbGF0Zm9ybSBhbmRyb2lkLWFybSxhbmRyb2lkLWFybTY0LGFuZHJvaWQteDY0IFwKICAgICAgICAgICAgLS1idWlsZC1uYW1lPSIke0FQUF9WRVJTSU9OfSIgXAogICAgICAgICAgICAtLWJ1aWxkLW51bWJlcj0iJHtHSVRIVUJfUlVOX05VTUJFUn0iIFwKICAgICAgICAgICAgLS1zcGxpdC1kZWJ1Zy1pbmZvPWJ1aWxkL2RlYnVnLWluZm8vYW5kcm9pZC9zcGxpdCBcCiAgICAgICAgICAgIC0tZGFydC1kZWZpbmU9Im1vbmV5Zmx5X2J1aWxkX251bWJlcj0ke0dJVEhVQl9SVU5fTlVNQkVSfSIgXAogICAgICAgICAgICAtLWRhcnQtZGVmaW5lPXNlbnRyeV9kc249CgogICAgICAtIG5hbWU6IEJ1aWxkIEFBQgogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAogICAgICAgICAgZmx1dHRlciBidWlsZCBhcHBidW5kbGUgXAogICAgICAgICAgICAtLXJlbGVhc2UgXAogICAgICAgICAgICAtLXRhcmdldCAiJHtCVUlMRF9UQVJHRVR9IiBcCiAgICAgICAgICAgIC0tYnVpbGQtbmFtZT0iJHtBUFBfVkVSU0lPTn0iIFwKICAgICAgICAgICAgLS1idWlsZC1udW1iZXI9IiR7R0lUSFVCX1JVTl9OVU1CRVJ9IiBcCiAgICAgICAgICAgIC0tc3BsaXQtZGVidWctaW5mbz1idWlsZC9kZWJ1Zy1pbmZvL2FuZHJvaWQvYWFiIFwKICAgICAgICAgICAgLS1kYXJ0LWRlZmluZT0ibW9uZXlmbHlfYnVpbGRfbnVtYmVyPSR7R0lUSFVCX1JVTl9OVU1CRVJ9IiBcCiAgICAgICAgICAgIC0tZGFydC1kZWZpbmU9c2VudHJ5X2Rzbj0KCiAgICAgIC0gbmFtZTogQ29sbGVjdCBBbmRyb2lkIGFydGlmYWN0cwogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAogICAgICAgICAgbWtkaXIgLXAgYXJ0aWZhY3RzL2FuZHJvaWQKICAgICAgICAgIGNwIGJ1aWxkL21vbmV5Zmx5LWFway1jYWNoZS9hcHAtcmVsZWFzZS5hcGsgImFydGlmYWN0cy9hbmRyb2lkLyR7QVBQX05BTUV9LUFuZHJvaWQtdW5pdmVyc2FsLmFwayIKICAgICAgICAgIGNwIGJ1aWxkL2FwcC9vdXRwdXRzL2ZsdXR0ZXItYXBrL2FwcC1hcm1lYWJpLXY3YS1yZWxlYXNlLmFwayAiYXJ0aWZhY3RzL2FuZHJvaWQvJHtBUFBfTkFNRX0tQW5kcm9pZC1hcm1lYWJpLXY3YS5hcGsiCiAgICAgICAgICBjcCBidWlsZC9hcHAvb3V0cHV0cy9mbHV0dGVyLWFway9hcHAtYXJtNjQtdjhhLXJlbGVhc2UuYXBrICJhcnRpZmFjdHMvYW5kcm9pZC8ke0FQUF9OQU1FfS1BbmRyb2lkLWFybTY0LXY4YS5hcGsiCiAgICAgICAgICBjcCBidWlsZC9hcHAvb3V0cHV0cy9mbHV0dGVyLWFway9hcHAteDg2XzY0LXJlbGVhc2UuYXBrICJhcnRpZmFjdHMvYW5kcm9pZC8ke0FQUF9OQU1FfS1BbmRyb2lkLXg4Nl82NC5hcGsiCiAgICAgICAgICBjcCBidWlsZC9hcHAvb3V0cHV0cy9idW5kbGUvcmVsZWFzZS9hcHAtcmVsZWFzZS5hYWIgImFydGlmYWN0cy9hbmRyb2lkLyR7QVBQX05BTUV9LUFuZHJvaWQuYWFiIgogICAgICAgICAgZm9yIGFwayBpbiBhcnRpZmFjdHMvYW5kcm9pZC8qLmFwazsgZG8KICAgICAgICAgICAgIiR7QU5EUk9JRF9IT01FfS9idWlsZC10b29scy8zNi4wLjAvYXBrc2lnbmVyIiB2ZXJpZnkgLS12ZXJib3NlICIkYXBrIgogICAgICAgICAgZG9uZQogICAgICAgICAgamFyc2lnbmVyIC12ZXJpZnkgLWNlcnRzICJhcnRpZmFjdHMvYW5kcm9pZC8ke0FQUF9OQU1FfS1BbmRyb2lkLmFhYiIKICAgICAgICAgIGxzIC1sYSBhcnRpZmFjdHMvYW5kcm9pZAoKICAgICAgLSBuYW1lOiBVcGxvYWQgQW5kcm9pZCBhcnRpZmFjdHMKICAgICAgICB1c2VzOiBhY3Rpb25zL3VwbG9hZC1hcnRpZmFjdEB2NAogICAgICAgIHdpdGg6CiAgICAgICAgICBuYW1lOiBtb25leWZseS1hbmRyb2lkCiAgICAgICAgICBwYXRoOiBhcnRpZmFjdHMvYW5kcm9pZC8qCiAgICAgICAgICByZXRlbnRpb24tZGF5czogMTQKICAgICAgICAgIG92ZXJ3cml0ZTogdHJ1ZQoKICBtYWNvczoKICAgIG5hbWU6IG1hY09TCiAgICBpZjogZ2l0aHViLmV2ZW50X25hbWUgIT0gJ3dvcmtmbG93X2Rpc3BhdGNoJyB8fCBpbnB1dHMuYnVpbGRfbWFjb3MKICAgIG5lZWRzOiBxdWFsaXR5CiAgICBydW5zLW9uOiBtYWNvcy0xNQogICAgdGltZW91dC1taW51dGVzOiA5MAoKICAgIHN0ZXBzOgogICAgICAtIG5hbWU6IENoZWNrb3V0CiAgICAgICAgdXNlczogYWN0aW9ucy9jaGVja291dEB2NAoKICAgICAgLSBuYW1lOiBTZXR1cCBGbHV0dGVyCiAgICAgICAgdXNlczogc3Vib3NpdG8vZmx1dHRlci1hY3Rpb25AdjIKICAgICAgICB3aXRoOgogICAgICAgICAgZmx1dHRlci12ZXJzaW9uOiAke3sgZW52LkZMVVRURVJfVkVSU0lPTiB9fQogICAgICAgICAgY2hhbm5lbDogc3RhYmxlCiAgICAgICAgICBjYWNoZTogdHJ1ZQoKICAgICAgLSBuYW1lOiBQcmVwYXJlIEZsdXR0ZXIgc291cmNlcwogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAogICAgICAgICAgZmx1dHRlciAtLXZlcnNpb24KICAgICAgICAgIGZsdXR0ZXIgY29uZmlnIC0tZW5hYmxlLW1hY29zLWRlc2t0b3AKICAgICAgICAgIGZsdXR0ZXIgcHViIGdldAogICAgICAgICAgZGFydCBydW4gYnVpbGRfcnVubmVyIGJ1aWxkIC0tZGVsZXRlLWNvbmZsaWN0aW5nLW91dHB1dHMKICAgICAgICAgIGRhcnQgcnVuIHNsYW5nCgogICAgICAtIG5hbWU6IERvd25sb2FkIG1hY09TIGNvcmUKICAgICAgICBzaGVsbDogYmFzaAogICAgICAgIHJ1bjogfAogICAgICAgICAgc2V0IC1ldW8gcGlwZWZhaWwKICAgICAgICAgIENPUkVfVkVSU0lPTj0iJChncmVwICdeY29yZS52ZXJzaW9uPScgZGVwZW5kZW5jaWVzLnByb3BlcnRpZXMgfCBjdXQgLWQ9IC1mMikiCiAgICAgICAgICBDT1JFX1VSTD0iaHR0cHM6Ly9naXRodWIuY29tL2hpZGRpZnkvaGlkZGlmeS1uZXh0LWNvcmUvcmVsZWFzZXMvZG93bmxvYWQvdiR7Q09SRV9WRVJTSU9OfSIKICAgICAgICAgIG1rZGlyIC1wIGhpZGRpZnktY29yZS9iaW4KICAgICAgICAgIGN1cmwgLUwgIiR7Q09SRV9VUkx9L2hpZGRpZnktbGliLW1hY29zLnRhci5neiIgfCB0YXIgeHogLUMgaGlkZGlmeS1jb3JlL2JpbgogICAgICAgICAgd2hpbGUgSUZTPSByZWFkIC1yIGZpbGU7IGRvCiAgICAgICAgICAgIGlmIGZpbGUgIiR7ZmlsZX0iIHwgZ3JlcCAtcSAnTWFjaC1PJzsgdGhlbgogICAgICAgICAgICAgIHN0cmlwIC14ICIke2ZpbGV9IiB8fCB0cnVlCiAgICAgICAgICAgIGZpCiAgICAgICAgICBkb25lIDwgPChmaW5kIGhpZGRpZnktY29yZS9iaW4gLXR5cGUgZikKICAgICAgICAgIGxzIC1sYSBoaWRkaWZ5LWNvcmUvYmluCgogICAgICAtIG5hbWU6IEJ1aWxkIG1hY09TIGFwcAogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAogICAgICAgICAgZmx1dHRlciBidWlsZCBtYWNvcyBcCiAgICAgICAgICAgIC0tcmVsZWFzZSBcCiAgICAgICAgICAgIC0tdGFyZ2V0ICIke0JVSUxEX1RBUkdFVH0iIFwKICAgICAgICAgICAgLS1idWlsZC1uYW1lPSIke0FQUF9WRVJTSU9OfSIgXAogICAgICAgICAgICAtLWJ1aWxkLW51bWJlcj0iJHtHSVRIVUJfUlVOX05VTUJFUn0iIFwKICAgICAgICAgICAgLS1zcGxpdC1kZWJ1Zy1pbmZvPWJ1aWxkL2RlYnVnLWluZm8vbWFjb3MgXAogICAgICAgICAgICAtLWRhcnQtZGVmaW5lPSJtb25leWZseV9idWlsZF9udW1iZXI9JHtHSVRIVUJfUlVOX05VTUJFUn0iIFwKICAgICAgICAgICAgLS1kYXJ0LWRlZmluZT1zZW50cnlfZHNuPQoKICAgICAgLSBuYW1lOiBDb2xsZWN0IG1hY09TIGFydGlmYWN0cwogICAgICAgIHNoZWxsOiBiYXNoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBzZXQgLWV1byBwaXBlZmFpbAogICAgICAgICAgQVBQX1BBVEg9ImJ1aWxkL21hY29zL0J1aWxkL1Byb2R1Y3RzL1JlbGVhc2UvJHtBUFBfTkFNRX0uYXBwIgogICAgICAgICAgaWYgW1sgISAtZCAiJHtBUFBfUEFUSH0iIF1dOyB0aGVuCiAgICAgICAgICAgIEFQUF9QQVRIPSJidWlsZC9tYWNvcy9CdWlsZC9Qcm9kdWN0cy9SZWxlYXNlL0hpZGRpZnkuYXBwIgogICAgICAgICAgZmkKICAgICAgICAgIHRlc3QgLWQgIiR7QVBQX1BBVEh9IgogICAgICAgICAgU09VUkNFX0lDT05TRVQ9Im1hY29zL1J1bm5lci9Bc3NldHMueGNhc3NldHMvQXBwSWNvbi5hcHBpY29uc2V0IgogICAgICAgICAgcHl0aG9uMyBzY3JpcHRzL3JlYnVpbGRfbWFjb3NfaWNucy5weSAiJHtTT1VSQ0VfSUNPTlNFVH0iICIke0FQUF9QQVRIfS9Db250ZW50cy9SZXNvdXJjZXMvQXBwSWNvbi5pY25zIgogICAgICAgICAgSUNPTlNFVF9ESVI9IiQobWt0ZW1wIC1kKSIKICAgICAgICAgIGljb251dGlsIC1jIGljb25zZXQgLW8gIiR7SUNPTlNFVF9ESVJ9L0FwcEljb24uaWNvbnNldCIgIiR7QVBQX1BBVEh9L0NvbnRlbnRzL1Jlc291cmNlcy9BcHBJY29uLmljbnMiCiAgICAgICAgICBmaW5kICIke0lDT05TRVRfRElSfS9BcHBJY29uLmljb25zZXQiIC1tYXhkZXB0aCAxIC10eXBlIGYgLXByaW50CiAgICAgICAgICBweXRob24zIC0gIiR7SUNPTlNFVF9ESVJ9L0FwcEljb24uaWNvbnNldCIgPDwnUFknCiAgICAgICAgICBpbXBvcnQgc3VicHJvY2VzcwogICAgICAgICAgaW1wb3J0IHN5cwogICAgICAgICAgZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgogICAgICAgICAgaWNvbnNldCA9IFBhdGgoc3lzLmFyZ3ZbMV0pCiAgICAgICAgICBmb3IgcG5nIGluIGljb25zZXQuZ2xvYigiKi5wbmciKToKICAgICAgICAgICAgICBvdXRwdXQgPSBzdWJwcm9jZXNzLmNoZWNrX291dHB1dCgKICAgICAgICAgICAgICAgICAgWyJzaXBzIiwgIi1nIiwgInBpeGVsV2lkdGgiLCAiLWciLCAicGl4ZWxIZWlnaHQiLCBzdHIocG5nKV0sCiAgICAgICAgICAgICAgICAgIHRleHQ9VHJ1ZSwKICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgaWYgInBpeGVsV2lkdGg6IDEwMjQiIGluIG91dHB1dCBhbmQgInBpeGVsSGVpZ2h0OiAxMDI0IiBpbiBvdXRwdXQ6CiAgICAgICAgICAgICAgICAgIHByaW50KGYiRm91bmQgMTAyNHgxMDI0IGljb246IHtwbmcubmFtZX0iKQogICAgICAgICAgICAgICAgICBicmVhawogICAgICAgICAgZWxzZToKICAgICAgICAgICAgICByYWlzZSBTeXN0ZW1FeGl0KCJBcHBJY29uLmljbnMgZG9lcyBub3QgY29udGFpbiBhIDEwMjR4MTAyNCBiaXRtYXAiKQogICAgICAgICAgUFkKICAgICAgICAgIGNvZGVzaWduIC0tZm9yY2UgLS1kZWVwIC0tc2lnbiAtICIke0FQUF9QQVRIfSIgfHwgdHJ1ZQogICAgICAgICAgbWtkaXIgLXAgYXJ0aWZhY3RzL21hY29zCiAgICAgICAgICBETUdfRElSPSIkKG1rdGVtcCAtZCkiCiAgICAgICAgICBkaXR0byAiJHtBUFBfUEFUSH0iICIke0RNR19ESVJ9LyR7QVBQX05BTUV9LmFwcCIKICAgICAgICAgIGxuIC1zIC9BcHBsaWNhdGlvbnMgIiR7RE1HX0RJUn0vQXBwbGljYXRpb25zIgogICAgICAgICAgaGRpdXRpbCBjcmVhdGUgXAogICAgICAgICAgICAtdm9sbmFtZSAiJHtBUFBfTkFNRX0iIFwKICAgICAgICAgICAgLXNyY2ZvbGRlciAiJHtETUdfRElSfSIgXAogICAgICAgICAgICAtb3YgXAogICAgICAgICAgICAtZm9ybWF0IFVEWk8gXAogICAgICAgICAgICAtaW1hZ2VrZXkgemxpYi1sZXZlbD05IFwKICAgICAgICAgICAgImFydGlmYWN0cy9tYWNvcy8ke0FQUF9OQU1FfS1tYWNPUy11bml2ZXJzYWwuZG1nIgogICAgICAgICAgcGtnYnVpbGQgXAogICAgICAgICAgICAtLWluc3RhbGwtbG9jYXRpb24gL0FwcGxpY2F0aW9ucyBcCiAgICAgICAgICAgIC0tY29tcG9uZW50ICIke0RNR19ESVJ9LyR7QVBQX05BTUV9LmFwcCIgXAogICAgICAgICAgICAiYXJ0aWZhY3RzL21hY29zLyR7QVBQX05BTUV9LW1hY09TLXVuaXZlcnNhbC5wa2ciCiAgICAgICAgICBscyAtbGEgYXJ0aWZhY3RzL21hY29zCgogICAgICAtIG5hbWU6IFVwbG9hZCBtYWNPUyBhcnRpZmFjdAogICAgICAgIHVzZXM6IGFjdGlvbnMvdXBsb2FkLWFydGlmYWN0QHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIG5hbWU6IG1vbmV5Zmx5LW1hY29zCiAgICAgICAgICBwYXRoOiBhcnRpZmFjdHMvbWFjb3MvKgogICAgICAgICAgcmV0ZW50aW9uLWRheXM6IDE0CiAgICAgICAgICBvdmVyd3JpdGU6IHRydWUKCiAgd2luZG93czoKICAgIG5hbWU6IFdpbmRvd3MKICAgIGlmOiBnaXRodWIuZXZlbnRfbmFtZSAhPSAnd29ya2Zsb3dfZGlzcGF0Y2gnIHx8IGlucHV0cy5idWlsZF93aW5kb3dzCiAgICBuZWVkczogcXVhbGl0eQogICAgcnVucy1vbjogd2luZG93cy1sYXRlc3QKICAgIHRpbWVvdXQtbWludXRlczogOTAKCiAgICBzdGVwczoKICAgICAgLSBuYW1lOiBDaGVja291dAogICAgICAgIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKCiAgICAgIC0gbmFtZTogU2V0dXAgRmx1dHRlcgogICAgICAgIHVzZXM6IHN1Ym9zaXRvL2ZsdXR0ZXItYWN0aW9uQHYyCiAgICAgICAgd2l0aDoKICAgICAgICAgIGZsdXR0ZXItdmVyc2lvbjogJHt7IGVudi5GTFVUVEVSX1ZFUlNJT04gfX0KICAgICAgICAgIGNoYW5uZWw6IHN0YWJsZQogICAgICAgICAgY2FjaGU6IHRydWUKCiAgICAgIC0gbmFtZTogUHJlcGFyZSBGbHV0dGVyIHNvdXJjZXMKICAgICAgICBzaGVsbDogcHdzaAogICAgICAgIHJ1bjogfAogICAgICAgICAgZmx1dHRlciAtLXZlcnNpb24KICAgICAgICAgIGZsdXR0ZXIgY29uZmlnIC0tZW5hYmxlLXdpbmRvd3MtZGVza3RvcAogICAgICAgICAgZmx1dHRlciBwdWIgZ2V0CiAgICAgICAgICBkYXJ0IHJ1biBidWlsZF9ydW5uZXIgYnVpbGQgLS1kZWxldGUtY29uZmxpY3Rpbmctb3V0cHV0cwogICAgICAgICAgZGFydCBydW4gc2xhbmcKCiAgICAgIC0gbmFtZTogRG93bmxvYWQgV2luZG93cyBjb3JlCiAgICAgICAgc2hlbGw6IHB3c2gKICAgICAgICBydW46IHwKICAgICAgICAgICRjb3JlTGluZSA9IEdldC1Db250ZW50IGRlcGVuZGVuY2llcy5wcm9wZXJ0aWVzIHwgV2hlcmUtT2JqZWN0IHsgJF8gLW1hdGNoICdeY29yZVwudmVyc2lvbj0nIH0gfCBTZWxlY3QtT2JqZWN0IC1GaXJzdCAxCiAgICAgICAgICAkY29yZVZlcnNpb24gPSAkY29yZUxpbmUuU3BsaXQoJz0nKVsxXS5UcmltKCkKICAgICAgICAgICRjb3JlVXJsID0gImh0dHBzOi8vZ2l0aHViLmNvbS9oaWRkaWZ5L2hpZGRpZnktbmV4dC1jb3JlL3JlbGVhc2VzL2Rvd25sb2FkL3YkY29yZVZlcnNpb24iCiAgICAgICAgICBOZXctSXRlbSAtSXRlbVR5cGUgRGlyZWN0b3J5IC1QYXRoIGhpZGRpZnktY29yZVxiaW4gLUZvcmNlIHwgT3V0LU51bGwKICAgICAgICAgIGN1cmwuZXhlIC1MICIkY29yZVVybC9oaWRkaWZ5LWxpYi13aW5kb3dzLWFtZDY0LnRhci5neiIgLW8gaGlkZGlmeS1saWItd2luZG93cy1hbWQ2NC50YXIuZ3oKICAgICAgICAgIHRhciAteHpmIGhpZGRpZnktbGliLXdpbmRvd3MtYW1kNjQudGFyLmd6IC1DIGhpZGRpZnktY29yZVxiaW4KICAgICAgICAgIEdldC1DaGlsZEl0ZW0gaGlkZGlmeS1jb3JlXGJpbgoKICAgICAgLSBuYW1lOiBCdWlsZCBXaW5kb3dzIGFwcAogICAgICAgIHNoZWxsOiBwd3NoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICBmbHV0dGVyIGJ1aWxkIHdpbmRvd3MgYAogICAgICAgICAgICAtLXJlbGVhc2UgYAogICAgICAgICAgICAtLXRhcmdldCAiJHtlbnY6QlVJTERfVEFSR0VUfSIgYAogICAgICAgICAgICAtLWJ1aWxkLW5hbWU9IiR7ZW52OkFQUF9WRVJTSU9OfSIgYAogICAgICAgICAgICAtLWJ1aWxkLW51bWJlcj0iJHtlbnY6R0lUSFVCX1JVTl9OVU1CRVJ9IiBgCiAgICAgICAgICAgIC0tc3BsaXQtZGVidWctaW5mbz1idWlsZFxkZWJ1Zy1pbmZvXHdpbmRvd3MgYAogICAgICAgICAgICAtLWRhcnQtZGVmaW5lPSJtb25leWZseV9idWlsZF9udW1iZXI9JHtlbnY6R0lUSFVCX1JVTl9OVU1CRVJ9IiBgCiAgICAgICAgICAgIC0tZGFydC1kZWZpbmU9c2VudHJ5X2Rzbj0KCiAgICAgIC0gbmFtZTogSW5zdGFsbCBJbm5vIFNldHVwCiAgICAgICAgc2hlbGw6IHB3c2gKICAgICAgICBydW46IHwKICAgICAgICAgIGNob2NvIGluc3RhbGwgaW5ub3NldHVwIC15IC0tbm8tcHJvZ3Jlc3MKCiAgICAgIC0gbmFtZTogQ29sbGVjdCBXaW5kb3dzIGFydGlmYWN0cwogICAgICAgIHNoZWxsOiBwd3NoCiAgICAgICAgcnVuOiB8CiAgICAgICAgICAkcmVsZWFzZURpciA9ICJidWlsZFx3aW5kb3dzXHg2NFxydW5uZXJcUmVsZWFzZSIKICAgICAgICAgICRleGVQYXRoID0gSm9pbi1QYXRoICRyZWxlYXNlRGlyICIke2VudjpBUFBfTkFNRX0uZXhlIgogICAgICAgICAgaWYgKCEoVGVzdC1QYXRoICRleGVQYXRoKSkgewogICAgICAgICAgICBHZXQtQ2hpbGRJdGVtIC1SZWN1cnNlIGJ1aWxkXHdpbmRvd3MgfCBTZWxlY3QtT2JqZWN0IEZ1bGxOYW1lCiAgICAgICAgICAgIHRocm93ICJXaW5kb3dzIHJlbGVhc2UgZXhlY3V0YWJsZSB3YXMgbm90IGdlbmVyYXRlZC4iCiAgICAgICAgICB9CiAgICAgICAgICBHZXQtQ2hpbGRJdGVtIC1QYXRoICRyZWxlYXNlRGlyIC1SZWN1cnNlIC1JbmNsdWRlICoucGRiLCouZXhwLCoubGliIC1GaWxlIHwgUmVtb3ZlLUl0ZW0gLUZvcmNlCiAgICAgICAgICBOZXctSXRlbSAtSXRlbVR5cGUgRGlyZWN0b3J5IC1QYXRoIGFydGlmYWN0c1x3aW5kb3dzIC1Gb3JjZSB8IE91dC1OdWxsCiAgICAgICAgICA3eiBhIC10emlwIC1teD05ICJhcnRpZmFjdHNcd2luZG93c1wke2VudjpBUFBfTkFNRX0tV2luZG93cy14NjQtUG9ydGFibGUuemlwIiAiJHJlbGVhc2VEaXJcKiIgfCBPdXQtSG9zdAogICAgICAgICAgJGFwcFZlcnNpb24gPSAiJHtlbnY6QVBQX1ZFUlNJT059IgogICAgICAgICAgJHNvdXJjZURpciA9IChSZXNvbHZlLVBhdGggJHJlbGVhc2VEaXIpLlBhdGgKICAgICAgICAgICRvdXRwdXREaXIgPSAoUmVzb2x2ZS1QYXRoIGFydGlmYWN0c1x3aW5kb3dzKS5QYXRoCiAgICAgICAgICAkaWNvblBhdGggPSAoUmVzb2x2ZS1QYXRoICJ3aW5kb3dzXHJ1bm5lclxyZXNvdXJjZXNcYXBwX2ljb24uaWNvIikuUGF0aAogICAgICAgICAgJGlzc1BhdGggPSBKb2luLVBhdGggJGVudjpSVU5ORVJfVEVNUCAibW9uZXlmbHktaW5zdGFsbGVyLmlzcyIKICAgICAgICAgIEAiCiAgICAgICAgICBbU2V0dXBdCiAgICAgICAgICBBcHBJZD17e0E4MjZGNEU2LUUxNDItNEI5RC05RjlELTE3MzA0ODI5RjJCMX0KICAgICAgICAgIEFwcE5hbWU9JHtlbnY6QVBQX05BTUV9CiAgICAgICAgICBBcHBWZXJzaW9uPSRhcHBWZXJzaW9uCiAgICAgICAgICBBcHBQdWJsaXNoZXI9TW9uZXlGbHkKICAgICAgICAgIEFwcFB1Ymxpc2hlclVSTD1odHRwczovL2R5Lm1vbmV5Zmx5LnRvcAogICAgICAgICAgQXBwU3VwcG9ydFVSTD1odHRwczovL2R5Lm1vbmV5Zmx5LnRvcAogICAgICAgICAgQXBwVXBkYXRlc1VSTD1odHRwczovL2R5Lm1vbmV5Zmx5LnRvcAogICAgICAgICAgRGVmYXVsdERpck5hbWU9e2F1dG9wZjY0fVxNb25leUZseQogICAgICAgICAgTWluVmVyc2lvbj0xMC4wCiAgICAgICAgICBEaXNhYmxlUHJvZ3JhbUdyb3VwUGFnZT15ZXMKICAgICAgICAgIE91dHB1dERpcj0kb3V0cHV0RGlyCiAgICAgICAgICBPdXRwdXRCYXNlRmlsZW5hbWU9JHtlbnY6QVBQX05BTUV9LVdpbmRvd3MteDY0LVNldHVwCiAgICAgICAgICBDb21wcmVzc2lvbj1sem1hMgogICAgICAgICAgU29saWRDb21wcmVzc2lvbj15ZXMKICAgICAgICAgIFdpemFyZFN0eWxlPW1vZGVybgogICAgICAgICAgU2V0dXBJY29uRmlsZT0kaWNvblBhdGgKICAgICAgICAgIEFyY2hpdGVjdHVyZXNBbGxvd2VkPXg2NAogICAgICAgICAgQXJjaGl0ZWN0dXJlc0luc3RhbGxJbjY0Qml0TW9kZT14NjQKICAgICAgICAgIENsb3NlQXBwbGljYXRpb25zPWZvcmNlCgogICAgICAgICAgW0xhbmd1YWdlc10KICAgICAgICAgIE5hbWU6ICJlbmdsaXNoIjsgTWVzc2FnZXNGaWxlOiAiY29tcGlsZXI6RGVmYXVsdC5pc2wiCgogICAgICAgICAgW1Rhc2tzXQogICAgICAgICAgTmFtZTogImRlc2t0b3BpY29uIjsgRGVzY3JpcHRpb246ICJ7Y206Q3JlYXRlRGVza3RvcEljb259IjsgR3JvdXBEZXNjcmlwdGlvbjogIntjbTpBZGRpdGlvbmFsSWNvbnN9IjsgRmxhZ3M6IGNoZWNrZWRvbmNlCgogICAgICAgICAgW0ZpbGVzXQogICAgICAgICAgU291cmNlOiAiJHNvdXJjZURpclwqIjsgRGVzdERpcjogInthcHB9IjsgRmxhZ3M6IGlnbm9yZXZlcnNpb24gcmVjdXJzZXN1YmRpcnMgY3JlYXRlYWxsc3ViZGlycwoKICAgICAgICAgIFtJY29uc10KICAgICAgICAgIE5hbWU6ICJ7YXV0b3Byb2dyYW1zfVwke2VudjpBUFBfTkFNRX0iOyBGaWxlbmFtZTogInthcHB9XCR7ZW52OkFQUF9OQU1FfS5leGUiCiAgICAgICAgICBOYW1lOiAie2F1dG9kZXNrdG9wfVwke2VudjpBUFBfTkFNRX0iOyBGaWxlbmFtZTogInthcHB9XCR7ZW52OkFQUF9OQU1FfS5leGUiOyBUYXNrczogZGVza3RvcGljb24KCiAgICAgICAgICBbUnVuXQogICAgICAgICAgRmlsZW5hbWU6ICJ7YXBwfVwke2VudjpBUFBfTkFNRX0uZXhlIjsgRGVzY3JpcHRpb246ICJ7Y206TGF1bmNoUHJvZ3JhbSwke2VudjpBUFBfTkFNRX19IjsgRmxhZ3M6IG5vd2FpdCBwb3N0aW5zdGFsbCBza2lwaWZzaWxlbnQKCiAgICAgICAgICBbVW5pbnN0YWxsRGVsZXRlXQogICAgICAgICAgVHlwZTogZmlsZXNhbmRvcmRpcnM7IE5hbWU6ICJ7dXNlcmFwcGRhdGF9XE1vbmV5Rmx5IgoKICAgICAgICAgIFtDb2RlXQogICAgICAgICAgZnVuY3Rpb24gSW5pdGlhbGl6ZVNldHVwKCk6IEJvb2xlYW47CiAgICAgICAgICB2YXIKICAgICAgICAgICAgUmVzdWx0Q29kZTogSW50ZWdlcjsKICAgICAgICAgIGJlZ2luCiAgICAgICAgICAgIEV4ZWMoJ3Rhc2traWxsJywgJy9GIC9JTSBNb25leUZseS5leGUnLCAnJywgU1dfSElERSwgZXdXYWl0VW50aWxUZXJtaW5hdGVkLCBSZXN1bHRDb2RlKTsKICAgICAgICAgICAgRXhlYygndGFza2tpbGwnLCAnL0YgL0lNIGhpZGRpZnkuZXhlJywgJycsIFNXX0hJREUsIGV3V2FpdFVudGlsVGVybWluYXRlZCwgUmVzdWx0Q29kZSk7CiAgICAgICAgICAgIEV4ZWMoJ25ldCcsICdzdG9wICJIaWRkaWZ5VHVubmVsU2VydmljZSInLCAnJywgU1dfSElERSwgZXdXYWl0VW50aWxUZXJtaW5hdGVkLCBSZXN1bHRDb2RlKTsKICAgICAgICAgICAgRXhlYygnc2MuZXhlJywgJ2RlbGV0ZSAiSGlkZGlmeVR1bm5lbFNlcnZpY2UiJywgJycsIFNXX0hJREUsIGV3V2FpdFVudGlsVGVybWluYXRlZCwgUmVzdWx0Q29kZSk7CiAgICAgICAgICAgIFJlc3VsdCA6PSBUcnVlOwogICAgICAgICAgZW5kOwogICAgICAgICAgIkAgfCBTZXQtQ29udGVudCAtUGF0aCAkaXNzUGF0aCAtRW5jb2RpbmcgVVRGOAogICAgICAgICAgJGlzY2MgPSAiJHtlbnY6UHJvZ3JhbUZpbGVzKHg4Nil9XElubm8gU2V0dXAgNlxJU0NDLmV4ZSIKICAgICAgICAgIGlmICghKFRlc3QtUGF0aCAkaXNjYykpIHsKICAgICAgICAgICAgJGlzY2MgPSAiJHtlbnY6UHJvZ3JhbUZpbGVzfVxJbm5vIFNldHVwIDZcSVNDQy5leGUiCiAgICAgICAgICB9CiAgICAgICAgICAmICRpc2NjICRpc3NQYXRoCiAgICAgICAgICBHZXQtQ2hpbGRJdGVtIGFydGlmYWN0c1x3aW5kb3dzCgogICAgICAtIG5hbWU6IFVwbG9hZCBXaW5kb3dzIGFydGlmYWN0CiAgICAgICAgdXNlczogYWN0aW9ucy91cGxvYWQtYXJ0aWZhY3RAdjQKICAgICAgICB3aXRoOgogICAgICAgICAgbmFtZTogbW9uZXlmbHktd2luZG93cwogICAgICAgICAgcGF0aDogYXJ0aWZhY3RzL3dpbmRvd3MvKgogICAgICAgICAgcmV0ZW50aW9uLWRheXM6IDE0CiAgICAgICAgICBvdmVyd3JpdGU6IHRydWUKCiAgcHVibGlzaDoKICAgIG5hbWU6IFB1Ymxpc2ggUmVsZWFzZQogICAgbmVlZHM6CiAgICAgIC0gYW5kcm9pZAogICAgICAtIG1hY29zCiAgICAgIC0gd2luZG93cwogICAgaWY6ICR7eyBhbHdheXMoKSAmJiAhY2FuY2VsbGVkKCkgJiYgIWZhaWx1cmUoKSAmJiAoZ2l0aHViLmV2ZW50X25hbWUgIT0gJ3dvcmtmbG93X2Rpc3BhdGNoJyB8fCBpbnB1dHMucHVibGlzaF9yZWxlYXNlKSB9fQogICAgcnVucy1vbjogdWJ1bnR1LWxhdGVzdAogICAgdGltZW91dC1taW51dGVzOiAzMAoKICAgIHN0ZXBzOgogICAgICAtIG5hbWU6IENoZWNrb3V0CiAgICAgICAgdXNlczogYWN0aW9ucy9jaGVja291dEB2NAoKICAgICAgLSBuYW1lOiBEb3dubG9hZCBidWlsZCBhcnRpZmFjdHMKICAgICAgICB1c2VzOiBhY3Rpb25zL2Rvd25sb2FkLWFydGlmYWN0QHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIHBhdGg6IHJlbGVhc2UtYXNzZXRzCiAgICAgICAgICBtZXJnZS1tdWx0aXBsZTogdHJ1ZQoKICAgICAgLSBuYW1lOiBQdWJsaXNoIEdpdEh1YiByZWxlYXNlCiAgICAgICAgc2hlbGw6IGJhc2gKICAgICAgICBlbnY6CiAgICAgICAgICBHSF9UT0tFTjogJHt7IGdpdGh1Yi50b2tlbiB9fQogICAgICAgIHJ1bjogfAogICAgICAgICAgc2V0IC1ldW8gcGlwZWZhaWwKICAgICAgICAgIGZpbmQgcmVsZWFzZS1hc3NldHMgLW1heGRlcHRoIDIgLXR5cGUgZiAtcHJpbnQKICAgICAgICAgIFJFTEVBU0VfVkVSU0lPTj0iJHtBUFBfVkVSU0lPTn0rJHtHSVRIVUJfUlVOX05VTUJFUn0iCiAgICAgICAgICBUQUc9InYke1JFTEVBU0VfVkVSU0lPTn0iCiAgICAgICAgICBjYXQgPiByZWxlYXNlLW5vdGVzLm1kIDw8RU9GCiAgICAgICAgICBNb25leUZseSAke1JFTEVBU0VfVkVSU0lPTn0gYXV0b21hdGVkIGJ1aWxkIGZyb20gY29tbWl0ICR7R0lUSFVCX1NIQX0uCgogICAgICAgICAgQXNzZXRzOgogICAgICAgICAgLSBNb25leUZseS1BbmRyb2lkLWFybTY0LXY4YS5hcGs6IHNtYWxsZXIgQW5kcm9pZCBwYWNrYWdlIGZvciBtb3N0IG1vZGVybiBwaG9uZXMKICAgICAgICAgIC0gTW9uZXlGbHktQW5kcm9pZC1hcm1lYWJpLXY3YS5hcGs6IHNtYWxsZXIgQW5kcm9pZCBwYWNrYWdlIGZvciBvbGRlciAzMi1iaXQgcGhvbmVzCiAgICAgICAgICAtIE1vbmV5Rmx5LUFuZHJvaWQteDg2XzY0LmFwazogQW5kcm9pZCBwYWNrYWdlIGZvciB4ODZfNjQgZGV2aWNlcy9lbXVsYXRvcnMKICAgICAgICAgIC0gTW9uZXlGbHktQW5kcm9pZC11bml2ZXJzYWwuYXBrOiBsYXJnZXIgQW5kcm9pZCBwYWNrYWdlIGNvbnRhaW5pbmcgYWxsIENQVSBhcmNoaXRlY3R1cmVzCiAgICAgICAgICAtIE1vbmV5Rmx5LUFuZHJvaWQuYWFiOiBBbmRyb2lkIEFwcCBCdW5kbGUgZm9yIHN0b3JlIHVwbG9hZAogICAgICAgICAgLSBNb25leUZseS1tYWNPUy11bml2ZXJzYWwuZG1nOiBtYWNPUyBkcmFnLWFuZC1kcm9wIGluc3RhbGxlciBmb3IgSW50ZWwgYW5kIEFwcGxlIFNpbGljb24gd2hlbiBzdXBwb3J0ZWQgYnkgdGhlIGJ1bmRsZWQgY29yZQogICAgICAgICAgLSBNb25leUZseS1tYWNPUy11bml2ZXJzYWwucGtnOiBtYWNPUyBwYWNrYWdlIGluc3RhbGxlcgogICAgICAgICAgLSBNb25leUZseS1XaW5kb3dzLXg2NC1TZXR1cC5leGU6IFdpbmRvd3MgMTAvMTEgeDY0IGluc3RhbGxlcgogICAgICAgICAgLSBNb25leUZseS1XaW5kb3dzLXg2NC1Qb3J0YWJsZS56aXA6IFdpbmRvd3MgMTAvMTEgeDY0IHBvcnRhYmxlIHBhY2thZ2UKICAgICAgICAgIC0gU0hBMjU2U1VNUy50eHQ6IGNoZWNrc3VtcyBmb3IgYWxsIHJlbGVhc2UgYXNzZXRzCgogICAgICAgICAgTm90ZTogV2luZG93cyA3LzggYXJlIG5vdCBzdXBwb3J0ZWQgYnkgdGhlIGN1cnJlbnQgRmx1dHRlciAzLjM4LjUgZGVza3RvcCB0b29sY2hhaW4uCiAgICAgICAgICBFT0YKICAgICAgICAgIHB5dGhvbjMgLSA8PCdQWScKICAgICAgICAgIGltcG9ydCBvcwogICAgICAgICAgZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgogICAgICAgICAgYXBwX3ZlcnNpb24gPSBvcy5lbnZpcm9uWyJBUFBfVkVSU0lPTiJdCiAgICAgICAgICBidWlsZF9udW1iZXIgPSBvcy5lbnZpcm9uWyJHSVRIVUJfUlVOX05VTUJFUiJdCiAgICAgICAgICBtYWpvciwgbWlub3IsIF8gPSBhcHBfdmVyc2lvbi5zcGxpdCgiLiIsIDIpCiAgICAgICAgICB2ZXJzaW9uID0gZiJ7bWFqb3J9LnttaW5vcn0ue2J1aWxkX251bWJlcn0iCiAgICAgICAgICBhcHBjYXN0ID0gUGF0aCgiYXBwY2FzdC54bWwiKQogICAgICAgICAgdGV4dCA9IGFwcGNhc3QucmVhZF90ZXh0KCkKICAgICAgICAgIGltcG9ydCByZQogICAgICAgICAgdGV4dCA9IHJlLnN1YihyIjx0aXRsZT5WZXJzaW9uIFtePF0rPC90aXRsZT4iLCBmIjx0aXRsZT5WZXJzaW9uIHt2ZXJzaW9ufTwvdGl0bGU+IiwgdGV4dCkKICAgICAgICAgIHRleHQgPSByZS5zdWIocidzcGFya2xlOnZlcnNpb249IlteIl0rIicsIGYnc3BhcmtsZTp2ZXJzaW9uPSJ7dmVyc2lvbn0iJywgdGV4dCkKICAgICAgICAgIGFwcGNhc3Qud3JpdGVfdGV4dCh0ZXh0KQogICAgICAgICAgUFkKICAgICAgICAgIGNwIGFwcGNhc3QueG1sIHJlbGVhc2UtYXNzZXRzL2FwcGNhc3QueG1sCiAgICAgICAgICAoY2QgcmVsZWFzZS1hc3NldHMgJiYgZmluZCAuIC1tYXhkZXB0aCAxIC10eXBlIGYgISAtbmFtZSBTSEEyNTZTVU1TLnR4dCAtcHJpbnQwIHwgc29ydCAteiB8IHhhcmdzIC0wIHNoYTI1NnN1bSA+IFNIQTI1NlNVTVMudHh0KQogICAgICAgICAgZ2ggcmVsZWFzZSBkZWxldGUgIiR7VEFHfSIgLS1yZXBvICIke0dJVEhVQl9SRVBPU0lUT1JZfSIgLS1jbGVhbnVwLXRhZyAteSB8fCB0cnVlCiAgICAgICAgICBnaCByZWxlYXNlIGNyZWF0ZSAiJHtUQUd9IiBcCiAgICAgICAgICAgIHJlbGVhc2UtYXNzZXRzLyogXAogICAgICAgICAgICAtLXJlcG8gIiR7R0lUSFVCX1JFUE9TSVRPUll9IiBcCiAgICAgICAgICAgIC0tdGl0bGUgIk1vbmV5Rmx5ICR7UkVMRUFTRV9WRVJTSU9OfSIgXAogICAgICAgICAgICAtLW5vdGVzLWZpbGUgcmVsZWFzZS1ub3Rlcy5tZCBcCiAgICAgICAgICAgIC0tbGF0ZXN0Cg==
+name: MoneyFly Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_android:
+        description: Build Android APK and AAB
+        required: true
+        type: boolean
+        default: true
+      build_macos:
+        description: Build macOS DMG
+        required: true
+        type: boolean
+        default: true
+      build_windows:
+        description: Build Windows portable ZIP
+        required: true
+        type: boolean
+        default: true
+      publish_release:
+        description: Publish build files to GitHub Releases
+        required: true
+        type: boolean
+        default: true
+  push:
+    branches:
+      - main
+      - master
+      - dev
+      - moneyfly-build
+
+permissions:
+  contents: write
+
+concurrency:
+  group: moneyfly-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_NAME: "MoneyFly"
+  APP_VERSION: "1.0.0"
+  FLUTTER_VERSION: "3.38.5"
+  JAVA_VERSION: "17"
+  ANDROID_NDK_VERSION: "28.2.13676358"
+  BUILD_TARGET: "lib/main.dart"
+
+jobs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Validate Flutter sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter --version
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+          flutter test
+          flutter analyze --no-fatal-infos
+
+  android:
+    name: Android
+    if: github.event_name != 'workflow_dispatch' || inputs.build_android
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "ndk;${ANDROID_NDK_VERSION}"
+          yes | sdkmanager --licenses >/dev/null || true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Prepare Flutter sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter --version
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Download Android core
+        shell: bash
+        run: |
+          set -euo pipefail
+          CORE_VERSION="$(grep '^core.version=' dependencies.properties | cut -d= -f2)"
+          CORE_URL="https://github.com/hiddify/hiddify-next-core/releases/download/v${CORE_VERSION}"
+          mkdir -p android/app/libs
+          curl -L "${CORE_URL}/hiddify-lib-android.tar.gz" | tar xz -C android/app/libs
+          STRIP="${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
+          find android/app/libs -name '*.so' -print -exec "${STRIP}" --strip-unneeded {} \;
+          ls -la android/app/libs
+
+      - name: Configure Android signing
+        shell: bash
+        env:
+          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${ANDROID_SIGNING_KEY:-}" && -n "${ANDROID_SIGNING_STORE_PASSWORD:-}" && -n "${ANDROID_SIGNING_KEY_PASSWORD:-}" && -n "${ANDROID_SIGNING_KEY_ALIAS:-}" ]]; then
+            echo "${ANDROID_SIGNING_KEY}" | base64 --decode > android/moneyfly-release.jks
+            {
+              echo "storeFile=$(pwd)/android/moneyfly-release.jks"
+              echo "storePassword=${ANDROID_SIGNING_STORE_PASSWORD}"
+              echo "keyPassword=${ANDROID_SIGNING_KEY_PASSWORD}"
+              echo "keyAlias=${ANDROID_SIGNING_KEY_ALIAS}"
+            } > android/key.properties
+            echo "Using Android signing key from repository secrets."
+          else
+            keytool -genkeypair -v \
+              -keystore android/moneyfly-ci-release.jks \
+              -storepass moneyfly-ci-store-password \
+              -keypass moneyfly-ci-store-password \
+              -alias moneyfly-ci \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=MoneyFly CI, OU=MoneyFly, O=MoneyFly, L=Shenzhen, ST=Guangdong, C=CN"
+            {
+              echo "storeFile=$(pwd)/android/moneyfly-ci-release.jks"
+              echo "storePassword=moneyfly-ci-store-password"
+              echo "keyPassword=moneyfly-ci-store-password"
+              echo "keyAlias=moneyfly-ci"
+            } > android/key.properties
+            echo "Using generated CI Android signing key. Add ANDROID_SIGNING_* secrets for production signing."
+          fi
+          chmod 600 android/*.jks android/key.properties
+
+      - name: Build APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/moneyfly-apk-cache
+          flutter build apk \
+            --release \
+            --target "${BUILD_TARGET}" \
+            --target-platform android-arm,android-arm64,android-x64 \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
+            --split-debug-info=build/debug-info/android/universal \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define=sentry_dsn=
+          cp build/app/outputs/flutter-apk/app-release.apk build/moneyfly-apk-cache/app-release.apk
+          flutter build apk \
+            --release \
+            --split-per-abi \
+            --target "${BUILD_TARGET}" \
+            --target-platform android-arm,android-arm64,android-x64 \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
+            --split-debug-info=build/debug-info/android/split \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define=sentry_dsn=
+
+      - name: Build AAB
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build appbundle \
+            --release \
+            --target "${BUILD_TARGET}" \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
+            --split-debug-info=build/debug-info/android/aab \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define=sentry_dsn=
+
+      - name: Collect Android artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/android
+          cp build/moneyfly-apk-cache/app-release.apk "artifacts/android/${APP_NAME}-Android-universal.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "artifacts/android/${APP_NAME}-Android-armeabi-v7a.apk"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "artifacts/android/${APP_NAME}-Android-arm64-v8a.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk "artifacts/android/${APP_NAME}-Android-x86_64.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "artifacts/android/${APP_NAME}-Android.aab"
+          for apk in artifacts/android/*.apk; do
+            "${ANDROID_HOME}/build-tools/36.0.0/apksigner" verify --verbose "$apk"
+          done
+          jarsigner -verify -certs "artifacts/android/${APP_NAME}-Android.aab"
+          ls -la artifacts/android
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: moneyfly-android
+          path: artifacts/android/*
+          retention-days: 14
+          overwrite: true
+
+  macos:
+    name: macOS
+    if: github.event_name != 'workflow_dispatch' || inputs.build_macos
+    needs: quality
+    runs-on: macos-15
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Prepare Flutter sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter --version
+          flutter config --enable-macos-desktop
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Download macOS core
+        shell: bash
+        run: |
+          set -euo pipefail
+          CORE_VERSION="$(grep '^core.version=' dependencies.properties | cut -d= -f2)"
+          CORE_URL="https://github.com/hiddify/hiddify-next-core/releases/download/v${CORE_VERSION}"
+          mkdir -p hiddify-core/bin
+          curl -L "${CORE_URL}/hiddify-lib-macos.tar.gz" | tar xz -C hiddify-core/bin
+          while IFS= read -r file; do
+            if file "${file}" | grep -q 'Mach-O'; then
+              strip -x "${file}" || true
+            fi
+          done < <(find hiddify-core/bin -type f)
+          ls -la hiddify-core/bin
+
+      - name: Build macOS app
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build macos \
+            --release \
+            --target "${BUILD_TARGET}" \
+            --build-name="${APP_VERSION}" \
+            --build-number="${GITHUB_RUN_NUMBER}" \
+            --split-debug-info=build/debug-info/macos \
+            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define=sentry_dsn=
+
+      - name: Collect macOS artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_PATH="build/macos/Build/Products/Release/${APP_NAME}.app"
+          if [[ ! -d "${APP_PATH}" ]]; then
+            APP_PATH="build/macos/Build/Products/Release/Hiddify.app"
+          fi
+          test -d "${APP_PATH}"
+          SOURCE_ICONSET="macos/Runner/Assets.xcassets/AppIcon.appiconset"
+          python3 scripts/rebuild_macos_icns.py "${SOURCE_ICONSET}" "${APP_PATH}/Contents/Resources/AppIcon.icns"
+          ICONSET_DIR="$(mktemp -d)"
+          iconutil -c iconset -o "${ICONSET_DIR}/AppIcon.iconset" "${APP_PATH}/Contents/Resources/AppIcon.icns"
+          find "${ICONSET_DIR}/AppIcon.iconset" -maxdepth 1 -type f -print
+          python3 - "${ICONSET_DIR}/AppIcon.iconset" <<'PY'
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          iconset = Path(sys.argv[1])
+          for png in iconset.glob("*.png"):
+              output = subprocess.check_output(
+                  ["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(png)],
+                  text=True,
+              )
+              if "pixelWidth: 1024" in output and "pixelHeight: 1024" in output:
+                  print(f"Found 1024x1024 icon: {png.name}")
+                  break
+          else:
+              raise SystemExit("AppIcon.icns does not contain a 1024x1024 bitmap")
+          PY
+          codesign --force --deep --sign - "${APP_PATH}" || true
+          mkdir -p artifacts/macos
+          DMG_DIR="$(mktemp -d)"
+          ditto "${APP_PATH}" "${DMG_DIR}/${APP_NAME}.app"
+          ln -s /Applications "${DMG_DIR}/Applications"
+          hdiutil create \
+            -volname "${APP_NAME}" \
+            -srcfolder "${DMG_DIR}" \
+            -ov \
+            -format UDZO \
+            -imagekey zlib-level=9 \
+            "artifacts/macos/${APP_NAME}-macOS-universal.dmg"
+          pkgbuild \
+            --install-location /Applications \
+            --component "${DMG_DIR}/${APP_NAME}.app" \
+            "artifacts/macos/${APP_NAME}-macOS-universal.pkg"
+          ls -la artifacts/macos
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moneyfly-macos
+          path: artifacts/macos/*
+          retention-days: 14
+          overwrite: true
+
+  windows:
+    name: Windows
+    if: github.event_name != 'workflow_dispatch' || inputs.build_windows
+    needs: quality
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Prepare Flutter sources
+        shell: pwsh
+        run: |
+          flutter --version
+          flutter config --enable-windows-desktop
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Download Windows core
+        shell: pwsh
+        run: |
+          $coreLine = Get-Content dependencies.properties | Where-Object { $_ -match '^core\.version=' } | Select-Object -First 1
+          $coreVersion = $coreLine.Split('=')[1].Trim()
+          $coreUrl = "https://github.com/hiddify/hiddify-next-core/releases/download/v$coreVersion"
+          New-Item -ItemType Directory -Path hiddify-core\bin -Force | Out-Null
+          curl.exe -L "$coreUrl/hiddify-lib-windows-amd64.tar.gz" -o hiddify-lib-windows-amd64.tar.gz
+          tar -xzf hiddify-lib-windows-amd64.tar.gz -C hiddify-core\bin
+          Get-ChildItem hiddify-core\bin
+
+      - name: Build Windows app
+        shell: pwsh
+        run: |
+          flutter build windows `
+            --release `
+            --target "${env:BUILD_TARGET}" `
+            --build-name="${env:APP_VERSION}" `
+            --build-number="${env:GITHUB_RUN_NUMBER}" `
+            --split-debug-info=build\debug-info\windows `
+            --dart-define="moneyfly_build_number=${env:GITHUB_RUN_NUMBER}" `
+            --dart-define=sentry_dsn=
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+
+      - name: Collect Windows artifacts
+        shell: pwsh
+        run: |
+          $releaseDir = "build\windows\x64\runner\Release"
+          $exePath = Join-Path $releaseDir "${env:APP_NAME}.exe"
+          if (!(Test-Path $exePath)) {
+            Get-ChildItem -Recurse build\windows | Select-Object FullName
+            throw "Windows release executable was not generated."
+          }
+          Get-ChildItem -Path $releaseDir -Recurse -Include *.pdb,*.exp,*.lib -File | Remove-Item -Force
+          New-Item -ItemType Directory -Path artifacts\windows -Force | Out-Null
+          7z a -tzip -mx=9 "artifacts\windows\${env:APP_NAME}-Windows-x64-Portable.zip" "$releaseDir\*" | Out-Host
+          $appVersion = "${env:APP_VERSION}"
+          $sourceDir = (Resolve-Path $releaseDir).Path
+          $outputDir = (Resolve-Path artifacts\windows).Path
+          $iconPath = (Resolve-Path "windows\runner\resources\app_icon.ico").Path
+          $issPath = Join-Path $env:RUNNER_TEMP "moneyfly-installer.iss"
+          @"
+          [Setup]
+          AppId={{A826F4E6-E142-4B9D-9F9D-17304829F2B1}
+          AppName=${env:APP_NAME}
+          AppVersion=$appVersion
+          AppPublisher=MoneyFly
+          AppPublisherURL=https://dy.moneyfly.top
+          AppSupportURL=https://dy.moneyfly.top
+          AppUpdatesURL=https://dy.moneyfly.top
+          DefaultDirName={autopf64}\MoneyFly
+          MinVersion=10.0
+          DisableProgramGroupPage=yes
+          OutputDir=$outputDir
+          OutputBaseFilename=${env:APP_NAME}-Windows-x64-Setup
+          Compression=lzma2
+          SolidCompression=yes
+          WizardStyle=modern
+          SetupIconFile=$iconPath
+          ArchitecturesAllowed=x64
+          ArchitecturesInstallIn64BitMode=x64
+          CloseApplications=force
+
+          [Languages]
+          Name: "english"; MessagesFile: "compiler:Default.isl"
+
+          [Tasks]
+          Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+
+          [Files]
+          Source: "$sourceDir\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+          [Icons]
+          Name: "{autoprograms}\${env:APP_NAME}"; Filename: "{app}\${env:APP_NAME}.exe"
+          Name: "{autodesktop}\${env:APP_NAME}"; Filename: "{app}\${env:APP_NAME}.exe"; Tasks: desktopicon
+
+          [Run]
+          Filename: "{app}\${env:APP_NAME}.exe"; Description: "{cm:LaunchProgram,${env:APP_NAME}}"; Flags: nowait postinstall skipifsilent
+
+          [UninstallDelete]
+          Type: filesandordirs; Name: "{userappdata}\MoneyFly"
+
+          [Code]
+          function InitializeSetup(): Boolean;
+          var
+            ResultCode: Integer;
+          begin
+            Exec('taskkill', '/F /IM MoneyFly.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('taskkill', '/F /IM hiddify.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('net', 'stop "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('sc.exe', 'delete "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Result := True;
+          end;
+          "@ | Set-Content -Path $issPath -Encoding UTF8
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) {
+            $iscc = "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc $issPath
+          Get-ChildItem artifacts\windows
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moneyfly-windows
+          path: artifacts/windows/*
+          retention-days: 14
+          overwrite: true
+
+  publish:
+    name: Publish Release
+    needs:
+      - android
+      - macos
+      - windows
+    if: ${{ always() && !cancelled() && !failure() && (github.event_name != 'workflow_dispatch' || inputs.publish_release) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          find release-assets -maxdepth 2 -type f -print
+          RELEASE_VERSION="${APP_VERSION}+${GITHUB_RUN_NUMBER}"
+          TAG="v${RELEASE_VERSION}"
+          cat > release-notes.md <<EOF
+          MoneyFly ${RELEASE_VERSION} automated build from commit ${GITHUB_SHA}.
+
+          Assets:
+          - MoneyFly-Android-arm64-v8a.apk: smaller Android package for most modern phones
+          - MoneyFly-Android-armeabi-v7a.apk: smaller Android package for older 32-bit phones
+          - MoneyFly-Android-x86_64.apk: Android package for x86_64 devices/emulators
+          - MoneyFly-Android-universal.apk: larger Android package containing all CPU architectures
+          - MoneyFly-Android.aab: Android App Bundle for store upload
+          - MoneyFly-macOS-universal.dmg: macOS drag-and-drop installer for Intel and Apple Silicon when supported by the bundled core
+          - MoneyFly-macOS-universal.pkg: macOS package installer
+          - MoneyFly-Windows-x64-Setup.exe: Windows 10/11 x64 installer
+          - MoneyFly-Windows-x64-Portable.zip: Windows 10/11 x64 portable package
+          - SHA256SUMS.txt: checksums for all release assets
+
+          Note: Windows 7/8 are not supported by the current Flutter 3.38.5 desktop toolchain.
+          EOF
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          app_version = os.environ["APP_VERSION"]
+          build_number = os.environ["GITHUB_RUN_NUMBER"]
+          major, minor, _ = app_version.split(".", 2)
+          version = f"{major}.{minor}.{build_number}"
+          appcast = Path("appcast.xml")
+          text = appcast.read_text()
+          import re
+          text = re.sub(r"<title>Version [^<]+</title>", f"<title>Version {version}</title>", text)
+          text = re.sub(r'sparkle:version="[^"]+"', f'sparkle:version="{version}"', text)
+          appcast.write_text(text)
+          PY
+          cp appcast.xml release-assets/appcast.xml
+          (cd release-assets && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
+          gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || true
+          gh release create "${TAG}" \
+            release-assets/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "MoneyFly ${RELEASE_VERSION}" \
+            --notes-file release-notes.md \
+            --latest

@@ -1,1 +1,58 @@
-IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwppbXBvcnQgc3RydWN0CmltcG9ydCBzeXMKZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgoKSUNOU19FTlRSSUVTID0gWwogICAgKCJpY3A0IiwgImFwcF9pY29uXzE2LnBuZyIsIDE2LCAxNiksCiAgICAoImljMTEiLCAiYXBwX2ljb25fMTZAMngucG5nIiwgMzIsIDMyKSwKICAgICgiaWNwNSIsICJhcHBfaWNvbl8zMi5wbmciLCAzMiwgMzIpLAogICAgKCJpYzEyIiwgImFwcF9pY29uXzY0LnBuZyIsIDY0LCA2NCksCiAgICAoImljMDciLCAiYXBwX2ljb25fMTI4LnBuZyIsIDEyOCwgMTI4KSwKICAgICgiaWMxMyIsICJhcHBfaWNvbl8xMjhAMngucG5nIiwgMjU2LCAyNTYpLAogICAgKCJpYzA4IiwgImFwcF9pY29uXzI1Ni5wbmciLCAyNTYsIDI1NiksCiAgICAoImljMTQiLCAiYXBwX2ljb25fMjU2QDJ4LnBuZyIsIDUxMiwgNTEyKSwKICAgICgiaWMwOSIsICJhcHBfaWNvbl81MTIucG5nIiwgNTEyLCA1MTIpLAogICAgKCJpYzEwIiwgImFwcF9pY29uXzEwMjQucG5nIiwgMTAyNCwgMTAyNCksCl0KClBOR19TSUdOQVRVUkUgPSBiIlx4ODlQTkdcclxuXHgxYVxuIgoKCmRlZiByZWFkX3BuZ193aXRoX3NpemUocGF0aDogUGF0aCwgZXhwZWN0ZWRfd2lkdGg6IGludCwgZXhwZWN0ZWRfaGVpZ2h0OiBpbnQpIC0+IGJ5dGVzOgogICAgZGF0YSA9IHBhdGgucmVhZF9ieXRlcygpCiAgICBpZiBsZW4oZGF0YSkgPCAyNCBvciBub3QgZGF0YS5zdGFydHN3aXRoKFBOR19TSUdOQVRVUkUpIG9yIGRhdGFbMTI6MTZdICE9IGIiSUhEUiI6CiAgICAgICAgcmFpc2UgVmFsdWVFcnJvcihmIntwYXRofSBpcyBub3QgYSB2YWxpZCBQTkciKQoKICAgIHdpZHRoLCBoZWlnaHQgPSBzdHJ1Y3QudW5wYWNrKCI+SUkiLCBkYXRhWzE2OjI0XSkKICAgIGlmICh3aWR0aCwgaGVpZ2h0KSAhPSAoZXhwZWN0ZWRfd2lkdGgsIGV4cGVjdGVkX2hlaWdodCk6CiAgICAgICAgcmFpc2UgVmFsdWVFcnJvcigKICAgICAgICAgICAgZiJ7cGF0aH0gbXVzdCBiZSB7ZXhwZWN0ZWRfd2lkdGh9eHtleHBlY3RlZF9oZWlnaHR9LCBnb3Qge3dpZHRofXh7aGVpZ2h0fSIKICAgICAgICApCiAgICByZXR1cm4gZGF0YQoKCmRlZiByZWJ1aWxkX2ljbnMoc291cmNlX2ljb25zZXQ6IFBhdGgsIG91dHB1dF9maWxlOiBQYXRoKSAtPiBOb25lOgogICAgY2h1bmtzID0gW10KICAgIGZvciBpY29uX3R5cGUsIGZpbGVuYW1lLCB3aWR0aCwgaGVpZ2h0IGluIElDTlNfRU5UUklFUzoKICAgICAgICBkYXRhID0gcmVhZF9wbmdfd2l0aF9zaXplKHNvdXJjZV9pY29uc2V0IC8gZmlsZW5hbWUsIHdpZHRoLCBoZWlnaHQpCiAgICAgICAgY2h1bmtzLmFwcGVuZChpY29uX3R5cGUuZW5jb2RlKCJhc2NpaSIpICsgc3RydWN0LnBhY2soIj5JIiwgbGVuKGRhdGEpICsgOCkgKyBkYXRhKQoKICAgIG91dHB1dF9maWxlLnBhcmVudC5ta2RpcihwYXJlbnRzPVRydWUsIGV4aXN0X29rPVRydWUpCiAgICBvdXRwdXRfZmlsZS53cml0ZV9ieXRlcygKICAgICAgICBiImljbnMiICsgc3RydWN0LnBhY2soIj5JIiwgOCArIHN1bShsZW4oY2h1bmspIGZvciBjaHVuayBpbiBjaHVua3MpKSArIGIiIi5qb2luKGNodW5rcykKICAgICkKCgpkZWYgbWFpbigpIC0+IGludDoKICAgIGlmIGxlbihzeXMuYXJndikgIT0gMzoKICAgICAgICBwcmludCgiVXNhZ2U6IHJlYnVpbGRfbWFjb3NfaWNucy5weSA8QXBwSWNvbi5hcHBpY29uc2V0PiA8b3V0cHV0LmljbnM+IiwgZmlsZT1zeXMuc3RkZXJyKQogICAgICAgIHJldHVybiAyCgogICAgcmVidWlsZF9pY25zKFBhdGgoc3lzLmFyZ3ZbMV0pLCBQYXRoKHN5cy5hcmd2WzJdKSkKICAgIHJldHVybiAwCgoKaWYgX19uYW1lX18gPT0gIl9fbWFpbl9fIjoKICAgIHJhaXNlIFN5c3RlbUV4aXQobWFpbigpKQo=
+#!/usr/bin/env python3
+import struct
+import sys
+from pathlib import Path
+
+
+ICNS_ENTRIES = [
+    ("icp4", "app_icon_16.png", 16, 16),
+    ("ic11", "app_icon_16@2x.png", 32, 32),
+    ("icp5", "app_icon_32.png", 32, 32),
+    ("ic12", "app_icon_64.png", 64, 64),
+    ("ic07", "app_icon_128.png", 128, 128),
+    ("ic13", "app_icon_128@2x.png", 256, 256),
+    ("ic08", "app_icon_256.png", 256, 256),
+    ("ic14", "app_icon_256@2x.png", 512, 512),
+    ("ic09", "app_icon_512.png", 512, 512),
+    ("ic10", "app_icon_1024.png", 1024, 1024),
+]
+
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
+def read_png_with_size(path: Path, expected_width: int, expected_height: int) -> bytes:
+    data = path.read_bytes()
+    if len(data) < 24 or not data.startswith(PNG_SIGNATURE) or data[12:16] != b"IHDR":
+        raise ValueError(f"{path} is not a valid PNG")
+
+    width, height = struct.unpack(">II", data[16:24])
+    if (width, height) != (expected_width, expected_height):
+        raise ValueError(
+            f"{path} must be {expected_width}x{expected_height}, got {width}x{height}"
+        )
+    return data
+
+
+def rebuild_icns(source_iconset: Path, output_file: Path) -> None:
+    chunks = []
+    for icon_type, filename, width, height in ICNS_ENTRIES:
+        data = read_png_with_size(source_iconset / filename, width, height)
+        chunks.append(icon_type.encode("ascii") + struct.pack(">I", len(data) + 8) + data)
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_bytes(
+        b"icns" + struct.pack(">I", 8 + sum(len(chunk) for chunk in chunks)) + b"".join(chunks)
+    )
+
+
+def main() -> int:
+    if len(sys.argv) != 3:
+        print("Usage: rebuild_macos_icns.py <AppIcon.appiconset> <output.icns>", file=sys.stderr)
+        return 2
+
+    rebuild_icns(Path(sys.argv[1]), Path(sys.argv[2]))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
