@@ -19,10 +19,10 @@ on:
         type: boolean
         default: true
       build_windows7:
-        description: Attempt Windows 7 legacy package after compatibility checks
+        description: Build Windows 7 legacy setup and portable packages
         required: true
         type: boolean
-        default: false
+        default: true
       publish_release:
         description: Publish build files to GitHub Releases
         required: true
@@ -502,7 +502,7 @@ jobs:
             --markdown artifacts\windows7-check\Windows7-Compatibility.md
 
       - name: Build Windows 7 legacy package
-        if: github.event_name == 'workflow_dispatch' && inputs.build_windows7
+        if: github.event_name != 'workflow_dispatch' || inputs.build_windows7
         shell: pwsh
         run: |
           python scripts\prepare_windows7_legacy_plugins.py
@@ -668,9 +668,13 @@ jobs:
           - MoneyFly-macOS-universal.pkg: macOS package installer
           - MoneyFly-Windows-x64-Setup.exe: Windows 10/11 x64 installer
           - MoneyFly-Windows-x64-Portable.zip: Windows 10/11 x64 portable package
-          - MoneyFly-Windows7-x64-Setup.exe: optional Windows 7 legacy installer, only produced when workflow_dispatch build_windows7 passes
-          - MoneyFly-Windows7-x64-Portable.zip: optional Windows 7 legacy portable package, only produced when workflow_dispatch build_windows7 passes
+          - MoneyFly-Windows7-x64-Setup.exe: Windows 7 SP1 x64 legacy installer
+          - MoneyFly-Windows7-x64-Portable.zip: Windows 7 SP1 x64 legacy portable package
           - SHA256SUMS.txt: checksums for all release assets
+
+          Windows 7 legacy downloads:
+          - Installer: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/MoneyFly-Windows7-x64-Setup.exe
+          - Portable ZIP: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/MoneyFly-Windows7-x64-Portable.zip
 
           Note: Windows 7/8 are not supported by the current Flutter 3.38.5 desktop toolchain. The Windows 7 legacy package is gated by static compatibility checks and still requires runtime verification in a real Windows 7 SP1 VM.
           EOF
