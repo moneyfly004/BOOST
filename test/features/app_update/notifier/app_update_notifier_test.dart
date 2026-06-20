@@ -14,6 +14,58 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  group('isRemoteVersionNewer', () {
+    test('does not report an update for the same semantic version and build number', () {
+      final remoteVersion = RemoteVersionEntity(
+        version: '1.0.0',
+        buildNumber: '25',
+        releaseTag: 'v1.0.0+25',
+        preRelease: false,
+        url: 'https://github.com/moneyfly004/cboard/releases/tag/v1.0.0+25',
+        publishedAt: DateTime(2026, 6, 20),
+        flavor: Environment.prod,
+      );
+
+      expect(isRemoteVersionNewer(remote: remoteVersion, currentVersion: '1.0.0', currentBuildNumber: '25'), isFalse);
+    });
+
+    test('reports an update only when the remote build number is greater', () {
+      final remoteVersion = RemoteVersionEntity(
+        version: '1.0.0',
+        buildNumber: '26',
+        releaseTag: 'v1.0.0+26',
+        preRelease: false,
+        url: 'https://github.com/moneyfly004/cboard/releases/tag/v1.0.0+26',
+        publishedAt: DateTime(2026, 6, 20),
+        flavor: Environment.prod,
+      );
+
+      expect(isRemoteVersionNewer(remote: remoteVersion, currentVersion: '1.0.0', currentBuildNumber: '25'), isTrue);
+    });
+
+    test('uses the compiled MoneyFly build number when package build metadata is stale', () {
+      final remoteVersion = RemoteVersionEntity(
+        version: '1.0.0',
+        buildNumber: '25',
+        releaseTag: 'v1.0.0+25',
+        preRelease: false,
+        url: 'https://github.com/moneyfly004/cboard/releases/tag/v1.0.0+25',
+        publishedAt: DateTime(2026, 6, 20),
+        flavor: Environment.prod,
+      );
+
+      expect(
+        isRemoteVersionNewer(
+          remote: remoteVersion,
+          currentVersion: '1.0.0',
+          currentBuildNumber: '1',
+          compiledBuildNumber: 25,
+        ),
+        isFalse,
+      );
+    });
+  });
+
   test('check reports an available update for a newer semantic build number', () async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();

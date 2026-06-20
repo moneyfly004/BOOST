@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:accessibility_tools/accessibility_tools.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
@@ -25,7 +27,6 @@ import 'package:hiddify/hiddifycore/hiddify_core_service_provider.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:toastification/toastification.dart';
-import 'package:upgrader/upgrader.dart';
 
 bool _debugAccessibility = false;
 bool isOnPauseCalled = false;
@@ -46,6 +47,14 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
   void onResume(WidgetRef ref) {
     // if (PlatformUtils.isDesktop) return;
     ref.read(hiddifyCoreServiceProvider).init();
+    unawaited(
+      ref.read(foregroundProfilesUpdateNotifierProvider.notifier).trigger().catchError((
+        Object error,
+        StackTrace stackTrace,
+      ) {
+        loggy.warning("resume profile refresh failed", error, stackTrace);
+      }),
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (isOnPauseCalled && PlatformUtils.isAndroid) ref.invalidate(perAppProxyServiceProvider);
@@ -60,7 +69,6 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
     final locale = ref.watch(localePreferencesProvider);
     final themeMode = ref.watch(themePreferencesProvider);
     final theme = AppTheme(themeMode, locale.preferredFontFamily);
-    final upgrader = ref.watch(upgraderProvider);
     final activeBreakpoint = Breakpoint(context).activeBreakpoint;
 
     ref.listen(foregroundProfilesUpdateNotifierProvider, (_, _) {});
@@ -82,6 +90,11 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
           await ref.read(appUpdateNotifierProvider.notifier).check();
         } catch (error, stackTrace) {
           loggy.warning("background update check failed", error, stackTrace);
+        }
+        try {
+          await ref.read(foregroundProfilesUpdateNotifierProvider.notifier).trigger();
+        } catch (error, stackTrace) {
+          loggy.warning("startup profile refresh failed", error, stackTrace);
         }
       });
       return null;
@@ -105,11 +118,7 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
                   title: Constants.appName,
                   builder: (context, child) {
                     final theme = Theme.of(context);
-                    child = UpgradeAlert(
-                      upgrader: upgrader,
-                      navigatorKey: router.routerDelegate.navigatorKey,
-                      child: child ?? const SizedBox(),
-                    );
+                    child = child ?? const SizedBox();
                     if (kDebugMode && _debugAccessibility) {
                       return AccessibilityTools(checkFontOverflows: true, child: child);
                     }
@@ -132,68 +141,6 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
       ),
     );
   }
-
-  // @override
-  // Widget build1(BuildContext context, WidgetRef ref) {
-  //   setupStateListener(ref);
-  //   // setupQuickSettings(ref);
-  //   final router = ref.watch(routerProvider);
-  //   final locale = ref.watch(localePreferencesProvider);
-  //   final themeMode = ref.watch(themePreferencesProvider);
-  //   final theme = AppTheme(themeMode, locale.preferredFontFamily);
-  //   final upgrader = ref.watch(upgraderProvider);
-
-  //   ref.listen(foregroundProfilesUpdateNotifierProvider, (_, __) {});
-
-  //   return WindowWrapper(
-  //     TrayWrapper(
-  //       ShortcutWrapper(
-  //         ConnectionWrapper(
-  //           PlatformProvider(
-  //               settings: PlatformSettingsData(
-  //                 iosUsesMaterialWidgets: true,
-  //               ),
-  //               builder: (context) => DynamicColorBuilder(
-  //                     builder: (ColorScheme? lightColorScheme, ColorScheme? darkColorScheme) {
-  //                       return PlatformApp.router(
-  //                         routerConfig: router,
-  //                         locale: locale.flutterLocale,
-  //                         supportedLocales: AppLocaleUtils.supportedLocales,
-  //                         localizationsDelegates: GlobalMaterialLocalizations.delegates,
-  //                         debugShowCheckedModeBanner: false,
-  //                         material: (context, platform) => MaterialAppRouterData(
-  //                           theme: theme.lightTheme(lightColorScheme),
-  //                           darkTheme: theme.darkTheme(darkColorScheme),
-  //                           themeMode: themeMode.flutterThemeMode,
-  //                         ),
-  //                         cupertino: (context, platform) {
-  //                           final sysDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
-
-  //                           return CupertinoAppRouterData(theme: theme.cupertinoThemeData(sysDark, lightColorScheme, darkColorScheme));
-  //                         },
-  //                         title: Constants.appName,
-  //                         builder: (context, child) {
-  //                           child = UpgradeAlert(
-  //                             upgrader: upgrader,
-  //                             navigatorKey: router.routerDelegate.navigatorKey,
-  //                             child: child ?? const SizedBox(),
-  //                           );
-  //                           if (kDebugMode && _debugAccessibility) {
-  //                             return AccessibilityTools(
-  //                               checkFontOverflows: true,
-  //                               child: child,
-  //                             );
-  //                           }
-  //                           return child;
-  //                         },
-  //                       );
-  //                     },
-  //                   )),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   void setupStateListener(WidgetRef ref) {
     final appLifecycleState = useAppLifecycleState();

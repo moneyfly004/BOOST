@@ -48,15 +48,31 @@ class ForegroundProfilesUpdateNotifier extends _$ForegroundProfilesUpdateNotifie
 
   NeatPeriodicTaskScheduler? _scheduler;
   bool _forceNextRun = false;
+  Future<void>? _runningUpdate;
 
   Future<void> trigger() async {
     loggy.debug("triggering update");
     _forceNextRun = true;
-    await _scheduler?.trigger();
+    if (_scheduler != null) {
+      await _scheduler?.trigger();
+    } else {
+      await updateProfiles();
+    }
   }
 
   @visibleForTesting
   Future<void> updateProfiles() async {
+    if (_runningUpdate case final running?) return running;
+    final run = _updateProfiles();
+    _runningUpdate = run;
+    try {
+      await run;
+    } finally {
+      _runningUpdate = null;
+    }
+  }
+
+  Future<void> _updateProfiles() async {
     var force = false;
     if (_forceNextRun) {
       force = true;

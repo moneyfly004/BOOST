@@ -683,14 +683,11 @@ jobs:
           from pathlib import Path
 
           app_version = os.environ["APP_VERSION"]
-          build_number = os.environ["GITHUB_RUN_NUMBER"]
-          major, minor, _ = app_version.split(".", 2)
-          version = f"{major}.{minor}.{build_number}"
           appcast = Path("appcast.xml")
           text = appcast.read_text()
           import re
-          text = re.sub(r"<title>Version [^<]+</title>", f"<title>Version {version}</title>", text)
-          text = re.sub(r'sparkle:version="[^"]+"', f'sparkle:version="{version}"', text)
+          text = re.sub(r"<title>Version [^<]+</title>", f"<title>Version {app_version}</title>", text)
+          text = re.sub(r'sparkle:version="[^"]+"', f'sparkle:version="{app_version}"', text)
           appcast.write_text(text)
           PY
           cp appcast.xml release-assets/appcast.xml
