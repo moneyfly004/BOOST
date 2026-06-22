@@ -44,13 +44,64 @@ concurrency:
 
 env:
   APP_NAME: "MoneyFly"
-  APP_VERSION: "1.0.0"
   FLUTTER_VERSION: "3.38.5"
   JAVA_VERSION: "17"
   ANDROID_NDK_VERSION: "28.2.13676358"
   BUILD_TARGET: "lib/main.dart"
 
 jobs:
+  version:
+    name: Resolve Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app_version: ${{ steps.resolve.outputs.app_version }}
+      app_build_number: ${{ steps.resolve.outputs.app_build_number }}
+      release_tag: ${{ steps.resolve.outputs.release_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve next patch version
+        id: resolve
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          base_version="$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+          if [[ ! "${base_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid base version in pubspec.yaml: ${base_version}" >&2
+            exit 1
+          fi
+
+          release_tags="$(
+            gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+              --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name'
+          )"
+          latest_version="$(printf '%s\n' "${release_tags}" | sed -nE 's/^v([0-9]+\.[0-9]+\.[0-9]+)(\+.*)?$/\1/p' | head -n 1)"
+
+          if [[ -n "${latest_version}" ]]; then
+            IFS=. read -r major minor patch <<< "${latest_version}"
+            patch=$((patch + 1))
+            app_version="${major}.${minor}.${patch}"
+          else
+            app_version="${base_version}"
+            IFS=. read -r major minor patch <<< "${app_version}"
+          fi
+
+          app_build_number=$((major * 10000 + minor * 100 + patch))
+          release_tag="v${app_version}"
+
+          {
+            echo "app_version=${app_version}"
+            echo "app_build_number=${app_build_number}"
+            echo "release_tag=${release_tag}"
+          } >> "${GITHUB_OUTPUT}"
+
+          echo "Resolved MoneyFly version ${app_version} (${app_build_number})."
+
   quality:
     name: Quality
     runs-on: ubuntu-latest
@@ -87,9 +138,14 @@ jobs:
   android:
     name: Android
     if: github.event_name != 'workflow_dispatch' || inputs.build_android
-    needs: quality
+    needs:
+      - version
+      - quality
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      APP_VERSION: ${{ needs.version.outputs.app_version }}
+      APP_BUILD_NUMBER: ${{ needs.version.outputs.app_build_number }}
 
     steps:
       - name: Checkout
@@ -190,9 +246,9 @@ jobs:
             --target "${BUILD_TARGET}" \
             --target-platform android-arm,android-arm64,android-x64 \
             --build-name="${APP_VERSION}" \
-            --build-number="${GITHUB_RUN_NUMBER}" \
+            --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/android/universal \
-            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
           cp build/app/outputs/flutter-apk/app-release.apk build/moneyfly-apk-cache/app-release.apk
           flutter build apk \
@@ -201,9 +257,9 @@ jobs:
             --target "${BUILD_TARGET}" \
             --target-platform android-arm,android-arm64,android-x64 \
             --build-name="${APP_VERSION}" \
-            --build-number="${GITHUB_RUN_NUMBER}" \
+            --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/android/split \
-            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Build AAB
@@ -214,9 +270,9 @@ jobs:
             --release \
             --target "${BUILD_TARGET}" \
             --build-name="${APP_VERSION}" \
-            --build-number="${GITHUB_RUN_NUMBER}" \
+            --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/android/aab \
-            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Collect Android artifacts
@@ -246,9 +302,14 @@ jobs:
   macos:
     name: macOS
     if: github.event_name != 'workflow_dispatch' || inputs.build_macos
-    needs: quality
+    needs:
+      - version
+      - quality
     runs-on: macos-15
     timeout-minutes: 90
+    env:
+      APP_VERSION: ${{ needs.version.outputs.app_version }}
+      APP_BUILD_NUMBER: ${{ needs.version.outputs.app_build_number }}
 
     steps:
       - name: Checkout
@@ -294,9 +355,9 @@ jobs:
             --release \
             --target "${BUILD_TARGET}" \
             --build-name="${APP_VERSION}" \
-            --build-number="${GITHUB_RUN_NUMBER}" \
+            --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/macos \
-            --dart-define="moneyfly_build_number=${GITHUB_RUN_NUMBER}" \
+            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Collect macOS artifacts
@@ -359,9 +420,14 @@ jobs:
   windows:
     name: Windows
     if: github.event_name != 'workflow_dispatch' || inputs.build_windows || inputs.build_windows7
-    needs: quality
+    needs:
+      - version
+      - quality
     runs-on: windows-latest
     timeout-minutes: 90
+    env:
+      APP_VERSION: ${{ needs.version.outputs.app_version }}
+      APP_BUILD_NUMBER: ${{ needs.version.outputs.app_build_number }}
 
     steps:
       - name: Checkout
@@ -401,9 +467,9 @@ jobs:
             --release `
             --target "${env:BUILD_TARGET}" `
             --build-name="${env:APP_VERSION}" `
-            --build-number="${env:GITHUB_RUN_NUMBER}" `
+            --build-number="${env:APP_BUILD_NUMBER}" `
             --split-debug-info=build\debug-info\windows `
-            --dart-define="moneyfly_build_number=${env:GITHUB_RUN_NUMBER}" `
+            --dart-define="moneyfly_build_number=${env:APP_BUILD_NUMBER}" `
             --dart-define=sentry_dsn=
 
       - name: Install Inno Setup
@@ -515,9 +581,9 @@ jobs:
             --no-pub `
             --target "${env:BUILD_TARGET}" `
             --build-name="${env:APP_VERSION}" `
-            --build-number="${env:GITHUB_RUN_NUMBER}" `
+            --build-number="${env:APP_BUILD_NUMBER}" `
             --split-debug-info=build\debug-info\windows7 `
-            --dart-define="moneyfly_build_number=${env:GITHUB_RUN_NUMBER}" `
+            --dart-define="moneyfly_build_number=${env:APP_BUILD_NUMBER}" `
             --dart-define=sentry_dsn=
 
           $releaseDir = "build\windows\x64\runner\Release"
@@ -623,12 +689,17 @@ jobs:
   publish:
     name: Publish Release
     needs:
+      - version
       - android
       - macos
       - windows
     if: ${{ always() && !cancelled() && !failure() && (github.event_name != 'workflow_dispatch' || inputs.publish_release) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      APP_VERSION: ${{ needs.version.outputs.app_version }}
+      APP_BUILD_NUMBER: ${{ needs.version.outputs.app_build_number }}
+      RELEASE_TAG: ${{ needs.version.outputs.release_tag }}
 
     steps:
       - name: Checkout
@@ -653,10 +724,12 @@ jobs:
             -name 'windows7-legacy-compatibility.json' \
           \) -delete
           find release-assets -maxdepth 2 -type f -print
-          RELEASE_VERSION="${APP_VERSION}+${GITHUB_RUN_NUMBER}"
-          TAG="v${RELEASE_VERSION}"
+          RELEASE_VERSION="${APP_VERSION}"
+          TAG="${RELEASE_TAG}"
           cat > release-notes.md <<EOF
           MoneyFly ${RELEASE_VERSION} automated build from commit ${GITHUB_SHA}.
+
+          Build number: ${APP_BUILD_NUMBER}
 
           Assets:
           - MoneyFly-Android-arm64-v8a.apk: smaller Android package for most modern phones
@@ -679,14 +752,18 @@ jobs:
           Note: Windows 7/8 are not supported by the current Flutter 3.38.5 desktop toolchain. The Windows 7 legacy package is gated by static compatibility checks and still requires runtime verification in a real Windows 7 SP1 VM.
           EOF
           python3 - <<'PY'
+          import datetime
+          import email.utils
           import os
           from pathlib import Path
 
           app_version = os.environ["APP_VERSION"]
+          pub_date = email.utils.format_datetime(datetime.datetime.now(datetime.timezone.utc), usegmt=True)
           appcast = Path("appcast.xml")
           text = appcast.read_text()
           import re
           text = re.sub(r"<title>Version [^<]+</title>", f"<title>Version {app_version}</title>", text)
+          text = re.sub(r"<pubDate>[^<]+</pubDate>", f"<pubDate>{pub_date}</pubDate>", text)
           text = re.sub(r'sparkle:version="[^"]+"', f'sparkle:version="{app_version}"', text)
           appcast.write_text(text)
           PY

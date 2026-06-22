@@ -57,9 +57,9 @@ void main() {
 
     test("parses MoneyFly semantic release version", () {
       final release = GithubReleaseParser.parse({
-        "tag_name": "v1.0.0+26",
+        "tag_name": "v1.0.1",
         "prerelease": false,
-        "html_url": "https://github.com/moneyfly004/cboard/releases/tag/v1.0.0+26",
+        "html_url": "https://github.com/moneyfly004/cboard/releases/tag/v1.0.1",
         "published_at": "2026-06-18T00:00:00Z",
         "assets": [
           {
@@ -81,12 +81,12 @@ void main() {
         ],
       });
 
-      expect(release.version, "1.0.0");
-      expect(release.buildNumber, "26");
-      expect(release.releaseTag, "v1.0.0+26");
+      expect(release.version, "1.0.1");
+      expect(release.buildNumber, "");
+      expect(release.releaseTag, "v1.0.1");
       expect(release.flavor, Environment.prod);
       expect(release.automatedBuildNumber, isNull);
-      expect(release.presentVersion, "1.0.0 (26)");
+      expect(release.presentVersion, "1.0.1");
       expect(release.downloadUrl, isNotNull);
       expect(release.updateUrl, contains("MoneyFly-"));
     });

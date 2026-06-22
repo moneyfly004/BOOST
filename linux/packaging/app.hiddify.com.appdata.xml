@@ -71,7 +71,7 @@
   </provides>
 
   <releases>
-    <release version="1.0.0" date="2025-10-25">
+    <release version="1.0.1" date="2026-06-22">
       <description>
         <p>Initial Linux release of Hiddify with multi-protocol support and modern UI.</p>
       </description>

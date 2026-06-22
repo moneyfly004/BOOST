@@ -43,6 +43,20 @@ void main() {
       expect(isRemoteVersionNewer(remote: remoteVersion, currentVersion: '1.0.0', currentBuildNumber: '25'), isTrue);
     });
 
+    test('reports an update when the remote patch version is greater', () {
+      final remoteVersion = RemoteVersionEntity(
+        version: '1.0.1',
+        buildNumber: '',
+        releaseTag: 'v1.0.1',
+        preRelease: false,
+        url: 'https://github.com/moneyfly004/cboard/releases/tag/v1.0.1',
+        publishedAt: DateTime(2026, 6, 22),
+        flavor: Environment.prod,
+      );
+
+      expect(isRemoteVersionNewer(remote: remoteVersion, currentVersion: '1.0.0', currentBuildNumber: '10000'), isTrue);
+    });
+
     test('uses the compiled MoneyFly build number when package build metadata is stale', () {
       final remoteVersion = RemoteVersionEntity(
         version: '1.0.0',
