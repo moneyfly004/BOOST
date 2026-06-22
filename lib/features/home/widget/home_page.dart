@@ -114,7 +114,7 @@ class HomePage extends HookConsumerWidget {
                                 ),
                               ),
                               ActiveProxyFooter(),
-                              Gap(32),
+                              Gap(84),
                             ],
                           ),
                         ),
@@ -135,31 +135,26 @@ class HomePage extends HookConsumerWidget {
               Positioned(
                 right: 0,
                 left: 0,
-                bottom: 0,
+                bottom: 20,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Material(
                       color: theme.colorScheme.primaryContainer,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      elevation: 2,
                       child: InkWell(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
+                        borderRadius: BorderRadius.circular(20),
                         onTap: () => ref.read(bottomSheetsNotifierProvider.notifier).showQuickSettings(),
                         child: Container(
-                          height: 32,
-                          padding: const EdgeInsetsDirectional.only(start: 16, end: 8),
+                          constraints: const BoxConstraints(minHeight: 44),
+                          padding: const EdgeInsetsDirectional.only(start: 18, end: 12),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(t.pages.home.quickSettings),
-                              const Gap(4),
-                              const Icon(Icons.arrow_drop_up_rounded, size: 16),
+                              const Gap(6),
+                              const Icon(Icons.swap_horiz_rounded, size: 18),
                             ],
                           ),
                         ),
@@ -214,18 +209,35 @@ class _AccountSubscriptionOverview extends ConsumerWidget {
                 ],
               ),
               const Gap(12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
+              Column(
                 children: [
-                  _InfoPill(label: '状态', value: _statusText(subscription?.status ?? 'none')),
-                  _InfoPill(label: '到期时间', value: subscription?.expireTime ?? '未开通'),
-                  _InfoPill(
-                    label: '在线设备',
-                    value:
-                        '${subscription?.onlineDevices ?? subscription?.currentDevices ?? 0}/${subscription?.deviceLimit ?? 0}',
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _InfoPill(label: '状态', value: _statusText(subscription?.status ?? 'none')),
+                      ),
+                      const Gap(10),
+                      Expanded(
+                        child: _InfoPill(label: '到期时间', value: subscription?.expireTime ?? '未开通'),
+                      ),
+                    ],
                   ),
-                  _InfoPill(label: '剩余天数', value: '${subscription?.remainingDays ?? 0} 天'),
+                  const Gap(10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _InfoPill(
+                          label: '在线设备',
+                          value:
+                              '${subscription?.onlineDevices ?? subscription?.currentDevices ?? 0}/${subscription?.deviceLimit ?? 0}',
+                        ),
+                      ),
+                      const Gap(10),
+                      Expanded(
+                        child: _InfoPill(label: '剩余天数', value: '${subscription?.remainingDays ?? 0} 天'),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],
@@ -245,24 +257,21 @@ class _InfoPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
-      width: 132,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-              const Gap(2),
-              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelLarge),
-            ],
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const Gap(2),
+            Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.labelLarge),
+          ],
         ),
       ),
     );

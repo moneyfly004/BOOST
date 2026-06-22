@@ -99,7 +99,7 @@
   "pages": {
     "home": {
       "title": "主页",
-      "quickSettings": "快速设置选项"
+      "quickSettings": "模式切换"
     },
     "proxies": {
       "title": "代理",

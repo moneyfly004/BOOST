@@ -99,7 +99,7 @@
   "pages": {
     "home": {
       "title": "Home",
-      "quickSettings": "Quick setting options"
+      "quickSettings": "Mode switch"
     },
     "proxies": {
       "title": "Proxies",
