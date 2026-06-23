@@ -728,6 +728,7 @@ jobs:
           - Added an always-available logout action for signed-in accounts.
           - Added remembered account login so BOOST can automatically sign in again after restart unless the user logs out manually.
           - Clears account-owned subscription profiles when the app exits or leaves the foreground, then downloads fresh backend-approved profiles on the next automatic login.
+          - Refreshes the account subscription again when the mobile app returns to the foreground after cleanup.
           - Improved account subscription downloads so the backend can register the current device instead of treating the request as a browser visit.
           - Kept release artifacts out of the source repository. Release files are generated only by GitHub Actions.
 
@@ -738,6 +739,7 @@ jobs:
           - Fixed logout so BOOST clears local account state and account-owned subscription profiles even if the remote logout request fails.
           - Fixed automatic account recovery by falling back to saved login credentials when stored access or refresh tokens expire.
           - Fixed stale account profile retention so expired, disabled, or over-limit accounts cannot keep using an old local account subscription after app exit.
+          - Fixed mobile foreground recovery so subscription cleanup is followed by a fresh account refresh instead of leaving the profile list empty.
           - Fixed profile import for account subscription URLs by using app User-Agent headers that the backend device tracker accepts.
           - Fixed subscription URL detection for the new.moneyfly.top v2 backend while preserving the existing behavior for external subscription links.
           - Added focused tests for v2 account API parsing, account auto-login, account logout cleanup, shutdown profile cleanup, and account subscription download headers.
