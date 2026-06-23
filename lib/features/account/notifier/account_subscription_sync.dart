@@ -80,7 +80,7 @@ class AccountSubscriptionSync {
         .first;
     RemoteProfileEntity? existingAccountProfile;
     for (final profile in profiles.where((profile) => _isAccountProfile(profile, activeUrls: activeUrls))) {
-      if (profile is RemoteProfileEntity && _matchesSubscriptionUrls(profile.url, activeUrls)) {
+      if (profile is RemoteProfileEntity) {
         existingAccountProfile ??= profile;
       }
       await repo.deleteById(profile.id, profile.active).getOrElse((failure) => throw failure).run();

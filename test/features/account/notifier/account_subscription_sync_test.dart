@@ -157,6 +157,48 @@ void main() {
     ]);
   });
 
+  test('sync migrates old sing-box account profile to Clash and preserves update interval', () async {
+    const accountUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token';
+    const oldSingboxUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox';
+    const accountClashUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash';
+    final repo = _FakeProfileRepository([
+      RemoteProfileEntity(
+        id: 'account',
+        active: true,
+        name: AccountSubscriptionSync.accountProfileName,
+        url: oldSingboxUrl,
+        lastUpdate: DateTime(2026),
+        userOverride: const UserOverride(name: AccountSubscriptionSync.accountProfileName, updateInterval: 12),
+      ),
+    ]);
+    final container = ProviderContainer(
+      overrides: [profileRepositoryProvider.overrideWith((ref) => Future.value(repo))],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(accountSubscriptionSyncProvider)
+        .sync(
+          const AccountDashboard(
+            subscription: AccountSubscription(
+              id: 1,
+              packageName: 'VIP',
+              tokenUrl: accountUrl,
+              singboxUrl: oldSingboxUrl,
+              status: 'active',
+              remainingDays: 30,
+              isActive: true,
+            ),
+          ),
+        );
+
+    expect(repo.deletedIds, ['account']);
+    expect(repo.upsertedUrls, [accountClashUrl]);
+    expect(repo.upsertedUserOverrides, [
+      const UserOverride(name: AccountSubscriptionSync.accountProfileName, updateInterval: 12),
+    ]);
+  });
+
   test('sync removes account subscription profile when subscription is disabled but still has a url', () async {
     const disabledAccountUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=disabled-token';
     final repo = _FakeProfileRepository([

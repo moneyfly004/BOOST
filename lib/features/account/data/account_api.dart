@@ -453,17 +453,24 @@ class AccountSubscription {
   final int onlineDevices;
   final bool isActive;
 
-  List<String> get importUrls => _uniqueImportableSubscriptionUrls([
-    clashUrl,
-    _typedVariant(tokenUrl, 'clash'),
-    _typedVariant(universalUrl, 'clash'),
-    tokenUrl,
-    hiddifyUrl,
-    universalUrl,
-    singboxUrl,
-    _typedVariant(tokenUrl, 'singbox'),
-    _typedVariant(universalUrl, 'singbox'),
-  ]);
+  List<String> get importUrls {
+    final preferredUrls = _uniqueImportableSubscriptionUrls([
+      clashUrl,
+      _typedVariant(tokenUrl, 'clash'),
+      _typedVariant(universalUrl, 'clash'),
+      tokenUrl,
+      hiddifyUrl,
+      universalUrl,
+    ]);
+    if (preferredUrls.isNotEmpty) {
+      return preferredUrls;
+    }
+    return _uniqueImportableSubscriptionUrls([
+      singboxUrl,
+      _typedVariant(tokenUrl, 'singbox'),
+      _typedVariant(universalUrl, 'singbox'),
+    ]);
+  }
 
   String get importUrl {
     final urls = importUrls;

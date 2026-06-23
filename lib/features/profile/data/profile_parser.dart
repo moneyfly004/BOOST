@@ -176,6 +176,7 @@ class ProfileParser {
       return MapEntry(key, value);
     });
   }, (err, st) => err is ProfileFailure ? err : ProfileFailure.unexpected(err, st));
+  @visibleForTesting
   Future<void> expandRemoteLinesInParallel({
     required String tempFilePath,
     required DioHttpClient httpClient,
@@ -185,8 +186,7 @@ class ProfileParser {
   }) async {
     final content = await File(tempFilePath).readAsString();
     final lines = content.split('\n');
-
-    final results = List<String?>.filled(lines.length, null);
+    final results = _initialExpandedLines(lines);
 
     int index = 0;
 
@@ -199,9 +199,8 @@ class ProfileParser {
 
         final line = lines[currentIndex];
 
-        // Non-URL
-        if (!line.startsWith('http://') && !line.startsWith('https://')) {
-          results[currentIndex] = line.trim();
+        final lineToExpand = _lineToExpand(line);
+        if (lineToExpand == null) {
           continue;
         }
 
@@ -209,7 +208,7 @@ class ProfileParser {
           final tmpPath = '$tempFilePath.$currentIndex';
 
           await httpClient.download(
-            line,
+            lineToExpand,
             tmpPath,
             cancelToken: cancelToken,
             userAgent: ref.read(ConfigOptions.useXrayCoreWhenPossible)
@@ -234,6 +233,20 @@ class ProfileParser {
       final newContent = results.join("\n");
       await File(tempFilePath).writeAsString(newContent);
     }
+  }
+
+  @visibleForTesting
+  static List<String?> initialExpandedLinesForTesting(List<String> lines) => _initialExpandedLines(lines);
+
+  static List<String?> _initialExpandedLines(List<String> lines) {
+    return [for (final line in lines) _lineToExpand(line) == null ? line : null];
+  }
+
+  static String? _lineToExpand(String line) {
+    if (line.startsWith('http://') || line.startsWith('https://')) {
+      return line.trim();
+    }
+    return null;
   }
 
   static Either<ProfileFailure, Map<String, dynamic>> populateHeaders({

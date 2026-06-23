@@ -9,6 +9,32 @@ void main() {
   const validSupportUrl = "https://example.com/support";
 
   group("parse", () {
+    test("Should preserve indentation when preparing non-URL YAML lines for expansion", () {
+      final lines = [
+        'proxies:',
+        '  - name: 香港-fxus4x9o',
+        '    type: vmess',
+        'proxy-groups:',
+        '  - name: Auto',
+        '    proxies:',
+        '      - 香港-fxus4x9o',
+        '  https://example.com/nested-url-is-yaml-value',
+        'https://example.com/remote-profile',
+      ];
+
+      expect(ProfileParser.initialExpandedLinesForTesting(lines), [
+        'proxies:',
+        '  - name: 香港-fxus4x9o',
+        '    type: vmess',
+        'proxy-groups:',
+        '  - name: Auto',
+        '    proxies:',
+        '      - 香港-fxus4x9o',
+        '  https://example.com/nested-url-is-yaml-value',
+        null,
+      ]);
+    });
+
     test("Should use filename in url with no headers and fragment", () {
       final profile = ProfileParser.parse(
         tempFilePath: '',
