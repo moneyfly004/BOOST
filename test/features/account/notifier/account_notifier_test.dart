@@ -61,6 +61,25 @@ void main() {
     expect(notifier.state.devices, isEmpty);
   });
 
+  test('login keeps auth expired state when optional refresh hits authorization failure', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final preferences = await SharedPreferences.getInstance();
+    final api = _RefreshingAccountApi()
+      ..devicesFailure = AccountApiException('device token expired', statusCode: 401)
+      ..refreshFailure = AccountApiException('refresh token expired', statusCode: 401);
+    final sync = _FakeSubscriptionSync();
+
+    final notifier = AccountNotifier(api, sync, preferences);
+    await pumpEventQueue();
+    sync.reset();
+
+    await notifier.login('fresh@example.com', 'password');
+
+    expect(sync.syncCalls, 1);
+    expect(notifier.state.authExpired, isTrue);
+  });
+
   test('manual sync refreshes expired access token and preserves stored subscription until success', () async {
     const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
     SharedPreferences.setMockInitialValues({

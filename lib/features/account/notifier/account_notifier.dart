@@ -345,7 +345,6 @@ class AccountNotifier extends StateNotifier<AccountState> {
       deviceOnline: devices?.online ?? state.deviceOnline,
       deviceMobile: devices?.mobile ?? state.deviceMobile,
       deviceDesktop: devices?.desktop ?? state.deviceDesktop,
-      authExpired: false,
     );
   }
 
