@@ -8,6 +8,29 @@ import 'package:hiddify/features/account/notifier/account_subscription_sync.dart
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  test('effective device text uses loaded device summary instead of stale subscription counts', () {
+    const state = AccountState(
+      dashboard: AccountDashboard(
+        subscription: AccountSubscription(deviceLimit: 3, currentDevices: 2, onlineDevices: 2),
+      ),
+      deviceSummaryLoaded: true,
+    );
+
+    expect(state.effectiveOnlineDevices, 0);
+    expect(state.effectiveOnlineDeviceText, '0/3');
+  });
+
+  test('effective device text falls back to subscription before device summary loads', () {
+    const state = AccountState(
+      dashboard: AccountDashboard(
+        subscription: AccountSubscription(deviceLimit: 3, currentDevices: 2, onlineDevices: 2),
+      ),
+    );
+
+    expect(state.effectiveOnlineDevices, 2);
+    expect(state.effectiveOnlineDeviceText, '2/3');
+  });
+
   test('restore refreshes expired access token and syncs subscription', () async {
     const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
     SharedPreferences.setMockInitialValues({
@@ -30,6 +53,8 @@ void main() {
     expect(sync.clearCalls, 0);
     expect(api.deviceTokens, ['fresh-access-token']);
     expect(notifier.state.deviceTotal, 1);
+    expect(notifier.state.deviceSummaryLoaded, isTrue);
+    expect(notifier.state.effectiveOnlineDeviceText, '0/0');
     expect(notifier.state.devices.single.deviceName, 'MacBook');
     expect(notifier.state.isAuthenticated, isTrue);
     expect(notifier.state.token, 'fresh-access-token');
@@ -176,9 +201,10 @@ void main() {
     expect(api.dashboardTokens, ['fresh-access-token', 'fresh-access-token']);
     expect(api.refreshTokenCalls, 1);
     expect(api.refreshTokens, ['fresh-refresh-token']);
-    expect(api.deviceTokens, isEmpty);
+    expect(api.deviceTokens, ['fresh-access-token']);
     expect(sync.syncCalls, 1);
     expect(sync.clearCalls, 0);
+    expect(notifier.state.deviceSummaryLoaded, isTrue);
     expect(notifier.state.isAuthenticated, isTrue);
     expect(notifier.state.token, 'fresh-access-token');
     expect(notifier.state.refreshToken, 'fresh-refresh-token');

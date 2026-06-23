@@ -219,11 +219,7 @@ class _AccountSubscriptionOverview extends ConsumerWidget {
                 final infoItems = [
                   _InfoPill(label: '状态', value: _statusText(subscription?.status ?? 'none')),
                   _InfoPill(label: '到期时间', value: subscription?.expireTime ?? '未开通'),
-                  _InfoPill(
-                    label: '在线设备',
-                    value:
-                        '${subscription?.onlineDevices ?? subscription?.currentDevices ?? 0}/${subscription?.deviceLimit ?? 0}',
-                  ),
+                  _InfoPill(label: '在线设备', value: state.effectiveOnlineDeviceText),
                   _InfoPill(label: '剩余天数', value: '${subscription?.remainingDays ?? 0} 天'),
                 ];
                 if (compact) {

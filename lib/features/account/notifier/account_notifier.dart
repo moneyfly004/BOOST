@@ -30,6 +30,7 @@ class AccountState {
     this.deviceOnline = 0,
     this.deviceMobile = 0,
     this.deviceDesktop = 0,
+    this.deviceSummaryLoaded = false,
     this.loading = false,
     this.syncingSubscription = false,
     this.authExpired = false,
@@ -48,6 +49,7 @@ class AccountState {
   final int deviceOnline;
   final int deviceMobile;
   final int deviceDesktop;
+  final bool deviceSummaryLoaded;
   final bool loading;
   final bool syncingSubscription;
   final bool authExpired;
@@ -55,6 +57,26 @@ class AccountState {
 
   bool get isAuthenticated =>
       (token != null && token!.isNotEmpty) || (refreshToken != null && refreshToken!.isNotEmpty);
+
+  AccountSubscription? get subscription => dashboard?.subscription;
+
+  int get effectiveDeviceLimit => subscription?.deviceLimit ?? 0;
+
+  int get effectiveCurrentDevices {
+    if (deviceSummaryLoaded) {
+      return deviceTotal;
+    }
+    return subscription?.currentDevices ?? 0;
+  }
+
+  int get effectiveOnlineDevices {
+    if (deviceSummaryLoaded) {
+      return deviceOnline;
+    }
+    return subscription?.onlineDevices ?? effectiveCurrentDevices;
+  }
+
+  String get effectiveOnlineDeviceText => '$effectiveOnlineDevices/$effectiveDeviceLimit';
 
   AccountState copyWith({
     String? token,
@@ -69,6 +91,7 @@ class AccountState {
     int? deviceOnline,
     int? deviceMobile,
     int? deviceDesktop,
+    bool? deviceSummaryLoaded,
     bool? loading,
     bool? syncingSubscription,
     bool? authExpired,
@@ -88,6 +111,7 @@ class AccountState {
       deviceOnline: clearAuth ? 0 : deviceOnline ?? this.deviceOnline,
       deviceMobile: clearAuth ? 0 : deviceMobile ?? this.deviceMobile,
       deviceDesktop: clearAuth ? 0 : deviceDesktop ?? this.deviceDesktop,
+      deviceSummaryLoaded: !clearAuth && (deviceSummaryLoaded ?? this.deviceSummaryLoaded),
       loading: loading ?? this.loading,
       syncingSubscription: syncingSubscription ?? this.syncingSubscription,
       authExpired: !clearAuth && (authExpired ?? this.authExpired),
@@ -191,7 +215,9 @@ class AccountNotifier extends StateNotifier<AccountState> {
       final dashboard = await _withAuthenticatedToken(_api.getDashboard);
       state = state.copyWith(user: dashboard.user, dashboard: dashboard, authExpired: false);
       await _persistAuth(state.token, state.refreshToken, dashboard.user);
-      await _syncSubscription(dashboard, successMessage: '订阅已同步');
+      await _syncSubscription(dashboard);
+      await _refreshDevicesSummaryIfAvailable();
+      state = state.copyWith(message: '订阅已同步');
     });
   }
 
@@ -379,6 +405,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
       deviceOnline: devices?.online ?? state.deviceOnline,
       deviceMobile: devices?.mobile ?? state.deviceMobile,
       deviceDesktop: devices?.desktop ?? state.deviceDesktop,
+      deviceSummaryLoaded: devices != null || state.deviceSummaryLoaded,
     );
   }
 
@@ -404,6 +431,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
       deviceOnline: devices.online,
       deviceMobile: devices.mobile,
       deviceDesktop: devices.desktop,
+      deviceSummaryLoaded: true,
       authExpired: false,
     );
     await _persistAuth(state.token, state.refreshToken, dashboard.user);
@@ -417,6 +445,23 @@ class AccountNotifier extends StateNotifier<AccountState> {
       deviceOnline: devices.online,
       deviceMobile: devices.mobile,
       deviceDesktop: devices.desktop,
+      deviceSummaryLoaded: true,
+      authExpired: false,
+    );
+  }
+
+  Future<void> _refreshDevicesSummaryIfAvailable() async {
+    final devices = await _optionalAccountData<AccountDevicesResult>(() => _withAuthenticatedToken(_api.getDevices));
+    if (devices == null) {
+      return;
+    }
+    state = state.copyWith(
+      devices: devices.devices,
+      deviceTotal: devices.total,
+      deviceOnline: devices.online,
+      deviceMobile: devices.mobile,
+      deviceDesktop: devices.desktop,
+      deviceSummaryLoaded: true,
       authExpired: false,
     );
   }
