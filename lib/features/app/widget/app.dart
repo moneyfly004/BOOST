@@ -28,6 +28,7 @@ import 'package:toastification/toastification.dart';
 
 bool _debugAccessibility = false;
 bool isOnPauseCalled = false;
+Future<void>? accountSubscriptionCleanupOperation;
 
 class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
   const App({super.key});
@@ -39,11 +40,17 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
   void onPause(WidgetRef ref) {
     if (PlatformUtils.isDesktop) return;
     isOnPauseCalled = true;
-    ref.read(accountNotifierProvider.notifier).clearAccountSubscriptionsForShutdown().catchError((
-      Object error,
-      StackTrace stackTrace,
-    ) {
-      loggy.warning("error clearing account subscription on pause", error, stackTrace);
+    final cleanupOperation = ref
+        .read(accountNotifierProvider.notifier)
+        .clearAccountSubscriptionsForShutdown()
+        .catchError((Object error, StackTrace stackTrace) {
+          loggy.warning("error clearing account subscription on pause", error, stackTrace);
+        });
+    accountSubscriptionCleanupOperation = cleanupOperation;
+    cleanupOperation.whenComplete(() {
+      if (identical(accountSubscriptionCleanupOperation, cleanupOperation)) {
+        accountSubscriptionCleanupOperation = null;
+      }
     });
     ref.read(hiddifyCoreServiceProvider).closeFront();
   }
@@ -52,9 +59,18 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
     // if (PlatformUtils.isDesktop) return;
     ref.read(hiddifyCoreServiceProvider).init();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final shouldRefreshAccountSubscription = isOnPauseCalled && !PlatformUtils.isDesktop;
       if (isOnPauseCalled && PlatformUtils.isAndroid) ref.invalidate(perAppProxyServiceProvider);
       isOnPauseCalled = false;
+      if (shouldRefreshAccountSubscription) {
+        try {
+          await accountSubscriptionCleanupOperation;
+          await ref.read(accountNotifierProvider.notifier).refresh();
+        } catch (error, stackTrace) {
+          loggy.warning("account subscription refresh on resume failed", error, stackTrace);
+        }
+      }
     });
   }
 
