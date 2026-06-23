@@ -22,10 +22,7 @@ class AccountApi {
               connectTimeout: const Duration(seconds: 10),
               sendTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 15),
-              headers: const {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
+              headers: const {'Content-Type': 'application/json', 'Accept': 'application/json'},
             ),
           );
 
@@ -33,22 +30,13 @@ class AccountApi {
   String? _csrfToken;
   Future<String>? _csrfTokenRequest;
 
-  Future<AccountAuthResponse> login({
-    required String email,
-    required String password,
-  }) async {
-    final data = await _post(
-      '/auth/login',
-      data: {'email': email, 'password': password},
-    );
+  Future<AccountAuthResponse> login({required String email, required String password}) async {
+    final data = await _post('/auth/login', data: {'email': email, 'password': password});
     return AccountAuthResponse.fromJson(data);
   }
 
   Future<AccountAuthResponse> refreshToken(String refreshToken) async {
-    final data = await _post(
-      '/auth/refresh',
-      data: {'refresh_token': refreshToken},
-    );
+    final data = await _post('/auth/refresh', data: {'refresh_token': refreshToken});
     return AccountAuthResponse.fromJson(data);
   }
 
@@ -65,20 +53,15 @@ class AccountApi {
         'username': username,
         'email': email,
         'password': password,
-        if (verificationCode != null && verificationCode.isNotEmpty)
-          'verification_code': verificationCode,
-        if (inviteCode != null && inviteCode.isNotEmpty)
-          'invite_code': inviteCode,
+        if (verificationCode != null && verificationCode.isNotEmpty) 'verification_code': verificationCode,
+        if (inviteCode != null && inviteCode.isNotEmpty) 'invite_code': inviteCode,
       },
     );
     return AccountAuthResponse.fromJson(data);
   }
 
   Future<String> sendRegisterCode(String email) async {
-    final data = await _post(
-      '/auth/verification/send',
-      data: {'email': email, 'purpose': 'register'},
-    );
+    final data = await _post('/auth/verification/send', data: {'email': email, 'purpose': 'register'});
     return _messageFromData(data, fallback: '验证码已发送');
   }
 
@@ -121,19 +104,14 @@ class AccountApi {
     final results = await Future.wait<Map<String, dynamic>>([
       _get('/users/dashboard-info', token: token),
       _get('/users/me', token: token),
-      _get('/subscriptions/user-subscription', token: token).catchError((
-        Object error,
-      ) {
+      _get('/subscriptions/user-subscription', token: token).catchError((Object error) {
         if (error is AccountApiException && error.statusCode == 404) {
           return const <String, dynamic>{'data': null};
         }
         throw error;
       }),
     ]);
-    return AccountDashboard.fromBackend(
-      user: _payload(results[1]),
-      subscription: _nullablePayload(results[2]),
-    );
+    return AccountDashboard.fromBackend(user: _payload(results[1]), subscription: _nullablePayload(results[2]));
   }
 
   Future<List<AccountPackage>> getPackages() async {
@@ -154,39 +132,22 @@ class AccountApi {
     return methods;
   }
 
-  Future<OrderResult> createOrder({
-    required String token,
-    required int packageId,
-  }) async {
-    final data = await _post(
-      '/orders',
-      token: token,
-      data: {'package_id': packageId},
-    );
+  Future<OrderResult> createOrder({required String token, required int packageId}) async {
+    final data = await _post('/orders', token: token, data: {'package_id': packageId});
     return OrderResult.fromJson(_payload(data));
   }
 
   Future<List<AccountOrder>> getOrders(String token) async {
-    final data = await _get(
-      '/orders',
-      token: token,
-      queryParameters: const {'page': 1, 'page_size': 20},
-    );
+    final data = await _get('/orders', token: token, queryParameters: const {'page': 1, 'page_size': 20});
     final payload = _payload(data);
     final orders = payload['items'];
     if (orders is List) {
-      return orders
-          .whereType<Map>()
-          .map((order) => AccountOrder.fromJson(order.cast<String, dynamic>()))
-          .toList();
+      return orders.whereType<Map>().map((order) => AccountOrder.fromJson(order.cast<String, dynamic>())).toList();
     }
     return const [];
   }
 
-  Future<AccountOrderStatus> getOrderStatus({
-    required String token,
-    required String orderNo,
-  }) async {
+  Future<AccountOrderStatus> getOrderStatus({required String token, required String orderNo}) async {
     final data = await _get('/orders/$orderNo/status', token: token);
     return AccountOrderStatus.fromJson(_payload(data));
   }
@@ -200,25 +161,13 @@ class AccountApi {
     final data = await _post(
       '/payment',
       token: token,
-      data: {
-        'order_id': orderId,
-        'payment_method_id': paymentMethodId,
-        'is_mobile': isMobile,
-      },
+      data: {'order_id': orderId, 'payment_method_id': paymentMethodId, 'is_mobile': isMobile},
     );
     return OrderResult.fromJson(_payload(data));
   }
 
-  Future<OrderResult> payOrder({
-    required String token,
-    required String orderNo,
-    required String paymentMethod,
-  }) async {
-    final data = await _post(
-      '/orders/$orderNo/pay',
-      token: token,
-      data: {'payment_method': paymentMethod},
-    );
+  Future<OrderResult> payOrder({required String token, required String orderNo, required String paymentMethod}) async {
+    final data = await _post('/orders/$orderNo/pay', token: token, data: {'payment_method': paymentMethod});
     final payload = _payload(data);
     return OrderResult.fromJson({
       ...payload,
@@ -237,81 +186,38 @@ class AccountApi {
     return _messageFromData(data, fallback: '设备已删除');
   }
 
-  Future<String> updateDeviceRemark({
-    required String token,
-    required int id,
-    required String remark,
-  }) async {
-    final data = await _put(
-      '/subscriptions/devices/$id/remark',
-      token: token,
-      data: {'remark': remark.trim()},
-    );
+  Future<String> updateDeviceRemark({required String token, required int id, required String remark}) async {
+    final data = await _put('/subscriptions/devices/$id/remark', token: token, data: {'remark': remark.trim()});
     return _messageFromData(data, fallback: '备注已更新');
   }
 
-  Future<Map<String, dynamic>> _get(
-    String path, {
-    String? token,
-    Map<String, dynamic>? queryParameters,
-  }) {
+  Future<Map<String, dynamic>> _get(String path, {String? token, Map<String, dynamic>? queryParameters}) {
     return _request(
-      () => _dio.get<Map<String, dynamic>>(
-        path,
-        queryParameters: queryParameters,
-        options: _options(token),
-      ),
+      () => _dio.get<Map<String, dynamic>>(path, queryParameters: queryParameters, options: _options(token)),
     );
   }
 
-  Future<Map<String, dynamic>> _post(
-    String path, {
-    Object? data,
-    String? token,
-  }) {
+  Future<Map<String, dynamic>> _post(String path, {Object? data, String? token}) {
     return _request(
-      () => _withCsrf(
-        token,
-        (options) =>
-            _dio.post<Map<String, dynamic>>(path, data: data, options: options),
-      ),
+      () => _withCsrf(token, (options) => _dio.post<Map<String, dynamic>>(path, data: data, options: options)),
     );
   }
 
-  Future<Map<String, dynamic>> _put(
-    String path, {
-    Object? data,
-    String? token,
-  }) {
+  Future<Map<String, dynamic>> _put(String path, {Object? data, String? token}) {
     return _request(
-      () => _withCsrf(
-        token,
-        (options) =>
-            _dio.put<Map<String, dynamic>>(path, data: data, options: options),
-      ),
+      () => _withCsrf(token, (options) => _dio.put<Map<String, dynamic>>(path, data: data, options: options)),
     );
   }
 
   Future<Map<String, dynamic>> _delete(String path, {String? token}) {
-    return _request(
-      () => _withCsrf(
-        token,
-        (options) => _dio.delete<Map<String, dynamic>>(path, options: options),
-      ),
-    );
+    return _request(() => _withCsrf(token, (options) => _dio.delete<Map<String, dynamic>>(path, options: options)));
   }
 
   Options _options(String? token) {
-    return Options(
-      headers: {
-        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
-      },
-    );
+    return Options(headers: {if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token'});
   }
 
-  Future<Map<String, dynamic>> _request(
-    Future<Response<Map<String, dynamic>>> Function() run,
-  ) async {
+  Future<Map<String, dynamic>> _request(Future<Response<Map<String, dynamic>>> Function() run) async {
     try {
       final response = await run();
       return _checkedData(response.data);
@@ -324,10 +230,7 @@ class AccountApi {
           message = remoteMessage;
         }
       }
-      throw AccountApiException(
-        message,
-        statusCode: error.response?.statusCode,
-      );
+      throw AccountApiException(message, statusCode: error.response?.statusCode);
     }
   }
 
@@ -335,10 +238,7 @@ class AccountApi {
     final checked = data ?? const {};
     final code = checked['code'];
     if (code is num && code != 0) {
-      throw AccountApiException(
-        _messageFromData(checked, fallback: '请求失败'),
-        statusCode: code.toInt(),
-      );
+      throw AccountApiException(_messageFromData(checked, fallback: '请求失败'), statusCode: code.toInt());
     }
     return checked;
   }
@@ -388,11 +288,7 @@ class AccountApi {
     }
     final request = _dio
         .get<Map<String, dynamic>>('/csrf-token', options: _options(token))
-        .then(
-          (response) =>
-              _payload(_checkedData(response.data))['csrf_token']?.toString() ??
-              '',
-        );
+        .then((response) => _payload(_checkedData(response.data))['csrf_token']?.toString() ?? '');
     _csrfTokenRequest = request;
     return request
         .then((csrfToken) {
@@ -430,10 +326,7 @@ class AccountApi {
     return const [];
   }
 
-  String _messageFromData(
-    Map<String, dynamic> data, {
-    required String fallback,
-  }) {
+  String _messageFromData(Map<String, dynamic> data, {required String fallback}) {
     final message = data['message'];
     if (message is String && message.isNotEmpty) {
       return message;
@@ -443,26 +336,18 @@ class AccountApi {
 }
 
 class AccountAuthResponse {
-  AccountAuthResponse({
-    required this.accessToken,
-    this.refreshToken,
-    required this.user,
-  });
+  AccountAuthResponse({required this.accessToken, this.refreshToken, required this.user});
 
   final String accessToken;
   final String? refreshToken;
   final AccountUser user;
 
   factory AccountAuthResponse.fromJson(Map<String, dynamic> json) {
-    final payload = json['data'] is Map<String, dynamic>
-        ? json['data'] as Map<String, dynamic>
-        : json;
+    final payload = json['data'] is Map<String, dynamic> ? json['data'] as Map<String, dynamic> : json;
     return AccountAuthResponse(
       accessToken: payload['access_token']?.toString() ?? '',
       refreshToken: payload['refresh_token']?.toString(),
-      user: AccountUser.fromJson(
-        (payload['user'] as Map?)?.cast<String, dynamic>() ?? const {},
-      ),
+      user: AccountUser.fromJson((payload['user'] as Map?)?.cast<String, dynamic>() ?? const {}),
     );
   }
 }
@@ -526,15 +411,10 @@ class AccountDashboard {
   final List<AccountOrder> recentOrders;
   final double totalSpent;
 
-  factory AccountDashboard.fromBackend({
-    required Map<String, dynamic> user,
-    Map<String, dynamic>? subscription,
-  }) {
+  factory AccountDashboard.fromBackend({required Map<String, dynamic> user, Map<String, dynamic>? subscription}) {
     return AccountDashboard(
       user: AccountUser.fromJson(user),
-      subscription: subscription == null
-          ? null
-          : AccountSubscription.fromJson(subscription),
+      subscription: subscription == null ? null : AccountSubscription.fromJson(subscription),
       totalSpent: _asDouble(user['total_consumption']),
     );
   }
@@ -545,6 +425,9 @@ class AccountSubscription {
     this.id = 0,
     this.packageName = '',
     this.tokenUrl = '',
+    this.hiddifyUrl = '',
+    this.singboxUrl = '',
+    this.universalUrl = '',
     this.expireTime = '',
     this.remainingDays = 0,
     this.status = '',
@@ -557,6 +440,9 @@ class AccountSubscription {
   final int id;
   final String packageName;
   final String tokenUrl;
+  final String hiddifyUrl;
+  final String singboxUrl;
+  final String universalUrl;
   final String expireTime;
   final int remainingDays;
   final String status;
@@ -565,7 +451,19 @@ class AccountSubscription {
   final int onlineDevices;
   final bool isActive;
 
-  String get importUrl => _isBoostSubscriptionUrl(tokenUrl) ? tokenUrl : '';
+  String get importUrl {
+    for (final url in [
+      _singboxVariant(singboxUrl),
+      _singboxVariant(tokenUrl),
+      _singboxVariant(hiddifyUrl),
+      _singboxVariant(universalUrl),
+    ]) {
+      if (_isImportableSubscriptionUrl(url)) {
+        return url;
+      }
+    }
+    return '';
+  }
 
   bool get canImport {
     if (!isActive || importUrl.isEmpty) {
@@ -574,9 +472,7 @@ class AccountSubscription {
     if (remainingDays < 0) {
       return false;
     }
-    final parsedExpireTime = DateTime.tryParse(
-      expireTime.replaceFirst(' ', 'T'),
-    );
+    final parsedExpireTime = DateTime.tryParse(expireTime.replaceFirst(' ', 'T'));
     if (parsedExpireTime != null && parsedExpireTime.isBefore(DateTime.now())) {
       return false;
     }
@@ -590,6 +486,9 @@ class AccountSubscription {
       id: _asInt(json['id']),
       packageName: json['package_name']?.toString() ?? '',
       tokenUrl: json['token_url']?.toString() ?? '',
+      hiddifyUrl: json['token_hiddify_url']?.toString() ?? '',
+      singboxUrl: json['token_singbox_url']?.toString() ?? '',
+      universalUrl: json['universal_url']?.toString() ?? '',
       expireTime: json['expire_time']?.toString() ?? '',
       remainingDays: _asInt(json['days_remaining']),
       status: json['status']?.toString() ?? '',
@@ -602,17 +501,11 @@ class AccountSubscription {
 }
 
 class AccountDevicesResult {
-  AccountDevicesResult({
-    this.devices = const [],
-    int? total,
-    int? online,
-    int? mobile,
-    int? desktop,
-  }) : total = total ?? devices.length,
-       online =
-           online ?? devices.where((device) => device.isRecentlySeen).length,
-       mobile = mobile ?? devices.where((device) => device.isMobile).length,
-       desktop = desktop ?? devices.where((device) => device.isDesktop).length;
+  AccountDevicesResult({this.devices = const [], int? total, int? online, int? mobile, int? desktop})
+    : total = total ?? devices.length,
+      online = online ?? devices.where((device) => device.isRecentlySeen).length,
+      mobile = mobile ?? devices.where((device) => device.isMobile).length,
+      desktop = desktop ?? devices.where((device) => device.isDesktop).length;
 
   final List<AccountDevice> devices;
   final int total;
@@ -688,10 +581,7 @@ class AccountDevice {
   }
 
   String get softwareLabel {
-    return [
-      softwareName,
-      softwareVersion,
-    ].where((value) => value.isNotEmpty).join(' ');
+    return [softwareName, softwareVersion].where((value) => value.isNotEmpty).join(' ');
   }
 
   String get osLabel {
@@ -786,11 +676,7 @@ class AccountPackage {
 }
 
 class PaymentMethod {
-  const PaymentMethod({
-    required this.id,
-    required this.key,
-    required this.name,
-  });
+  const PaymentMethod({required this.id, required this.key, required this.name});
 
   factory PaymentMethod.balance() {
     return const PaymentMethod(id: 0, key: 'balance', name: '余额支付');
@@ -804,9 +690,7 @@ class PaymentMethod {
     return PaymentMethod(
       id: _asInt(json['id']),
       key: json['pay_type']?.toString() ?? '',
-      name:
-          json['name']?.toString() ??
-          _paymentName(json['pay_type']?.toString() ?? ''),
+      name: json['name']?.toString() ?? _paymentName(json['pay_type']?.toString() ?? ''),
     );
   }
 }
@@ -861,12 +745,7 @@ class AccountOrderStatus {
   bool get isPaid => status == 'paid' || status == 'completed';
 
   bool get isFinished => switch (status) {
-    'paid' ||
-    'completed' ||
-    'cancelled' ||
-    'failed' ||
-    'expired' ||
-    'refunded' => true,
+    'paid' || 'completed' || 'cancelled' || 'failed' || 'expired' || 'refunded' => true,
     _ => false,
   };
 
@@ -954,12 +833,25 @@ bool _asBool(Object? value, {bool fallback = false}) {
   return fallback;
 }
 
-bool _isBoostSubscriptionUrl(String url) {
+bool _isImportableSubscriptionUrl(String url) {
   final uri = Uri.tryParse(url);
   return uri != null &&
-      uri.host == 'new.moneyfly.top' &&
-      uri.path == '/api/v1/client/subscribe' &&
+      (uri.isScheme('https') || uri.isScheme('http')) &&
+      uri.host.isNotEmpty &&
       (uri.queryParameters['token']?.isNotEmpty ?? false);
+}
+
+String _singboxVariant(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null ||
+      uri.host.isEmpty ||
+      !(uri.isScheme('https') || uri.isScheme('http')) ||
+      !(uri.queryParameters['token']?.isNotEmpty ?? false)) {
+    return url;
+  }
+  final queryParameters = Map<String, String>.of(uri.queryParameters);
+  queryParameters['type'] = 'singbox';
+  return uri.replace(queryParameters: queryParameters).toString();
 }
 
 String _paymentName(String payType) {

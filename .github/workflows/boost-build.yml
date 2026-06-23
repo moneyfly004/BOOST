@@ -749,16 +749,45 @@ jobs:
           from pathlib import Path
 
           app_version = os.environ["APP_VERSION"]
+          repository = os.environ["GITHUB_REPOSITORY"]
           pub_date = email.utils.format_datetime(datetime.datetime.now(datetime.timezone.utc), usegmt=True)
-          appcast = Path("appcast.xml")
-          text = appcast.read_text()
-          import re
-          text = re.sub(r"<title>Version [^<]+</title>", f"<title>Version {app_version}</title>", text)
-          text = re.sub(r"<pubDate>[^<]+</pubDate>", f"<pubDate>{pub_date}</pubDate>", text)
-          text = re.sub(r'sparkle:version="[^"]+"', f'sparkle:version="{app_version}"', text)
-          appcast.write_text(text)
+          text = f"""<?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+              <channel>
+                  <title>BOOST Release</title>
+                  <item>
+                      <title>Version {app_version}</title>
+                      <pubDate>{pub_date}</pubDate>
+                      <enclosure
+                          url="https://github.com/{repository}/releases/latest/download/BOOST-Android-universal.apk"
+                          sparkle:version="{app_version}" sparkle:os="android" />
+                  </item>
+                  <item>
+                      <title>Version {app_version}</title>
+                      <pubDate>{pub_date}</pubDate>
+                      <enclosure
+                          url="https://github.com/{repository}/releases/latest/download/BOOST-Windows-x64-Setup.exe"
+                          sparkle:version="{app_version}" sparkle:os="windows" />
+                  </item>
+                  <item>
+                      <title>Version {app_version}</title>
+                      <pubDate>{pub_date}</pubDate>
+                      <enclosure
+                          url="https://github.com/{repository}/releases/latest/download/BOOST-macOS-universal.dmg"
+                          sparkle:version="{app_version}" sparkle:os="macos" />
+                  </item>
+                  <item>
+                      <title>Version {app_version}</title>
+                      <pubDate>{pub_date}</pubDate>
+                      <enclosure
+                          url="https://github.com/{repository}/releases/latest"
+                          sparkle:version="{app_version}" sparkle:os="linux" />
+                  </item>
+              </channel>
+          </rss>
+          """
+          Path("release-assets/appcast.xml").write_text(text)
           PY
-          cp appcast.xml release-assets/appcast.xml
           (cd release-assets && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
           gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || true
           gh release create "${TAG}" \

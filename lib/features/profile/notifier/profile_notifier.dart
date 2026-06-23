@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hiddify/core/haptic/haptic_service.dart';
-import 'package:hiddify/core/http_client/http_client_provider.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/failures.dart';
 import 'package:hiddify/core/notification/in_app_notification_controller.dart';
@@ -188,16 +186,7 @@ enum AddProfilePages { options, manual }
 @riverpod
 class FreeProfilesNotifier extends _$FreeProfilesNotifier {
   @override
-  Future<List<FreeProfile>> build() async {
-    final httpClient = ref.watch(httpClientProvider);
-    final res = await httpClient.get(
-      'https://raw.githubusercontent.com/hiddify/hiddify-app/refs/heads/main/test.configs/free_configs',
-    );
-    if (res.statusCode == 200) {
-      return FreeProfilesModel.fromJson(jsonDecode(res.data.toString()) as Map<String, dynamic>).profiles;
-    }
-    return <FreeProfile>[];
-  }
+  Future<List<FreeProfile>> build() async => <FreeProfile>[];
 }
 
 @riverpod

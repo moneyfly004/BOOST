@@ -14,7 +14,7 @@ body:
     id: confirm-search
     attributes:
       label: Search first
-      description: Please search [existing issues](https://github.com/moneyfly004/boost/issues) before reporting.
+      description: Please search [existing issues](https://github.com/moneyfly004/BOOST/issues) before reporting.
       options:
         - label: I searched and no similar issues were found
           required: true

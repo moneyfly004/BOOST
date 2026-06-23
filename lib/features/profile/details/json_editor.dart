@@ -19,8 +19,14 @@ const _popupMenuHeight = 30.0;
 const _popupMenuItemPadding = 20.0;
 const _textSpacer = SizedBox(width: 5);
 const _newKey = "new_key_added";
-const _downArrow = SizedBox(width: _expandIconWidth, child: Icon(FontAwesomeIcons.caretDown, size: 14));
-const _rightArrow = SizedBox(width: _expandIconWidth, child: Icon(FontAwesomeIcons.caretRight, size: 14));
+const _downArrow = SizedBox(
+  width: _expandIconWidth,
+  child: Icon(FontAwesomeIcons.caretDown, size: 14),
+);
+const _rightArrow = SizedBox(
+  width: _expandIconWidth,
+  child: Icon(FontAwesomeIcons.caretRight, size: 14),
+);
 const _newDataValue = {"string": "", "bool": false, "num": 0};
 bool _enableMoreOptions = true;
 bool _enableKeyEdit = true;
@@ -39,7 +45,11 @@ const Map<String, Map<String, dynamic>> protocolSchemaValues = {
     "type": "xray",
     "tag": "xray-out",
     "xray_outbound_raw": {},
-    "xray_fragment": {"packets": "tlshello", "interval": "1-10", "length": "1-10"},
+    "xray_fragment": {
+      "packets": "tlshello",
+      "interval": "1-10",
+      "length": "1-10",
+    },
   },
   "warp": {
     "type": "warp",
@@ -47,7 +57,12 @@ const Map<String, Map<String, dynamic>> protocolSchemaValues = {
     "host": "",
     "port": 808,
     "noise": {
-      "fake_packets": {"enabled": true, "count": "1-10", "delay": "1-10", "mode": "m4"},
+      "fake_packets": {
+        "enabled": true,
+        "count": "1-10",
+        "delay": "1-10",
+        "mode": "m4",
+      },
     },
   },
   "mieru": {
@@ -73,7 +88,7 @@ const Map<String, Map<String, dynamic>> protocolSchemaValues = {
   "dnstt": {
     "type": "dnstt",
     "tag": "dnstt-out",
-    "domain": "dnstt.hiddify.com",
+    "domain": "dnstt.new.moneyfly.top",
     "publicKey": "publickey",
     "resolvers": ["8.8.8.8:53", "8.8.4.4:53"],
     "tunnel_per_resolver": 4,
@@ -215,7 +230,10 @@ const Map<String, Map<String, dynamic>> protocolSchemaValues = {
 const Map<String, Map<String, Map<String, dynamic>>> exampleSchemaValues = {
   "config.outbounds.transport": {
     "browser user-agent": {
-      "header": {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"},
+      "header": {
+        "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+      },
     },
   },
   "config.outbounds.tls": {
@@ -262,7 +280,13 @@ const Map<String, Map<String, Map<String, dynamic>>> exampleSchemaValues = {
       },
     },
     "websocket": {
-      "transport": {"type": "ws", "path": "", "headers": {}, "max_early_data": 0, "early_data_header_name": ""},
+      "transport": {
+        "type": "ws",
+        "path": "",
+        "headers": {},
+        "max_early_data": 0,
+        "early_data_header_name": "",
+      },
     },
     "grpc": {
       "transport": {
@@ -288,7 +312,12 @@ const Map<String, Map<String, Map<String, dynamic>>> exampleSchemaValues = {
       },
     },
     "httpupgrade": {
-      "transport": {"type": "httpupgrade", "host": "", "path": "", "headers": {}},
+      "transport": {
+        "type": "httpupgrade",
+        "host": "",
+        "path": "",
+        "headers": {},
+      },
     },
     "xhttp": {
       "transport": {"type": "xhttp", "host": "", "path": "", "headers": {}},
@@ -298,7 +327,14 @@ const Map<String, Map<String, Map<String, dynamic>>> exampleSchemaValues = {
 
 const Map<String, List<String>> possibleValues = {
   "config.outbounds.flow": <String>["", "xtls-rprx-vision"],
-  "config.outbounds.security": <String>["", "auto", "none", "zero", "aes-128-gcm", "chacha20-poly1305"],
+  "config.outbounds.security": <String>[
+    "",
+    "auto",
+    "none",
+    "zero",
+    "aes-128-gcm",
+    "chacha20-poly1305",
+  ],
   "config.outbounds.method": <String>[
     "",
     "2022-blake3-aes-128-gcm",
@@ -335,8 +371,20 @@ const Map<String, List<String>> possibleValues = {
     "random",
     "randomized",
   ],
-  "config.outbounds.packet_encoding": <String>["", "(none)", "xudp", "packetaddr"],
-  "config.outbounds.transport.type": <String>["", "http", "ws", "grpc", "quic", "httpupgrade"],
+  "config.outbounds.packet_encoding": <String>[
+    "",
+    "(none)",
+    "xudp",
+    "packetaddr",
+  ],
+  "config.outbounds.transport.type": <String>[
+    "",
+    "http",
+    "ws",
+    "grpc",
+    "quic",
+    "httpupgrade",
+  ],
   "config.outbounds.type": <String>[
     "vless",
     "dnstt",
@@ -479,7 +527,8 @@ class _JsonEditorState extends State<JsonEditor> {
   late Editors _editor = widget.editors.first;
   bool _onError = false;
   bool? allExpanded;
-  late final _controller = TextEditingController()..text = _stringifyData(_data, 0, true);
+  late final _controller = TextEditingController()
+    ..text = _stringifyData(_data, 0, true);
   late final _scrollController = ScrollController();
   final _matchedKeys = <String, bool>{};
   final _matchedKeysLocation = <List>[];
@@ -533,7 +582,9 @@ class _JsonEditorState extends State<JsonEditor> {
   }
 
   void copyData() async {
-    await Clipboard.setData(ClipboardData(text: const JsonEncoder.withIndent(' ').convert(_data)));
+    await Clipboard.setData(
+      ClipboardData(text: const JsonEncoder.withIndent(' ').convert(_data)),
+    );
   }
 
   bool updateParentObjects(List newExpandList) {
@@ -554,7 +605,8 @@ class _JsonEditorState extends State<JsonEditor> {
       for (var key in keys) {
         final keyName = key.toString();
         if (keyName.toLowerCase().contains(text) ||
-            (data[key] is String && data[key].toString().toLowerCase().contains(text))) {
+            (data[key] is String &&
+                data[key].toString().toLowerCase().contains(text))) {
           _results = _results! + 1;
           _matchedKeys[keyName] = true;
           _matchedKeysLocation.add([...nestedParents, key]);
@@ -611,7 +663,8 @@ class _JsonEditorState extends State<JsonEditor> {
           if (keyFound) return;
           offset++;
           final newList = [...parents, entry.key];
-          if (entry.key == toFind.last && newList.toString() == toFind.toString()) {
+          if (entry.key == toFind.last &&
+              newList.toString() == toFind.toString()) {
             keyFound = true;
             return;
           }
@@ -641,7 +694,9 @@ class _JsonEditorState extends State<JsonEditor> {
 
   void scrollTo(int index) {
     final toFind = [..._matchedKeysLocation[index]];
-    final needsRebuilding = updateParentObjects([..._matchedKeysLocation[index]]..removeLast());
+    final needsRebuilding = updateParentObjects(
+      [..._matchedKeysLocation[index]]..removeLast(),
+    );
     if (needsRebuilding) setState(() {});
     Future.delayed(const Duration(milliseconds: 150), () {
       _scrollController.animateTo(
@@ -655,7 +710,8 @@ class _JsonEditorState extends State<JsonEditor> {
   void onSearchAction(_SearchActions action) {
     if (_matchedKeys.isEmpty) return;
     if (action == _SearchActions.next) {
-      if (_focusedKey != null && _matchedKeysLocation.length - 1 > _focusedKey!) {
+      if (_focusedKey != null &&
+          _matchedKeysLocation.length - 1 > _focusedKey!) {
         _focusedKey = _focusedKey! + 1;
       } else {
         _focusedKey = 0;
@@ -692,7 +748,10 @@ class _JsonEditorState extends State<JsonEditor> {
 
   Widget wrapWithHorizontolScroll(Widget child) {
     if (widget.enableHorizontalScroll) {
-      return SingleChildScrollView(scrollDirection: Axis.horizontal, child: child);
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: child,
+      );
     }
     return child;
   }
@@ -719,7 +778,10 @@ class _JsonEditorState extends State<JsonEditor> {
       textDirection: TextDirection.ltr,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(width: _onError ? 2 : 1, color: _onError ? Colors.red : _themeColor),
+          border: Border.all(
+            width: _onError ? 2 : 1,
+            color: _onError ? Colors.red : _themeColor,
+          ),
         ),
         child: SizedBox(
           child: Column(
@@ -728,10 +790,17 @@ class _JsonEditorState extends State<JsonEditor> {
               DecoratedBox(
                 decoration: BoxDecoration(
                   color: _themeColor,
-                  border: _onError ? const Border(bottom: BorderSide(color: Colors.red, width: 2)) : null,
+                  border: _onError
+                      ? const Border(
+                          bottom: BorderSide(color: Colors.red, width: 2),
+                        )
+                      : null,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 10,
+                  ),
                   child: Row(
                     children: [
                       const Text('Config Editor:  '),
@@ -750,19 +819,26 @@ class _JsonEditorState extends State<JsonEditor> {
                           },
                           position: PopupMenuPosition.under,
                           enabled: widget.editors.length > 1,
-                          constraints: const BoxConstraints(minWidth: 50, maxWidth: 150),
+                          constraints: const BoxConstraints(
+                            minWidth: 50,
+                            maxWidth: 150,
+                          ),
                           itemBuilder: (context) {
                             return <PopupMenuEntry<Editors>>[
                               PopupMenuItem<Editors>(
                                 height: _popupMenuHeight,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 enabled: widget.editors.contains(Editors.tree),
                                 value: Editors.tree,
                                 child: const Text("Tree"),
                               ),
                               PopupMenuItem<Editors>(
                                 height: _popupMenuHeight,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 enabled: widget.editors.contains(Editors.text),
                                 value: Editors.text,
                                 child: const Text("Text"),
@@ -784,11 +860,17 @@ class _JsonEditorState extends State<JsonEditor> {
                           onTap: () {
                             _controller.text = _stringifyData(_data, 0, true);
                           },
-                          child: const Tooltip(message: 'Format', child: Icon(Icons.format_align_left, size: 20)),
+                          child: const Tooltip(
+                            message: 'Format',
+                            child: Icon(Icons.format_align_left, size: 20),
+                          ),
                         ),
                       ] else ...[
                         const SizedBox(width: 20),
-                        if (_results != null) ...[Text("$_results results"), const SizedBox(width: 5)],
+                        if (_results != null) ...[
+                          Text("$_results results"),
+                          const SizedBox(width: 5),
+                        ],
                         _SearchField(onSearch, onSearchAction),
                         const SizedBox(width: 20),
                         InkWell(
@@ -797,7 +879,10 @@ class _JsonEditorState extends State<JsonEditor> {
                             expandAllObjects(_data, ["config"]);
                             setState(() {});
                           },
-                          child: const Tooltip(message: 'Expand All', child: Icon(Icons.expand, size: 20)),
+                          child: const Tooltip(
+                            message: 'Expand All',
+                            child: Icon(Icons.expand, size: 20),
+                          ),
                         ),
                         const SizedBox(width: 20),
                         InkWell(
@@ -805,13 +890,19 @@ class _JsonEditorState extends State<JsonEditor> {
                             _expandedObjects.clear();
                             setState(() {});
                           },
-                          child: const Tooltip(message: 'Collapse All', child: Icon(Icons.compress, size: 20)),
+                          child: const Tooltip(
+                            message: 'Collapse All',
+                            child: Icon(Icons.compress, size: 20),
+                          ),
                         ),
                       ],
                       const SizedBox(width: 20),
                       InkWell(
                         onTap: copyData,
-                        child: const Tooltip(message: 'Copy', child: Icon(Icons.copy, size: 20)),
+                        child: const Tooltip(
+                          message: 'Copy',
+                          child: Icon(Icons.copy, size: 20),
+                        ),
                       ),
                       if (widget.actions.isNotEmpty) const SizedBox(width: 20),
                       ...widget.actions,
@@ -852,7 +943,11 @@ class _JsonEditorState extends State<JsonEditor> {
                     textAlignVertical: TextAlignVertical.top,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.only(left: 5, top: 8, bottom: 8),
+                      contentPadding: EdgeInsets.only(
+                        left: 5,
+                        top: 8,
+                        bottom: 8,
+                      ),
                     ),
                   ),
                 ),
@@ -903,7 +998,8 @@ class _Holder extends StatefulWidget {
 }
 
 class _HolderState extends State<_Holder> {
-  late bool isExpanded = widget.expandedObjects[widget.allParents.toString()] == true;
+  late bool isExpanded =
+      widget.expandedObjects[widget.allParents.toString()] == true;
 
   void _toggleState() {
     if (!isExpanded) {
@@ -935,7 +1031,10 @@ class _HolderState extends State<_Holder> {
       setState(() {});
       widget.onChanged();
     } else if (exampleSchemaValues.containsKey(selectedItem.split("___")[0])) {
-      final jsonItem = exampleSchemaValues[selectedItem.split("___")[0]]![selectedItem.split("___")[1]]!;
+      final jsonItem =
+          exampleSchemaValues[selectedItem.split("___")[0]]![selectedItem.split(
+            "___",
+          )[1]]!;
       for (final key in jsonItem.keys) {
         widget.data[key] = jsonDecode(jsonEncode(jsonItem[key]));
       }
@@ -982,7 +1081,10 @@ class _HolderState extends State<_Holder> {
 
   Widget wrapWithColoredBox(Widget child, String key) {
     if (widget.matchedKeys[key] == true) {
-      return ColoredBox(color: Theme.of(context).colorScheme.secondaryContainer, child: child);
+      return ColoredBox(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        child: child,
+      );
     }
     return child;
   }
@@ -992,7 +1094,8 @@ class _HolderState extends State<_Holder> {
 
     var res = "{";
     if (data is Map<String, dynamic>) {
-      if (widget.expandedObjects[widget.allParents.toString()] ?? false) return "";
+      if (widget.expandedObjects[widget.allParents.toString()] ?? false)
+        return "";
       final content = data;
       //res += "${data.length}";
       if (content["type"] != null) {
@@ -1043,7 +1146,8 @@ class _HolderState extends State<_Holder> {
             child: Row(
               children: [
                 const SizedBox(width: _expandIconWidth),
-                if (_enableMoreOptions) _Options<Map>(onSelected, widget.getKeyPath()),
+                if (_enableMoreOptions)
+                  _Options<Map>(onSelected, widget.getKeyPath()),
                 SizedBox(width: widget.paddingLeft),
                 InkWell(
                   hoverColor: Colors.transparent,
@@ -1059,7 +1163,8 @@ class _HolderState extends State<_Holder> {
                     isKey: true,
                     onChanged: onKeyChanged,
                     setState: setState,
-                    isHighlighted: widget.matchedKeys["${widget.keyName}"] == true,
+                    isHighlighted:
+                        widget.matchedKeys["${widget.keyName}"] == true,
                   ),
                   _textSpacer,
                   Text(getChildSummary(widget), style: _textStyle),
@@ -1071,7 +1176,10 @@ class _HolderState extends State<_Holder> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        wrapWithColoredBox(Text("${widget.keyName}", style: _textStyle), "${widget.keyName}"),
+                        wrapWithColoredBox(
+                          Text("${widget.keyName}", style: _textStyle),
+                          "${widget.keyName}",
+                        ),
                         _textSpacer,
                         Text(getChildSummary(widget), style: _textStyle),
                       ],
@@ -1081,7 +1189,11 @@ class _HolderState extends State<_Holder> {
             ),
           ),
           if (isExpanded)
-            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: mapWidget),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: mapWidget,
+            ),
         ],
       );
     } else if (widget.data is List) {
@@ -1114,7 +1226,8 @@ class _HolderState extends State<_Holder> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(width: _expandIconWidth),
-                if (_enableMoreOptions) _Options<List>(onSelected, widget.getKeyPath()),
+                if (_enableMoreOptions)
+                  _Options<List>(onSelected, widget.getKeyPath()),
                 SizedBox(width: widget.paddingLeft),
                 InkWell(
                   hoverColor: Colors.transparent,
@@ -1130,7 +1243,8 @@ class _HolderState extends State<_Holder> {
                     isKey: true,
                     onChanged: onKeyChanged,
                     setState: setState,
-                    isHighlighted: widget.matchedKeys["${widget.keyName}"] == true,
+                    isHighlighted:
+                        widget.matchedKeys["${widget.keyName}"] == true,
                   ),
                   _textSpacer,
                   Text("[${widget.data.length}]", style: _textStyle),
@@ -1142,7 +1256,10 @@ class _HolderState extends State<_Holder> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        wrapWithColoredBox(Text("${widget.keyName}", style: _textStyle), "${widget.keyName}"),
+                        wrapWithColoredBox(
+                          Text("${widget.keyName}", style: _textStyle),
+                          "${widget.keyName}",
+                        ),
                         _textSpacer,
                         Text("[${widget.data.length}]", style: _textStyle),
                       ],
@@ -1152,7 +1269,11 @@ class _HolderState extends State<_Holder> {
             ),
           ),
           if (isExpanded)
-            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: listWidget),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: listWidget,
+            ),
         ],
       );
     } else {
@@ -1162,7 +1283,8 @@ class _HolderState extends State<_Holder> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(width: _expandIconWidth),
-            if (_enableMoreOptions) _Options<String>(onSelected, widget.getKeyPath()),
+            if (_enableMoreOptions)
+              _Options<String>(onSelected, widget.getKeyPath()),
             SizedBox(width: widget.paddingLeft + (_expandIconWidth * 2)),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -1174,14 +1296,18 @@ class _HolderState extends State<_Holder> {
                     isKey: true,
                     onChanged: onKeyChanged,
                     setState: setState,
-                    isHighlighted: widget.matchedKeys["${widget.keyName}"] == true,
+                    isHighlighted:
+                        widget.matchedKeys["${widget.keyName}"] == true,
                   ),
                   const Text(' :', style: _textStyle),
                 ] else
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      wrapWithColoredBox(Text("${widget.keyName}", style: _textStyle), "${widget.keyName}"),
+                      wrapWithColoredBox(
+                        Text("${widget.keyName}", style: _textStyle),
+                        "${widget.keyName}",
+                      ),
                       _textSpacer,
                       const Text(" :", style: _textStyle),
                     ],
@@ -1307,7 +1433,9 @@ class _ReplaceTextWithFieldState extends State<_ReplaceTextWithField> {
           Transform.scale(
             scale: 0.75,
             child: DropdownButton<String>(
-              hint: Text('Select ${widget.keyPath.replaceAll("config.outbounds", "")}'),
+              hint: Text(
+                'Select ${widget.keyPath.replaceAll("config.outbounds", "")}',
+              ),
               value: _text,
               icon: const Icon(Icons.arrow_downward),
               iconSize: 24,
@@ -1321,7 +1449,10 @@ class _ReplaceTextWithFieldState extends State<_ReplaceTextWithField> {
                 });
               },
               items: options.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(value: value, child: Text(value));
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
               }).toList(),
             ),
           ),
@@ -1426,7 +1557,9 @@ class _Options<T> extends StatelessWidget {
               ),
             ),
           if (keyPath != "config" && (T == Map || T == List)) ...[
-            if ((keyPath == "config.outbounds" || keyPath == "config.endpoints") && T == List) ...[
+            if ((keyPath == "config.outbounds" ||
+                    keyPath == "config.endpoints") &&
+                T == List) ...[
               for (final String key in protocolSchemaValues.keys) ...{
                 PopupMenuItem<_OptionItems>(
                   height: _popupMenuHeight,
@@ -1450,7 +1583,9 @@ class _Options<T> extends StatelessWidget {
                   for (final String key2 in exampleSchemaValues[key]!.keys) ...{
                     PopupMenuItem<_OptionItems>(
                       height: _popupMenuHeight,
-                      padding: const EdgeInsets.only(left: _popupMenuItemPadding),
+                      padding: const EdgeInsets.only(
+                        left: _popupMenuItemPadding,
+                      ),
                       value: key + "___" + key2,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1466,7 +1601,9 @@ class _Options<T> extends StatelessWidget {
               },
             ],
             if (keyPath != "config" &&
-                !(T == List && (keyPath == "config.outbounds" || keyPath == "config.endpoints"))) ...[
+                !(T == List &&
+                    (keyPath == "config.outbounds" ||
+                        keyPath == "config.endpoints"))) ...[
               const PopupMenuItem<_OptionItems>(
                 height: _popupMenuHeight,
                 padding: EdgeInsets.only(left: _popupMenuItemPadding),
@@ -1535,7 +1672,10 @@ class _Options<T> extends StatelessWidget {
             ],
           ],
           const PopupMenuDivider(height: 1),
-          if (keyPath != "config" && !(T == List && (keyPath == "config.outbounds" || keyPath == "config.endpoints")))
+          if (keyPath != "config" &&
+              !(T == List &&
+                  (keyPath == "config.outbounds" ||
+                      keyPath == "config.endpoints")))
             const PopupMenuItem<_OptionItems>(
               height: _popupMenuHeight,
               padding: EdgeInsets.only(left: 5),
@@ -1587,7 +1727,9 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Theme.of(context).searchBarTheme.backgroundColor?.resolve({}) ?? Colors.black,
+      color:
+          Theme.of(context).searchBarTheme.backgroundColor?.resolve({}) ??
+          Colors.black,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1619,14 +1761,20 @@ class _SearchField extends StatelessWidget {
             onTap: () {
               onAction(_SearchActions.next);
             },
-            child: const Tooltip(message: 'Next', child: Icon(Icons.keyboard_arrow_down_rounded, size: 20)),
+            child: const Tooltip(
+              message: 'Next',
+              child: Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+            ),
           ),
           const SizedBox(width: 2),
           InkWell(
             onTap: () {
               onAction(_SearchActions.prev);
             },
-            child: const Tooltip(message: 'Previous', child: Icon(Icons.keyboard_arrow_up_rounded, size: 20)),
+            child: const Tooltip(
+              message: 'Previous',
+              child: Icon(Icons.keyboard_arrow_up_rounded, size: 20),
+            ),
           ),
           const SizedBox(width: 5),
         ],
@@ -1656,7 +1804,8 @@ String _stringifyData(data, int spacing, [bool isLast = false]) {
     str += '\n';
     final keys = data.keys.toList();
     for (int i = 0; i < keys.length; i++) {
-      str += '$dataSpace"${keys[i]}": ${_stringifyData(data[keys[i]], spacing + 1, i == keys.length - 1)}';
+      str +=
+          '$dataSpace"${keys[i]}": ${_stringifyData(data[keys[i]], spacing + 1, i == keys.length - 1)}';
       str += '\n';
     }
     str += '$objectSpace}';
@@ -1669,7 +1818,8 @@ String _stringifyData(data, int spacing, [bool isLast = false]) {
       if (item is Map || item is List) {
         str += _stringifyData(item, spacing + 1, i == data.length - 1);
       } else {
-        str += '$dataSpace${_stringifyData(item, spacing + 1, i == data.length - 1)}';
+        str +=
+            '$dataSpace${_stringifyData(item, spacing + 1, i == data.length - 1)}';
       }
       str += '\n';
     }

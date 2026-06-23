@@ -4,16 +4,21 @@ import 'package:hiddify/utils/utils.dart';
 
 abstract class Constants {
   static const appName = "BOOST";
-  static const githubUrl = "https://github.com/moneyfly004/boost";
-  static const licenseUrl = "https://github.com/moneyfly004/boost";
-  static const githubReleasesApiUrl = "https://api.github.com/repos/moneyfly004/boost/releases";
-  static const githubLatestReleaseUrl = "https://github.com/moneyfly004/boost/releases/latest";
-  static const appCastUrl = "https://github.com/moneyfly004/boost/releases/latest/download/appcast.xml";
-  static const telegramChannelUrl = "https://t.me/hiddify";
-  static const privacyPolicyUrl = "https://hiddify.com/privacy-policy/";
-  static const termsAndConditionsUrl = "https://hiddify.com/terms/";
-  static const cfWarpPrivacyPolicy = "https://www.cloudflare.com/application/privacypolicy/";
-  static const cfWarpTermsOfService = "https://www.cloudflare.com/application/terms/";
+  static const githubUrl = "https://github.com/moneyfly004/BOOST";
+  static const licenseUrl = "https://github.com/moneyfly004/BOOST";
+  static const githubReleasesApiUrl =
+      "https://api.github.com/repos/moneyfly004/BOOST/releases";
+  static const githubLatestReleaseUrl =
+      "https://github.com/moneyfly004/BOOST/releases/latest";
+  static const appCastUrl =
+      "https://github.com/moneyfly004/BOOST/releases/latest/download/appcast.xml";
+  static const telegramChannelUrl = "https://new.moneyfly.top";
+  static const privacyPolicyUrl = "https://new.moneyfly.top";
+  static const termsAndConditionsUrl = "https://new.moneyfly.top";
+  static const cfWarpPrivacyPolicy =
+      "https://www.cloudflare.com/application/privacypolicy/";
+  static const cfWarpTermsOfService =
+      "https://www.cloudflare.com/application/terms/";
 }
 
 const kAnimationDuration = Duration(milliseconds: 250);
@@ -32,7 +37,10 @@ abstract class AddProfileModalConst {
 abstract class AlertDialogConst {
   static const minWidth = 280.0;
   static const maxWidth = 560.0;
-  static const boxConstraints = BoxConstraints(minWidth: minWidth, maxWidth: maxWidth);
+  static const boxConstraints = BoxConstraints(
+    minWidth: minWidth,
+    maxWidth: maxWidth,
+  );
 }
 
 abstract class BottomSheetConst {
@@ -81,9 +89,19 @@ abstract class KeyboardConst {
     LogicalKeyboardKey.arrowLeft,
     LogicalKeyboardKey.arrowRight,
   };
-  static final horizontalArrows = {LogicalKeyboardKey.arrowLeft, LogicalKeyboardKey.arrowRight};
-  static final verticalArrows = {LogicalKeyboardKey.arrowUp, LogicalKeyboardKey.arrowDown};
-  static final select = {LogicalKeyboardKey.select, LogicalKeyboardKey.enter, LogicalKeyboardKey.tab};
+  static final horizontalArrows = {
+    LogicalKeyboardKey.arrowLeft,
+    LogicalKeyboardKey.arrowRight,
+  };
+  static final verticalArrows = {
+    LogicalKeyboardKey.arrowUp,
+    LogicalKeyboardKey.arrowDown,
+  };
+  static final select = {
+    LogicalKeyboardKey.select,
+    LogicalKeyboardKey.enter,
+    LogicalKeyboardKey.tab,
+  };
 }
 
 abstract class ChainConst {
@@ -96,7 +114,9 @@ abstract class ChainConst {
   }
 
   static Color finalIpColor(ThemeData theme) =>
-      theme.brightness == Brightness.dark ? const Color(0xFF99AD7A) : const Color.fromARGB(255, 87, 136, 13);
+      theme.brightness == Brightness.dark
+      ? const Color(0xFF99AD7A)
+      : const Color.fromARGB(255, 87, 136, 13);
   static const warpColor = Color(0xFFF6821F);
   static const psiphonColor = Color(0xFFD52027);
   static const profileColor = Color(0xFF3282B8);

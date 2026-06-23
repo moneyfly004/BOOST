@@ -11,36 +11,41 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfileTileMain extends HookConsumerWidget {
-  const ProfileTileMain({super.key, required this.profile, this.isMain = false});
+  const ProfileTileMain({
+    super.key,
+    required this.profile,
+    this.isMain = false,
+  });
 
   final ProfileEntity profile;
   final bool isMain;
   static const verifiedDomains = [
-    'hiddify.com',
+    'new.moneyfly.top',
     // 't.me',
     // 'telegram.me',
     // 'instagram.com',
     // 'x.com',
     // 'facebook.com',
   ];
-  static const verifiedLinks = [
-    'https://t.me/hiddify',
-    'https://t.me/hiddify_board',
-    'https://instagram.com/hiddify_com',
-    'https://x.com/hiddify_com',
-    'https://facebook.com/hiddify',
-  ];
-  Future<void> _launchUrlWithCheck(BuildContext context, WidgetRef ref, String url) async {
+  static const verifiedLinks = <String>[];
+  Future<void> _launchUrlWithCheck(
+    BuildContext context,
+    WidgetRef ref,
+    String url,
+  ) async {
     final uri = Uri.parse(url);
     final host = uri.host.toLowerCase();
 
-    if (verifiedDomains.any((p) => host == p || host.endsWith(".$p")) || verifiedLinks.any((p) => url == p)) {
+    if (verifiedDomains.any((p) => host == p || host.endsWith(".$p")) ||
+        verifiedLinks.any((p) => url == p)) {
       await launchUrl(uri);
       return;
     }
 
     // Show warning dialog for unknown domains
-    final shouldLaunch = await ref.read(dialogNotifierProvider.notifier).showUnknownDomainsWarning(url: url);
+    final shouldLaunch = await ref
+        .read(dialogNotifierProvider.notifier)
+        .showUnknownDomainsWarning(url: url);
     if (shouldLaunch == true) {
       await launchUrl(uri);
     }
@@ -76,15 +81,23 @@ class ProfileTileMain extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(0.1),
+                      color: theme.colorScheme.primaryContainer.withOpacity(
+                        0.1,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(FluentIcons.arrow_sync_24_filled, color: theme.colorScheme.primary, size: 20),
+                    child: Icon(
+                      FluentIcons.arrow_sync_24_filled,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
                   ),
                   const Gap(6),
                   Text(
                     profile.name,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -119,26 +132,43 @@ class ProfileTileMain extends HookConsumerWidget {
                             title: subInfo.remaining.inDays > 365
                                 ? "∞ days remaining"
                                 : "${subInfo.remaining.inDays}/30 days remaining",
-                            progress: subInfo.remaining.inDays > 365 ? 0 : subInfo.remaining.inDays / 30,
-                            color: _getProgressColor(1 - (subInfo.remaining.inDays / 30)),
+                            progress: subInfo.remaining.inDays > 365
+                                ? 0
+                                : subInfo.remaining.inDays / 30,
+                            color: _getProgressColor(
+                              1 - (subInfo.remaining.inDays / 30),
+                            ),
                           ),
                       ],
                     ),
                   ),
                   if (subInfo.webPageUrl != null || subInfo.supportUrl != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: Row(
                         children: [
                           if (subInfo.webPageUrl != null)
                             Expanded(
                               child: InkWell(
-                                onTap: () => _launchUrlWithCheck(context, ref, subInfo.webPageUrl!),
+                                onTap: () => _launchUrlWithCheck(
+                                  context,
+                                  ref,
+                                  subInfo.webPageUrl!,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                                 child: _InfoItem(
-                                  icon: _getLinkIcon(subInfo.webPageUrl!, FluentIcons.building_shop_24_regular),
-                                  label: t.components.subscriptionInfo.profileSite,
-                                  value: _formatSupportLink(subInfo.webPageUrl!),
+                                  icon: _getLinkIcon(
+                                    subInfo.webPageUrl!,
+                                    FluentIcons.building_shop_24_regular,
+                                  ),
+                                  label:
+                                      t.components.subscriptionInfo.profileSite,
+                                  value: _formatSupportLink(
+                                    subInfo.webPageUrl!,
+                                  ),
                                 ),
                               ),
                             ),
@@ -146,12 +176,24 @@ class ProfileTileMain extends HookConsumerWidget {
                             const Gap(12),
                             Expanded(
                               child: InkWell(
-                                onTap: () => _launchUrlWithCheck(context, ref, subInfo.supportUrl!),
+                                onTap: () => _launchUrlWithCheck(
+                                  context,
+                                  ref,
+                                  subInfo.supportUrl!,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                                 child: _InfoItem(
-                                  icon: _getLinkIcon(subInfo.supportUrl!, FontAwesomeIcons.headset),
-                                  label: t.components.subscriptionInfo.profileSupport,
-                                  value: _formatSupportLink(subInfo.supportUrl!),
+                                  icon: _getLinkIcon(
+                                    subInfo.supportUrl!,
+                                    FontAwesomeIcons.headset,
+                                  ),
+                                  label: t
+                                      .components
+                                      .subscriptionInfo
+                                      .profileSupport,
+                                  value: _formatSupportLink(
+                                    subInfo.supportUrl!,
+                                  ),
                                 ),
                               ),
                             ),
@@ -183,9 +225,6 @@ class ProfileTileMain extends HookConsumerWidget {
     if (host.endsWith('facebook.com')) {
       return FontAwesomeIcons.facebook;
     }
-    if (host.endsWith('hiddify.com')) {
-      // return IconData();
-    }
     return icon ?? FluentIcons.link_24_regular;
   }
 
@@ -205,8 +244,8 @@ class ProfileTileMain extends HookConsumerWidget {
     if (host.endsWith('facebook.com')) {
       return uri.pathSegments.lastWhere((e) => e.isNotEmpty, orElse: () => '');
     }
-    if (host.endsWith('hiddify.com')) {
-      return "Hiddify";
+    if (host == 'new.moneyfly.top' || host.endsWith('.new.moneyfly.top')) {
+      return "BOOST";
     }
     return uri.host;
   }
@@ -220,7 +259,9 @@ class ProfileTileMain extends HookConsumerWidget {
   Widget _BandwithUsageRow(SubscriptionInfo subInfo) {
     return _UsageRow(
       icon: FluentIcons.data_usage_24_filled,
-      title: subInfo.total.isInfinitSize() ? "∞ GB remaining" : "${subInfo.remainingBWratio * 100}% remaining",
+      title: subInfo.total.isInfinitSize()
+          ? "∞ GB remaining"
+          : "${subInfo.remainingBWratio * 100}% remaining",
       progress: subInfo.total.isInfinitSize() ? 1 : subInfo.remainingBWratio,
       color: _getProgressColor(subInfo.remainingBWratio),
     );
@@ -230,7 +271,12 @@ class ProfileTileMain extends HookConsumerWidget {
 // Rest of the widget classes remain the same...
 
 class _UsageRow extends StatelessWidget {
-  const _UsageRow({required this.icon, required this.title, required this.progress, required this.color});
+  const _UsageRow({
+    required this.icon,
+    required this.title,
+    required this.progress,
+    required this.color,
+  });
 
   final IconData? icon;
   final String title;
@@ -244,7 +290,10 @@ class _UsageRow extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            if (icon != null) ...[Icon(icon, size: 20, color: color), const Gap(12)],
+            if (icon != null) ...[
+              Icon(icon, size: 20, color: color),
+              const Gap(12),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,7 +304,9 @@ class _UsageRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: progress,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                       minHeight: 4,
                     ),
@@ -271,7 +322,11 @@ class _UsageRow extends StatelessWidget {
 }
 
 class _InfoItem extends StatelessWidget {
-  const _InfoItem({required this.icon, required this.label, required this.value});
+  const _InfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -301,7 +356,12 @@ class _InfoItem extends StatelessWidget {
                     color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
                   ),
                 ),
-                Text(value, style: theme.textTheme.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  value,
+                  style: theme.textTheme.bodyMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
