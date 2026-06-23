@@ -58,6 +58,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   ),
             icon: const Icon(Icons.refresh_rounded),
           ),
+          if (state.isAuthenticated)
+            IconButton(
+              tooltip: '退出登录',
+              onPressed: state.loading
+                  ? null
+                  : () => _confirmLogout(context, ref),
+              icon: const Icon(Icons.logout_rounded),
+            ),
           const Gap(8),
         ],
       ),
@@ -88,6 +96,30 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       ),
     );
   }
+}
+
+Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('退出登录'),
+      content: const Text('退出后会清除本机账户订阅配置。'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('退出'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) {
+    return;
+  }
+  await _guard(context, ref.read(accountNotifierProvider.notifier).logout);
 }
 
 class _AuthPanel extends ConsumerStatefulWidget {
@@ -411,8 +443,13 @@ class _AccountOverviewPanel extends ConsumerWidget {
     final subscription = state.dashboard?.subscription;
     final hasSubscription =
         subscription != null && subscription.status.isNotEmpty;
-    final deviceText =
-        '${subscription?.onlineDevices ?? subscription?.currentDevices ?? 0}/${subscription?.deviceLimit ?? 0}';
+    final currentDevices = state.deviceTotal > 0
+        ? state.deviceTotal
+        : subscription?.currentDevices ?? 0;
+    final onlineDevices = state.deviceOnline > 0
+        ? state.deviceOnline
+        : subscription?.onlineDevices ?? currentDevices;
+    final deviceText = '$onlineDevices/${subscription?.deviceLimit ?? 0}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -968,6 +1005,12 @@ class _SubscriptionPanel extends ConsumerWidget {
     final syncing = state.syncingSubscription;
     final canImport = subscription?.canImport == true;
     final hasSyncUrl = subscription?.hasImportUrl == true;
+    final currentDevices = state.deviceTotal > 0
+        ? state.deviceTotal
+        : subscription?.currentDevices ?? 0;
+    final onlineDevices = state.deviceOnline > 0
+        ? state.deviceOnline
+        : subscription?.onlineDevices ?? currentDevices;
 
     return _Surface(
       child: Column(
@@ -1053,8 +1096,7 @@ class _SubscriptionPanel extends ConsumerWidget {
                         ),
                         _Metric(
                           label: '设备',
-                          value:
-                              '${subscription.onlineDevices == 0 ? subscription.currentDevices : subscription.onlineDevices}/${subscription.deviceLimit}',
+                          value: '$onlineDevices/${subscription.deviceLimit}',
                         ),
                       ],
                     ),

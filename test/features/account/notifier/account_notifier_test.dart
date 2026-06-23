@@ -163,6 +163,36 @@ void main() {
     expect(preferences.getString('boost_account_refresh_token'), 'invalid-refresh-token');
   });
 
+  test('logout clears local account state when remote logout fails', () async {
+    const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
+    SharedPreferences.setMockInitialValues({
+      'boost_account_access_token': 'fresh-access-token',
+      'boost_account_refresh_token': 'fresh-refresh-token',
+      'boost_account_user': jsonEncode(savedUser.toJson()),
+    });
+
+    final preferences = await SharedPreferences.getInstance();
+    final api = _RefreshingAccountApi();
+    final sync = _FakeSubscriptionSync();
+
+    final notifier = AccountNotifier(api, sync, preferences);
+    await pumpEventQueue();
+    api.reset();
+    sync.reset();
+    api.logoutFailure = AccountApiException('remote logout failed', statusCode: 500);
+
+    await notifier.logout();
+
+    expect(api.logoutTokens, ['fresh-access-token']);
+    expect(api.logoutRefreshTokens, ['fresh-refresh-token']);
+    expect(sync.clearCalls, 1);
+    expect(notifier.state.isAuthenticated, isFalse);
+    expect(notifier.state.message, '已退出登录');
+    expect(preferences.getString('boost_account_access_token'), isNull);
+    expect(preferences.getString('boost_account_refresh_token'), isNull);
+    expect(preferences.getString('boost_account_user'), isNull);
+  });
+
   test('silent subscription status refresh syncs active subscription from dashboard', () async {
     const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
     SharedPreferences.setMockInitialValues({
@@ -196,11 +226,14 @@ class _RefreshingAccountApi extends AccountApi {
   final List<String> dashboardTokens = [];
   final List<String> deviceTokens = [];
   final List<String> refreshTokens = [];
+  final List<String> logoutTokens = [];
+  final List<String?> logoutRefreshTokens = [];
   final List<String> loginEmails = [];
   int refreshTokenCalls = 0;
   bool _expireFreshTokenOnce = false;
   bool holdDashboards = false;
   AccountApiException? refreshFailure;
+  AccountApiException? logoutFailure;
   AccountApiException? ordersFailure;
   AccountApiException? devicesFailure;
   Completer<void>? _dashboardRelease;
@@ -209,11 +242,14 @@ class _RefreshingAccountApi extends AccountApi {
     dashboardTokens.clear();
     deviceTokens.clear();
     refreshTokens.clear();
+    logoutTokens.clear();
+    logoutRefreshTokens.clear();
     loginEmails.clear();
     refreshTokenCalls = 0;
     _expireFreshTokenOnce = false;
     holdDashboards = false;
     refreshFailure = null;
+    logoutFailure = null;
     ordersFailure = null;
     devicesFailure = null;
     _dashboardRelease = null;
@@ -231,6 +267,17 @@ class _RefreshingAccountApi extends AccountApi {
       refreshToken: 'fresh-refresh-token',
       user: const AccountUser(id: 1, username: 'fresh', email: 'fresh@example.com'),
     );
+  }
+
+  @override
+  Future<String> logout({required String token, String? refreshToken}) async {
+    logoutTokens.add(token);
+    logoutRefreshTokens.add(refreshToken);
+    final failure = logoutFailure;
+    if (failure != null) {
+      throw failure;
+    }
+    return '已登出';
   }
 
   void releaseDashboards() {

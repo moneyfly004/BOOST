@@ -117,6 +117,26 @@ vless://00000000-0000-0000-0000-000000000000@example.com:443?security=reality&fl
       expect(sanitized, isNot(equals(encoded)));
     });
 
+    test("Should identify BOOST account subscription downloads with a non-browser user agent", () {
+      final userAgent = ProfileParser.profileDownloadUserAgentForTesting(
+        'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash',
+        'HiddifyNext/1.0.0 (macos) like ClashMeta v2ray sing-box',
+      );
+      final xrayUserAgent = ProfileParser.profileDownloadUserAgentForTesting(
+        'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash',
+        'HiddifyNext/1.0.0 (windows) like ClashMeta v2ray sing-box',
+        useXrayCore: true,
+      );
+      final externalUserAgent = ProfileParser.profileDownloadUserAgentForTesting(
+        'https://example.com/api/v1/client/subscribe?token=account-token&type=clash',
+        'HiddifyNext/1.0.0 (macos) like ClashMeta v2ray sing-box',
+      );
+
+      expect(userAgent, 'HiddifyNext/1.0.0 (Mac OS X) Hiddify');
+      expect(xrayUserAgent, 'HiddifyNextX/1.0.0 (Windows NT 10.0) Hiddify');
+      expect(externalUserAgent, isNull);
+    });
+
     test("Should use filename in url with no headers and fragment", () {
       final profile = ProfileParser.parse(
         tempFilePath: '',

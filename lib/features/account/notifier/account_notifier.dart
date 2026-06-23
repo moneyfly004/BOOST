@@ -206,10 +206,13 @@ class AccountNotifier extends StateNotifier<AccountState> {
 
   Future<void> loadPublicData() async {
     await _run(() async {
-      final results = await Future.wait<Object>([_api.getPackages(), _api.getPaymentMethods()]);
+      final results = await Future.wait<Object?>([
+        _optionalAccountData<List<AccountPackage>>(() => _api.getPackages()),
+        _optionalAccountData<List<PaymentMethod>>(() => _api.getPaymentMethods()),
+      ]);
       state = state.copyWith(
-        packages: results[0] as List<AccountPackage>,
-        paymentMethods: results[1] as List<PaymentMethod>,
+        packages: (results[0] as List<AccountPackage>?) ?? state.packages,
+        paymentMethods: (results[1] as List<PaymentMethod>?) ?? state.paymentMethods,
       );
     });
   }
@@ -301,6 +304,15 @@ class AccountNotifier extends StateNotifier<AccountState> {
   Future<void> logout() async {
     state = state.copyWith(loading: true);
     try {
+      final token = state.token;
+      final refreshToken = state.refreshToken;
+      if (token != null && token.isNotEmpty) {
+        try {
+          await _api.logout(token: token, refreshToken: refreshToken);
+        } catch (_) {
+          // Local logout must remain available even when the remote token expired.
+        }
+      }
       await _subscriptionSync.clearAccountSubscriptions();
       await _preferences.remove(_tokenKey);
       await _preferences.remove(_refreshTokenKey);

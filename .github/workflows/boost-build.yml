@@ -723,24 +723,20 @@ jobs:
           Build number: ${APP_BUILD_NUMBER}
 
           Highlights:
-          - Replaced legacy user-facing branding with BOOST across app metadata, VPN session labels, Android service notifications, release files, and documentation.
-          - Connected the account, login, dashboard, subscription, package, order, and device flows to https://new.moneyfly.top.
-          - Automatically imports the active account subscription after login and selects it as the active local profile.
-          - Uses the backend Clash subscription URL first, then falls back through universal/base64 and Hiddify subscription URLs.
-          - Skips sing-box account subscription JSON during automatic account import because duplicated outbound tags in that format can block the profile parser.
-          - Replaced the legacy hiddify:// import scheme with boost:// for BOOST deep links.
-          - Removed tracked release/build outputs from the source repository. Release files are now generated only by GitHub Actions.
+          - Fixed BOOST account integration with the v2 backend at https://new.moneyfly.top.
+          - Restored dashboard refresh, package listing, payment methods, order history, device management, password changes, and logout.
+          - Added an always-available logout action for signed-in accounts.
+          - Improved account subscription downloads so the backend can register the current device instead of treating the request as a browser visit.
+          - Kept release artifacts out of the source repository. Release files are generated only by GitHub Actions.
 
           Fixed:
-          - Fixed account subscription parsing so token_clash_url from the backend is used for post-login profile import.
-          - Fixed the connection failure that could show "unable to determine config format" when a sing-box subscription response could not be parsed.
-          - Fixed Clash YAML profile downloads so indentation is preserved before local validation.
-          - Fixed the post-login flow so users are no longer asked to manually choose a profile after a valid account subscription is available.
-          - Fixed post-login subscription sync so the profile is imported before optional package, order, or device refresh failures can interrupt the account refresh.
-          - Fixed account subscription sync so BOOST tries the next available subscription URL when the first profile import fails.
-          - Fixed duplicate account subscription profiles by replacing previous account-owned profiles with the latest working backend subscription while preserving user update settings.
-          - Fixed VLESS Clash and URI subscription imports by sanitizing unsupported flow values before converting profiles to sing-box.
-          - Prevents account subscription sync from failing when backend subscriptions contain unsupported VLESS flow values such as TSAR or xtls-rprx-vision-udp443.
+          - Fixed v2 backend response parsing for packages, payment methods, orders, subscription details, and devices.
+          - Fixed device count and device list refresh by supporting the backend's actual subscription device response format.
+          - Fixed account refresh so package and payment loading are handled independently instead of leaving both empty when one endpoint fails.
+          - Fixed logout so BOOST clears local account state and account-owned subscription profiles even if the remote logout request fails.
+          - Fixed profile import for account subscription URLs by using app User-Agent headers that the backend device tracker accepts.
+          - Fixed subscription URL detection for the new.moneyfly.top v2 backend while preserving the existing behavior for external subscription links.
+          - Added focused tests for v2 account API parsing, account logout cleanup, and account subscription download headers.
 
           Build and release:
           - Release version: ${RELEASE_VERSION}. Versioning starts at 1.0.0.

@@ -87,12 +87,82 @@ void main() {
     expect(result.devices.last.isMobile, isTrue);
   });
 
-  test('AccountDevicesResult ignores unsupported response shapes', () {
-    final result = AccountDevicesResult.fromJson({
-      'data': {'items': []},
+  test('AccountSubscription parses v2 backend subscription urls', () {
+    final subscription = AccountSubscription.fromJson({
+      'id': 7,
+      'package_name': 'VIP',
+      'clash_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash',
+      'universal_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token',
+      'singbox_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox',
+      'status': 'active',
+      'days_remaining': 30,
+      'is_active': true,
+      'current_devices': 1,
+      'device_limit': 3,
     });
 
-    expect(result.total, 0);
-    expect(result.devices, isEmpty);
+    expect(subscription.importUrl, 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash');
+    expect(subscription.currentDevices, 1);
+    expect(subscription.canImport, isTrue);
+  });
+
+  test('AccountDevicesResult parses paginated v2 device response', () {
+    final result = AccountDevicesResult.fromJson({
+      'data': {
+        'items': [
+          {
+            'id': 12,
+            'device_name': 'BOOST macOS',
+            'device_type': 'desktop',
+            'software_name': 'Hiddify',
+            'os_name': 'macOS',
+            'last_access': DateTime.now().toIso8601String(),
+          },
+        ],
+        'total': 3,
+        'online_devices': 1,
+      },
+    });
+
+    expect(result.total, 3);
+    expect(result.online, 1);
+    expect(result.devices.single.displayName, 'BOOST macOS');
+  });
+
+  test('AccountPackage and AccountOrder parse v2 backend fields', () {
+    final package = AccountPackage.fromJson({
+      'id': 2,
+      'name': 'Pro',
+      'description': '30 days',
+      'price': 9.9,
+      'duration_days': 30,
+      'device_limit': 5,
+      'is_featured': true,
+    });
+    final order = AccountOrder.fromJson({
+      'id': 8,
+      'order_no': 'ORD123',
+      'package_name': 'Pro',
+      'final_amount': 8.8,
+      'status': 'pending',
+      'created_at': '2026-06-23T10:00:00Z',
+    });
+    final method = PaymentMethod.fromJson({'id': 4, 'pay_type': 'alipay'});
+    final payment = OrderResult.fromJson({
+      'order_no': 'ORD123',
+      'transaction_id': 'PAY123',
+      'amount': 8.8,
+      'pay_type': 'alipay',
+      'payment_url': 'https://pay.example/checkout',
+    });
+
+    expect(package.name, 'Pro');
+    expect(package.deviceLimit, 5);
+    expect(package.isRecommended, isTrue);
+    expect(order.orderNo, 'ORD123');
+    expect(order.packageName, 'Pro');
+    expect(method.name, '支付宝');
+    expect(payment.orderNo, 'ORD123');
+    expect(payment.paymentUrl, 'https://pay.example/checkout');
   });
 }

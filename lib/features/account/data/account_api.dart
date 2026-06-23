@@ -82,6 +82,17 @@ class AccountApi {
     return _messageFromData(data, fallback: '密码已更新');
   }
 
+  Future<String> logout({required String token, String? refreshToken}) async {
+    final data = await _request(
+      () => _dio.post<Map<String, dynamic>>(
+        '/auth/logout',
+        data: {if (refreshToken != null && refreshToken.isNotEmpty) 'refresh_token': refreshToken},
+        options: _options(token),
+      ),
+    );
+    return _messageFromData(data, fallback: '已登出');
+  }
+
   Future<AccountUser> getProfile(String token) async {
     final data = await _get('/users/me', token: token);
     return AccountUser.fromJson(_payload(data));
@@ -111,21 +122,22 @@ class AccountApi {
         throw error;
       }),
     ]);
-    return AccountDashboard.fromBackend(user: _payload(results[1]), subscription: _nullablePayload(results[2]));
+    return AccountDashboard.fromBackend(
+      dashboard: _payload(results[0]),
+      user: _payload(results[1]),
+      subscription: _nullablePayload(results[2]),
+    );
   }
 
   Future<List<AccountPackage>> getPackages() async {
     final data = await _get('/packages');
-    return _listPayload(data).map(AccountPackage.fromJson).toList();
+    return _listPayload(data, keys: const ['packages', 'items']).map(AccountPackage.fromJson).toList();
   }
 
   Future<List<PaymentMethod>> getPaymentMethods() async {
     final data = await _get('/payment/methods');
     final payload = _payload(data);
-    final methods = ((payload['methods'] as List?) ?? const [])
-        .whereType<Map>()
-        .map((method) => PaymentMethod.fromJson(method.cast<String, dynamic>()))
-        .toList();
+    final methods = _listFromValue(payload, keys: const ['methods', 'items']).map(PaymentMethod.fromJson).toList();
     if (_asBool(payload['balance_enabled'])) {
       return [PaymentMethod.balance(), ...methods];
     }
@@ -139,12 +151,7 @@ class AccountApi {
 
   Future<List<AccountOrder>> getOrders(String token) async {
     final data = await _get('/orders', token: token, queryParameters: const {'page': 1, 'page_size': 20});
-    final payload = _payload(data);
-    final orders = payload['items'];
-    if (orders is List) {
-      return orders.whereType<Map>().map((order) => AccountOrder.fromJson(order.cast<String, dynamic>())).toList();
-    }
-    return const [];
+    return _listPayload(data, keys: const ['orders', 'items']).map(AccountOrder.fromJson).toList();
   }
 
   Future<AccountOrderStatus> getOrderStatus({required String token, required String orderNo}) async {
@@ -176,8 +183,12 @@ class AccountApi {
     });
   }
 
-  Future<AccountDevicesResult> getDevices(String token) async {
-    final data = await _get('/subscriptions/devices', token: token);
+  Future<AccountDevicesResult> getDevices(String token, {int page = 1, int size = 100}) async {
+    final data = await _get(
+      '/subscriptions/devices',
+      token: token,
+      queryParameters: {'page': page, 'page_size': size, 'sort': 'last_access', 'order': 'desc'},
+    );
     return AccountDevicesResult.fromJson(data);
   }
 
@@ -307,6 +318,9 @@ class AccountApi {
     if (payload is Map<String, dynamic>) {
       return payload;
     }
+    if (payload is Map) {
+      return payload.cast<String, dynamic>();
+    }
     return data;
   }
 
@@ -315,21 +329,32 @@ class AccountApi {
     if (payload is Map<String, dynamic>) {
       return payload;
     }
+    if (payload is Map) {
+      return payload.cast<String, dynamic>();
+    }
     return null;
   }
 
-  List<Map<String, dynamic>> _listPayload(Map<String, dynamic> data) {
+  List<Map<String, dynamic>> _listPayload(Map<String, dynamic> data, {List<String> keys = const ['items', 'list']}) {
     final payload = data['data'];
-    if (payload is List) {
-      return payload.whereType<Map<String, dynamic>>().toList();
+    final fromPayload = _listFromValue(payload, keys: keys);
+    if (fromPayload.isNotEmpty || payload is List) {
+      return fromPayload;
     }
-    return const [];
+    return _listFromValue(data, keys: keys);
   }
 
   String _messageFromData(Map<String, dynamic> data, {required String fallback}) {
     final message = data['message'];
     if (message is String && message.isNotEmpty) {
       return message;
+    }
+    final payload = data['data'];
+    if (payload is Map) {
+      final payloadMessage = payload['message'];
+      if (payloadMessage is String && payloadMessage.isNotEmpty) {
+        return payloadMessage;
+      }
     }
     return fallback;
   }
@@ -411,11 +436,20 @@ class AccountDashboard {
   final List<AccountOrder> recentOrders;
   final double totalSpent;
 
-  factory AccountDashboard.fromBackend({required Map<String, dynamic> user, Map<String, dynamic>? subscription}) {
+  factory AccountDashboard.fromBackend({
+    Map<String, dynamic> dashboard = const {},
+    required Map<String, dynamic> user,
+    Map<String, dynamic>? subscription,
+  }) {
+    final dashboardSubscription = dashboard['subscription'];
+    final subscriptionJson =
+        subscription ?? (dashboardSubscription is Map ? dashboardSubscription.cast<String, dynamic>() : null);
+    final dashboardBalance = dashboard['balance'];
+    final userJson = {...user, if (dashboardBalance != null) 'balance': dashboardBalance};
     return AccountDashboard(
-      user: AccountUser.fromJson(user),
-      subscription: subscription == null ? null : AccountSubscription.fromJson(subscription),
-      totalSpent: _asDouble(user['total_consumption']),
+      user: AccountUser.fromJson(userJson),
+      subscription: subscriptionJson == null ? null : AccountSubscription.fromJson(subscriptionJson),
+      totalSpent: _asDouble(user['total_consumption'] ?? dashboard['total_consumption'] ?? dashboard['total_spent']),
     );
   }
 }
@@ -486,21 +520,34 @@ class AccountSubscription {
   bool get hasImportUrl => importUrl.isNotEmpty;
 
   factory AccountSubscription.fromJson(Map<String, dynamic> json) {
+    final tokenUrl = _firstString(json, const [
+      'token_url',
+      'universal_url',
+      'shadowrocket_url',
+      'v2ray_url',
+      'hiddify_url',
+    ]);
+    final clashUrl = _firstString(json, const ['token_clash_url', 'clash_url']);
+    final hiddifyUrl = _firstString(json, const ['token_hiddify_url', 'hiddify_url']);
+    final singboxUrl = _firstString(json, const ['token_singbox_url', 'singbox_url']);
+    final universalUrl = _firstString(json, const ['universal_url', 'token_url']);
+    final status = _firstString(json, const ['status']);
+    final expireTime = _firstString(json, const ['expire_time', 'expire_at', 'expired_at']);
     return AccountSubscription(
       id: _asInt(json['id']),
-      packageName: json['package_name']?.toString() ?? '',
-      tokenUrl: json['token_url']?.toString() ?? '',
-      clashUrl: json['token_clash_url']?.toString() ?? '',
-      hiddifyUrl: json['token_hiddify_url']?.toString() ?? '',
-      singboxUrl: json['token_singbox_url']?.toString() ?? '',
-      universalUrl: json['universal_url']?.toString() ?? '',
-      expireTime: json['expire_time']?.toString() ?? '',
-      remainingDays: _asInt(json['days_remaining']),
-      status: json['status']?.toString() ?? '',
+      packageName: _firstString(json, const ['package_name', 'plan_name', 'name']),
+      tokenUrl: tokenUrl,
+      clashUrl: clashUrl,
+      hiddifyUrl: hiddifyUrl,
+      singboxUrl: singboxUrl,
+      universalUrl: universalUrl,
+      expireTime: expireTime,
+      remainingDays: _asInt(json['days_remaining'] ?? json['remaining_days']),
+      status: status,
       deviceLimit: _asInt(json['device_limit']),
       currentDevices: _asInt(json['current_devices']),
-      onlineDevices: _asInt(json['online_devices']),
-      isActive: _asBool(json['is_active']) || json['status'] == 'active',
+      onlineDevices: _asInt(json['online_devices'] ?? json['online_devices_count']),
+      isActive: _asBool(json['is_active']) || status == 'active',
     );
   }
 }
@@ -520,12 +567,18 @@ class AccountDevicesResult {
 
   factory AccountDevicesResult.fromJson(Map<String, dynamic> json) {
     final payload = json['data'];
-    final rawDevices = payload is List ? payload : const [];
-    final devices = rawDevices
-        .whereType<Map>()
-        .map((device) => AccountDevice.fromJson(device.cast<String, dynamic>()))
-        .toList();
-    return AccountDevicesResult(devices: devices);
+    final payloadMap = payload is Map ? payload.cast<String, dynamic>() : json;
+    final devices = _listFromValue(
+      payload,
+      keys: const ['devices', 'items', 'list'],
+    ).map(AccountDevice.fromJson).toList();
+    return AccountDevicesResult(
+      devices: devices,
+      total: _firstNullableInt(payloadMap, const ['total', 'device_count', 'current_devices', 'current_device_count']),
+      online: _firstNullableInt(payloadMap, const ['online', 'online_devices', 'online_devices_count']),
+      mobile: _firstNullableInt(payloadMap, const ['mobile', 'mobile_devices', 'mobile_count']),
+      desktop: _firstNullableInt(payloadMap, const ['desktop', 'desktop_devices', 'desktop_count']),
+    );
   }
 }
 
@@ -670,12 +723,12 @@ class AccountPackage {
   factory AccountPackage.fromJson(Map<String, dynamic> json) {
     return AccountPackage(
       id: _asInt(json['id']),
-      name: json['name']?.toString() ?? '套餐',
-      description: json['description']?.toString() ?? '',
-      price: _asDouble(json['price']),
-      durationDays: _asInt(json['duration_days']),
-      deviceLimit: _asInt(json['device_limit']),
-      isRecommended: json['is_featured'] == true,
+      name: _firstString(json, const ['name', 'title', 'package_name'], fallback: '套餐'),
+      description: _firstString(json, const ['description', 'desc', 'content']),
+      price: _asDouble(json['price'] ?? json['amount']),
+      durationDays: _asInt(json['duration_days'] ?? json['duration'] ?? json['days']),
+      deviceLimit: _asInt(json['device_limit'] ?? json['devices'] ?? json['max_devices']),
+      isRecommended: _asBool(json['is_featured'] ?? json['is_recommended'] ?? json['recommended']),
     );
   }
 }
@@ -692,10 +745,11 @@ class PaymentMethod {
   final String name;
 
   factory PaymentMethod.fromJson(Map<String, dynamic> json) {
+    final key = _firstString(json, const ['pay_type', 'key', 'type', 'method']);
     return PaymentMethod(
       id: _asInt(json['id']),
-      key: json['pay_type']?.toString() ?? '',
-      name: json['name']?.toString() ?? _paymentName(json['pay_type']?.toString() ?? ''),
+      key: key,
+      name: _firstString(json, const ['name', 'title', 'label'], fallback: _paymentName(key)),
     );
   }
 }
@@ -722,12 +776,12 @@ class AccountOrder {
   factory AccountOrder.fromJson(Map<String, dynamic> json) {
     return AccountOrder(
       id: _asInt(json['id']),
-      orderNo: json['order_no']?.toString() ?? '',
-      packageName: json['package_name']?.toString() ?? '套餐',
-      amount: _asDouble(json['final_amount'] ?? json['amount']),
-      status: json['status']?.toString() ?? '',
-      createdAt: json['created_at']?.toString() ?? '',
-      paymentUrl: json['payment_url']?.toString(),
+      orderNo: _firstString(json, const ['order_no', 'trade_no', 'order_id']),
+      packageName: _firstString(json, const ['package_name', 'plan_name', 'subject', 'title'], fallback: '套餐'),
+      amount: _asDouble(json['final_amount'] ?? json['amount'] ?? json['total_amount']),
+      status: _firstString(json, const ['status']),
+      createdAt: _firstString(json, const ['created_at', 'createdAt', 'create_time']),
+      paymentUrl: _nullableString(json['payment_url'] ?? json['pay_url']),
     );
   }
 }
@@ -756,11 +810,11 @@ class AccountOrderStatus {
 
   factory AccountOrderStatus.fromJson(Map<String, dynamic> json) {
     return AccountOrderStatus(
-      orderNo: json['order_no']?.toString() ?? '',
-      status: json['status']?.toString() ?? '',
-      amount: _asDouble(json['amount']),
+      orderNo: _firstString(json, const ['order_no', 'trade_no', 'order_id']),
+      status: _firstString(json, const ['status']),
+      amount: _asDouble(json['amount'] ?? json['total_amount']),
       finalAmount: _asDouble(json['final_amount'] ?? json['amount']),
-      type: json['type']?.toString() ?? '',
+      type: _firstString(json, const ['type', 'order_type']),
     );
   }
 }
@@ -785,12 +839,64 @@ class OrderResult {
   factory OrderResult.fromJson(Map<String, dynamic> json) {
     return OrderResult(
       id: _asInt(json['id']),
-      orderNo: json['order_no']?.toString() ?? '',
-      status: json['status']?.toString() ?? '',
-      amount: _asDouble(json['final_amount'] ?? json['amount']),
-      paymentUrl: json['payment_url']?.toString(),
+      orderNo: _firstString(json, const ['order_no', 'trade_no', 'order_id']),
+      status: _firstString(json, const ['status']),
+      amount: _asDouble(json['final_amount'] ?? json['amount'] ?? json['total_amount']),
+      paymentUrl: _nullableString(json['payment_url'] ?? json['pay_url']),
+      paymentQrCode: _nullableString(json['payment_qr_code'] ?? json['qr_code'] ?? json['qrcode']),
     );
   }
+}
+
+String _firstString(Map<String, dynamic> json, List<String> keys, {String fallback = ''}) {
+  for (final key in keys) {
+    final value = json[key];
+    final text = _nullableString(value);
+    if (text != null && text.isNotEmpty) {
+      return text;
+    }
+  }
+  return fallback;
+}
+
+String? _nullableString(Object? value) {
+  if (value == null) {
+    return null;
+  }
+  final text = value.toString().trim();
+  return text.isEmpty || text == 'null' ? null : text;
+}
+
+int? _firstNullableInt(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    if (!json.containsKey(key)) {
+      continue;
+    }
+    return _asInt(json[key]);
+  }
+  return null;
+}
+
+List<Map<String, dynamic>> _listFromValue(Object? value, {List<String> keys = const ['items', 'list']}) {
+  if (value is List) {
+    return value.whereType<Map>().map((item) => item.cast<String, dynamic>()).toList();
+  }
+  if (value is Map) {
+    final map = value.cast<String, dynamic>();
+    for (final key in keys) {
+      final nested = map[key];
+      if (nested is List) {
+        return nested.whereType<Map>().map((item) => item.cast<String, dynamic>()).toList();
+      }
+      if (nested is Map) {
+        final nestedList = _listFromValue(nested, keys: keys);
+        if (nestedList.isNotEmpty) {
+          return nestedList;
+        }
+      }
+    }
+  }
+  return const [];
 }
 
 int _asInt(Object? value) {

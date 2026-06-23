@@ -160,9 +160,11 @@ class ProfileParser {
           url.trim(),
           tempFilePath,
           cancelToken: cancelToken,
-          userAgent: _ref.read(ConfigOptions.useXrayCoreWhenPossible)
-              ? _httpClient.userAgent.replaceAll("HiddifyNext", "HiddifyNextX")
-              : null,
+          userAgent: _profileDownloadUserAgent(
+            url,
+            _httpClient.userAgent,
+            useXrayCore: _ref.read(ConfigOptions.useXrayCoreWhenPossible),
+          ),
         )
         .catchError((err) {
           if (CancelToken.isCancel(err as DioException)) {
@@ -218,9 +220,11 @@ class ProfileParser {
             lineToExpand,
             tmpPath,
             cancelToken: cancelToken,
-            userAgent: ref.read(ConfigOptions.useXrayCoreWhenPossible)
-                ? httpClient.userAgent.replaceAll('HiddifyNext', 'HiddifyNextX')
-                : null,
+            userAgent: _profileDownloadUserAgent(
+              lineToExpand,
+              httpClient.userAgent,
+              useXrayCore: ref.read(ConfigOptions.useXrayCoreWhenPossible),
+            ),
           );
 
           results[currentIndex] = (await File(tmpPath).readAsString()).trim();
@@ -254,6 +258,49 @@ class ProfileParser {
       return line.trim();
     }
     return null;
+  }
+
+  @visibleForTesting
+  static String? profileDownloadUserAgentForTesting(String url, String defaultUserAgent, {bool useXrayCore = false}) {
+    return _profileDownloadUserAgent(url, defaultUserAgent, useXrayCore: useXrayCore);
+  }
+
+  static String? _profileDownloadUserAgent(String url, String defaultUserAgent, {required bool useXrayCore}) {
+    final userAgent = useXrayCore ? defaultUserAgent.replaceAll('HiddifyNext', 'HiddifyNextX') : defaultUserAgent;
+    if (!_isBoostSubscriptionUrl(url)) {
+      return useXrayCore ? userAgent : null;
+    }
+    final version = RegExp(r'HiddifyNextX?/([^\s(]+)').firstMatch(userAgent)?.group(1) ?? '1.0.0';
+    final appName = useXrayCore ? 'HiddifyNextX' : 'HiddifyNext';
+    return '$appName/$version (${_normalizedDeviceOs(userAgent)}) Hiddify';
+  }
+
+  static bool _isBoostSubscriptionUrl(String url) {
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null || uri.host.toLowerCase() != 'new.moneyfly.top') {
+      return false;
+    }
+    return uri.path == '/api/v1/client/subscribe' && (uri.queryParameters['token']?.isNotEmpty ?? false);
+  }
+
+  static String _normalizedDeviceOs(String userAgent) {
+    final lower = userAgent.toLowerCase();
+    if (lower.contains('ios')) {
+      return 'iPhone; CPU iPhone OS 17_0';
+    }
+    if (lower.contains('android')) {
+      return 'Android 14';
+    }
+    if (lower.contains('macos') || lower.contains('mac os') || lower.contains('darwin')) {
+      return 'Mac OS X';
+    }
+    if (lower.contains('windows')) {
+      return 'Windows NT 10.0';
+    }
+    if (lower.contains('linux')) {
+      return 'Linux';
+    }
+    return 'Windows NT 10.0';
   }
 
   @visibleForTesting
