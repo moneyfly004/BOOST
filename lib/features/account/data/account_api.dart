@@ -425,6 +425,7 @@ class AccountSubscription {
     this.id = 0,
     this.packageName = '',
     this.tokenUrl = '',
+    this.clashUrl = '',
     this.hiddifyUrl = '',
     this.singboxUrl = '',
     this.universalUrl = '',
@@ -440,6 +441,7 @@ class AccountSubscription {
   final int id;
   final String packageName;
   final String tokenUrl;
+  final String clashUrl;
   final String hiddifyUrl;
   final String singboxUrl;
   final String universalUrl;
@@ -451,18 +453,21 @@ class AccountSubscription {
   final int onlineDevices;
   final bool isActive;
 
+  List<String> get importUrls => _uniqueImportableSubscriptionUrls([
+    clashUrl,
+    _typedVariant(tokenUrl, 'clash'),
+    _typedVariant(universalUrl, 'clash'),
+    tokenUrl,
+    hiddifyUrl,
+    universalUrl,
+    singboxUrl,
+    _typedVariant(tokenUrl, 'singbox'),
+    _typedVariant(universalUrl, 'singbox'),
+  ]);
+
   String get importUrl {
-    for (final url in [
-      _singboxVariant(singboxUrl),
-      _singboxVariant(tokenUrl),
-      _singboxVariant(hiddifyUrl),
-      _singboxVariant(universalUrl),
-    ]) {
-      if (_isImportableSubscriptionUrl(url)) {
-        return url;
-      }
-    }
-    return '';
+    final urls = importUrls;
+    return urls.isEmpty ? '' : urls.first;
   }
 
   bool get canImport {
@@ -486,6 +491,7 @@ class AccountSubscription {
       id: _asInt(json['id']),
       packageName: json['package_name']?.toString() ?? '',
       tokenUrl: json['token_url']?.toString() ?? '',
+      clashUrl: json['token_clash_url']?.toString() ?? '',
       hiddifyUrl: json['token_hiddify_url']?.toString() ?? '',
       singboxUrl: json['token_singbox_url']?.toString() ?? '',
       universalUrl: json['universal_url']?.toString() ?? '',
@@ -841,7 +847,27 @@ bool _isImportableSubscriptionUrl(String url) {
       (uri.queryParameters['token']?.isNotEmpty ?? false);
 }
 
-String _singboxVariant(String url) {
+List<String> _uniqueImportableSubscriptionUrls(Iterable<String> urls) {
+  final seen = <String>{};
+  final result = <String>[];
+  for (final rawUrl in urls) {
+    final url = rawUrl.trim();
+    if (!_isImportableSubscriptionUrl(url)) {
+      continue;
+    }
+    final uri = Uri.parse(url);
+    final normalizedQuery = Map<String, String>.of(uri.queryParameters);
+    final normalized = uri
+        .replace(scheme: uri.scheme.toLowerCase(), host: uri.host.toLowerCase(), queryParameters: normalizedQuery)
+        .toString();
+    if (seen.add(normalized)) {
+      result.add(url);
+    }
+  }
+  return result;
+}
+
+String _typedVariant(String url, String type) {
   final uri = Uri.tryParse(url);
   if (uri == null ||
       uri.host.isEmpty ||
@@ -850,7 +876,7 @@ String _singboxVariant(String url) {
     return url;
   }
   final queryParameters = Map<String, String>.of(uri.queryParameters);
-  queryParameters['type'] = 'singbox';
+  queryParameters['type'] = type;
   return uri.replace(queryParameters: queryParameters).toString();
 }
 

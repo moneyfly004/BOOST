@@ -23,59 +23,65 @@ class AccountSubscriptionSync {
 
   Future<void> sync(AccountDashboard? dashboard) async {
     final subscription = dashboard?.subscription;
-    final url = subscription?.importUrl ?? '';
+    final urls = subscription?.importUrls ?? const <String>[];
     final repo = await _ref.read(profileRepositoryProvider.future);
     final canImport = subscription != null && subscription.canImport;
-    final existingAccountProfile = await _deleteAccountProfiles(repo, activeUrl: url, keepActiveUrl: canImport);
+    final existingAccountProfile = await _deleteAccountProfiles(repo, activeUrls: urls);
     if (!canImport) {
       return;
     }
 
-    await repo
-        .upsertRemote(url, userOverride: _accountUserOverride(existingAccountProfile), active: true)
-        .getOrElse((failure) => throw failure)
-        .run();
+    await _importFirstWorkingUrl(repo, urls, existingAccountProfile);
   }
 
   Future<void> refreshActiveSubscription(AccountDashboard? dashboard) async {
     final repo = await _ref.read(profileRepositoryProvider.future);
     final subscription = dashboard?.subscription;
-    final activeUrl = subscription?.importUrl ?? '';
+    final activeUrls = subscription?.importUrls ?? const <String>[];
     final canImport = subscription != null && subscription.canImport;
-    final existingAccountProfile = await _deleteAccountProfiles(repo, activeUrl: activeUrl, keepActiveUrl: canImport);
+    final existingAccountProfile = await _deleteAccountProfiles(repo, activeUrls: activeUrls);
     if (!canImport) {
       return;
     }
-    await repo
-        .upsertRemote(activeUrl, userOverride: _accountUserOverride(existingAccountProfile), active: true)
-        .getOrElse((failure) => throw failure)
-        .run();
+    await _importFirstWorkingUrl(repo, activeUrls, existingAccountProfile);
+  }
+
+  Future<void> _importFirstWorkingUrl(
+    ProfileRepository repo,
+    List<String> urls,
+    RemoteProfileEntity? existingAccountProfile,
+  ) async {
+    Object? lastFailure;
+    for (final url in urls) {
+      final result = await repo
+          .upsertRemote(url, userOverride: _accountUserOverride(existingAccountProfile), active: true)
+          .run();
+      final imported = result.match((failure) {
+        lastFailure = failure;
+        return false;
+      }, (_) => true);
+      if (imported) {
+        return;
+      }
+    }
+    final failure = lastFailure;
+    if (failure != null) {
+      throw failure;
+    }
   }
 
   Future<RemoteProfileEntity?> _deleteAccountProfiles(
     ProfileRepository repo, {
-    String? activeUrl,
-    bool keepActiveUrl = false,
+    List<String> activeUrls = const [],
   }) async {
     final profiles = await repo
         .watchAll(sortMode: SortMode.descending)
         .map((event) => event.getOrElse((failure) => throw failure))
         .first;
     RemoteProfileEntity? existingAccountProfile;
-    for (final profile in profiles.where((profile) => _isAccountProfile(profile, activeUrl: activeUrl))) {
-      if (profile is RemoteProfileEntity &&
-          activeUrl != null &&
-          activeUrl.isNotEmpty &&
-          _sameSubscriptionUrl(profile.url, activeUrl)) {
+    for (final profile in profiles.where((profile) => _isAccountProfile(profile, activeUrls: activeUrls))) {
+      if (profile is RemoteProfileEntity && _matchesSubscriptionUrls(profile.url, activeUrls)) {
         existingAccountProfile ??= profile;
-      }
-      if (keepActiveUrl &&
-          activeUrl != null &&
-          activeUrl.isNotEmpty &&
-          profile is RemoteProfileEntity &&
-          profile.url == activeUrl) {
-        existingAccountProfile ??= profile;
-        continue;
       }
       await repo.deleteById(profile.id, profile.active).getOrElse((failure) => throw failure).run();
     }
@@ -92,16 +98,20 @@ class AccountSubscriptionSync {
     return accountProfileOverride;
   }
 
-  bool _isAccountProfile(ProfileEntity profile, {String? activeUrl}) {
+  bool _isAccountProfile(ProfileEntity profile, {List<String> activeUrls = const []}) {
     return switch (profile) {
       RemoteProfileEntity(:final name, :final url, :final userOverride) =>
         name == accountProfileName ||
             userOverride?.name == accountProfileName ||
-            (activeUrl != null && activeUrl.isNotEmpty && _sameSubscriptionUrl(url, activeUrl)),
+            _matchesSubscriptionUrls(url, activeUrls),
       LocalProfileEntity(:final name, :final userOverride) =>
         name == accountProfileName || userOverride?.name == accountProfileName,
     };
   }
+}
+
+bool _matchesSubscriptionUrls(String url, Iterable<String> candidates) {
+  return candidates.any((candidate) => _sameSubscriptionUrl(url, candidate));
 }
 
 bool _sameSubscriptionUrl(String left, String right) {

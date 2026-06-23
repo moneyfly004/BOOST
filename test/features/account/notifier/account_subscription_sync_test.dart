@@ -13,7 +13,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 void main() {
   test('sync only replaces account subscription profile', () async {
     const accountUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token';
-    const accountSingboxUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox';
+    const accountClashUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash';
     final manualProfile = RemoteProfileEntity(
       id: 'manual',
       active: true,
@@ -74,7 +74,7 @@ void main() {
     expect(repo.profiles.map((profile) => profile.id), contains('manual'));
     expect(repo.profiles.map((profile) => profile.id), contains('manual-universal'));
     expect(repo.profiles.map((profile) => profile.id), contains('unrelated-boost-host'));
-    expect(repo.upsertedUrls, [accountSingboxUrl]);
+    expect(repo.upsertedUrls, [accountClashUrl]);
     expect(repo.upsertedUserOverrides, [AccountSubscriptionSync.accountProfileOverride]);
   });
 
@@ -119,7 +119,7 @@ void main() {
 
   test('sync keeps user configured account subscription update interval', () async {
     const accountUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token';
-    const accountSingboxUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox';
+    const accountClashUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash';
     final repo = _FakeProfileRepository([
       RemoteProfileEntity(
         id: 'account',
@@ -151,7 +151,7 @@ void main() {
         );
 
     expect(repo.deletedIds, ['account']);
-    expect(repo.upsertedUrls, [accountSingboxUrl]);
+    expect(repo.upsertedUrls, [accountClashUrl]);
     expect(repo.upsertedUserOverrides, [
       const UserOverride(name: AccountSubscriptionSync.accountProfileName, updateInterval: 12),
     ]);
@@ -196,9 +196,9 @@ void main() {
     expect(repo.upsertedUrls, isEmpty);
   });
 
-  test('sync imports token url as sing-box profile and marks it active', () async {
+  test('sync imports token url as Clash profile and marks it active', () async {
     const tokenUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token';
-    const expectedUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox';
+    const expectedUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash';
     final repo = _FakeProfileRepository([]);
     final container = ProviderContainer(
       overrides: [profileRepositoryProvider.overrideWith((ref) => Future.value(repo))],
@@ -224,8 +224,9 @@ void main() {
     expect(repo.upsertedActiveValues, [true]);
   });
 
-  test('sync prefers backend sing-box url when present', () async {
+  test('sync prefers backend Clash url when present', () async {
     const tokenUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token';
+    const clashUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash';
     const singboxUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox';
     final repo = _FakeProfileRepository([]);
     final container = ProviderContainer(
@@ -241,6 +242,7 @@ void main() {
               id: 1,
               packageName: 'VIP',
               tokenUrl: tokenUrl,
+              clashUrl: clashUrl,
               singboxUrl: singboxUrl,
               status: 'active',
               remainingDays: 30,
@@ -249,12 +251,12 @@ void main() {
           ),
         );
 
-    expect(repo.upsertedUrls, [singboxUrl]);
+    expect(repo.upsertedUrls, [clashUrl]);
   });
 
-  test('sync converts backend universal url to sing-box url', () async {
+  test('sync converts backend universal url to Clash url', () async {
     const universalUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=universal-token';
-    const expectedUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=universal-token&type=singbox';
+    const expectedUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=universal-token&type=clash';
     final repo = _FakeProfileRepository([]);
     final container = ProviderContainer(
       overrides: [profileRepositoryProvider.overrideWith((ref) => Future.value(repo))],
@@ -278,12 +280,42 @@ void main() {
 
     expect(repo.upsertedUrls, [expectedUrl]);
   });
+
+  test('sync falls back to universal token url when Clash import fails', () async {
+    const tokenUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token';
+    const clashUrl = 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash';
+    final repo = _FakeProfileRepository([], failingUrls: {clashUrl});
+    final container = ProviderContainer(
+      overrides: [profileRepositoryProvider.overrideWith((ref) => Future.value(repo))],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(accountSubscriptionSyncProvider)
+        .sync(
+          const AccountDashboard(
+            subscription: AccountSubscription(
+              id: 1,
+              packageName: 'VIP',
+              tokenUrl: tokenUrl,
+              clashUrl: clashUrl,
+              status: 'active',
+              remainingDays: 30,
+              isActive: true,
+            ),
+          ),
+        );
+
+    expect(repo.upsertedUrls, [clashUrl, tokenUrl]);
+    expect(repo.upsertedActiveValues, [true, true]);
+  });
 }
 
 class _FakeProfileRepository implements ProfileRepository {
-  _FakeProfileRepository(this.profiles);
+  _FakeProfileRepository(this.profiles, {Set<String>? failingUrls}) : failingUrls = failingUrls ?? const {};
 
   final List<ProfileEntity> profiles;
+  final Set<String> failingUrls;
   final List<String> deletedIds = [];
   final List<String> upsertedUrls = [];
   final List<UserOverride?> upsertedUserOverrides = [];
@@ -313,6 +345,12 @@ class _FakeProfileRepository implements ProfileRepository {
     CancelToken? cancelToken,
     bool active = false,
   }) {
+    if (failingUrls.contains(url)) {
+      upsertedUrls.add(url);
+      upsertedUserOverrides.add(userOverride);
+      upsertedActiveValues.add(active);
+      return TaskEither.left(const ProfileFailure.invalidConfig('bad profile'));
+    }
     return TaskEither.tryCatch(() async {
       upsertedUrls.add(url);
       upsertedUserOverrides.add(userOverride);

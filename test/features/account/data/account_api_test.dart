@@ -2,6 +2,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hiddify/features/account/data/account_api.dart';
 
 void main() {
+  test('AccountSubscription parses backend Clash URL and orders import fallbacks', () {
+    final subscription = AccountSubscription.fromJson({
+      'id': 7,
+      'package_name': 'VIP',
+      'token_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token',
+      'token_clash_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash',
+      'token_singbox_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox',
+      'status': 'active',
+      'days_remaining': 30,
+      'is_active': true,
+    });
+
+    expect(subscription.importUrls, [
+      'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash',
+      'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token',
+      'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox',
+    ]);
+    expect(subscription.importUrl, 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash');
+    expect(subscription.canImport, isTrue);
+  });
+
   test('AccountDevicesResult parses subscription device list response', () {
     final result = AccountDevicesResult.fromJson({
       'data': [
@@ -23,13 +44,7 @@ void main() {
           'access_count': 3,
           'remark': 'work laptop',
         },
-        {
-          'id': 13,
-          'device_name': 'Pixel',
-          'device_type': 'mobile',
-          'is_active': 1,
-          'is_allowed': 'true',
-        },
+        {'id': 13, 'device_name': 'Pixel', 'device_type': 'mobile', 'is_active': 1, 'is_allowed': 'true'},
       ],
     });
 

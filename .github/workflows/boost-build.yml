@@ -726,16 +726,16 @@ jobs:
           - Replaced legacy user-facing branding with BOOST across app metadata, VPN session labels, Android service notifications, release files, and documentation.
           - Connected the account, login, dashboard, subscription, package, order, and device flows to https://new.moneyfly.top.
           - Automatically imports the active account subscription after login and selects it as the active local profile.
-          - Uses the backend sing-box subscription endpoint with type=singbox so BOOST receives a JSON profile that the client can load directly.
+          - Uses the backend Clash subscription URL first, then falls back through universal/base64, Hiddify, and sing-box subscription URLs if an import format fails.
           - Replaced the legacy hiddify:// import scheme with boost:// for BOOST deep links.
           - Removed tracked release/build outputs from the source repository. Release files are now generated only by GitHub Actions.
 
           Fixed:
-          - Fixed account subscriptions downloading the generic plain-text/base64 subscription instead of the sing-box JSON profile.
-          - Fixed the connection failure that could show "unable to determine config format" after login.
+          - Fixed account subscription parsing so token_clash_url from the backend is used for post-login profile import.
+          - Fixed the connection failure that could show "unable to determine config format" when a sing-box subscription response could not be parsed.
           - Fixed the post-login flow so users are no longer asked to manually choose a profile after a valid account subscription is available.
-          - Fixed duplicate account subscription profiles by replacing the previous account-owned profile with the latest backend subscription.
-          - Existing BOOST account subscription profiles are migrated to the sing-box subscription URL while preserving user update settings.
+          - Fixed account subscription sync so BOOST tries the next available subscription URL when the first profile import fails.
+          - Fixed duplicate account subscription profiles by replacing previous account-owned profiles with the latest working backend subscription while preserving user update settings.
 
           Build and release:
           - Release version: ${RELEASE_VERSION}. Versioning starts at 1.0.0.
