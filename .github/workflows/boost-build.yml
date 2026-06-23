@@ -806,8 +806,13 @@ jobs:
           (cd release-assets && find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
           gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --cleanup-tag -y || true
           gh release create "${TAG}" \
-            release-assets/* \
             --repo "${GITHUB_REPOSITORY}" \
             --title "BOOST ${RELEASE_VERSION}" \
             --notes-file release-notes.md \
             --latest
+          while IFS= read -r -d '' asset; do
+            echo "Uploading $(basename "${asset}")"
+            gh release upload "${TAG}" "${asset}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber
+          done < <(find release-assets -maxdepth 1 -type f -print0 | sort -z)
