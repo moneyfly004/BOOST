@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiddify/features/profile/data/profile_parser.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
@@ -33,6 +35,86 @@ void main() {
         '  https://example.com/nested-url-is-yaml-value',
         null,
       ]);
+    });
+
+    test("Should sanitize unsupported VLESS flow values in Clash inline YAML", () {
+      const content = '''
+proxies:
+  - {name: bad-flow, type: vless, server: example.com, port: 443, uuid: id, flow: TSAR, tls: true}
+  - {name: udp443-flow, type: vless, server: example.com, port: 443, uuid: id, flow: xtls-rprx-vision-udp443, tls: true}
+  - {name: supported-flow, type: vless, server: example.com, port: 443, uuid: id, flow: xtls-rprx-vision, tls: true}
+  - {name: non-vless, type: vmess, server: example.com, port: 443, flow: TSAR, tls: true}
+''';
+
+      final sanitized = ProfileParser.sanitizeUnsupportedSubscriptionOptionsForTesting(content);
+
+      expect(sanitized, contains('{name: bad-flow, type: vless, server: example.com, port: 443, uuid: id, tls: true}'));
+      expect(
+        sanitized,
+        contains(
+          '{name: udp443-flow, type: vless, server: example.com, port: 443, uuid: id, flow: xtls-rprx-vision, tls: true}',
+        ),
+      );
+      expect(sanitized, contains('flow: xtls-rprx-vision, tls: true}'));
+      expect(sanitized, contains('{name: non-vless, type: vmess, server: example.com, port: 443, flow: TSAR'));
+      expect(sanitized, isNot(contains('type: vless, server: example.com, port: 443, uuid: id, flow: TSAR')));
+      expect(sanitized, isNot(contains('xtls-rprx-vision-udp443')));
+    });
+
+    test("Should sanitize unsupported VLESS flow values in Clash block YAML", () {
+      const content = '''
+proxies:
+  - name: bad-flow
+    type: vless
+    server: example.com
+    flow: TSAR
+    tls: true
+  - name: supported-flow
+    type: vless
+    server: example.com
+    flow: xtls-rprx-vision
+    tls: true
+  - name: non-vless
+    type: vmess
+    server: example.com
+    flow: TSAR
+''';
+
+      final sanitized = ProfileParser.sanitizeUnsupportedSubscriptionOptionsForTesting(content);
+
+      expect(sanitized, contains('  - name: bad-flow\n    type: vless\n    server: example.com\n    tls: true'));
+      expect(sanitized, contains('    flow: xtls-rprx-vision\n    tls: true'));
+      expect(sanitized, contains('  - name: non-vless\n    type: vmess\n    server: example.com\n    flow: TSAR'));
+      expect(sanitized, isNot(contains('bad-flow\n    type: vless\n    server: example.com\n    flow: TSAR')));
+    });
+
+    test("Should sanitize unsupported VLESS flow values in URI subscriptions", () {
+      const content = '''
+vless://00000000-0000-0000-0000-000000000000@example.com:443?security=reality&flow=TSAR&fp=chrome#bad
+vless://00000000-0000-0000-0000-000000000000@example.com:443?security=reality&flow=xtls-rprx-vision-udp443&fp=chrome#udp443
+vless://00000000-0000-0000-0000-000000000000@example.com:443?security=reality&flow=xtls-rprx-vision&fp=chrome#ok
+''';
+
+      final sanitized = ProfileParser.sanitizeUnsupportedSubscriptionOptionsForTesting(content);
+
+      expect(sanitized, contains('security=reality&fp=chrome#bad'));
+      expect(sanitized, contains('flow=xtls-rprx-vision&fp=chrome#udp443'));
+      expect(sanitized, contains('flow=xtls-rprx-vision&fp=chrome#ok'));
+      expect(sanitized, isNot(contains('flow=TSAR')));
+      expect(sanitized, isNot(contains('xtls-rprx-vision-udp443')));
+    });
+
+    test("Should decode base64 URI subscriptions before sanitizing unsupported VLESS flow values", () {
+      const decoded =
+          'vless://00000000-0000-0000-0000-000000000000@example.com:443?security=reality&flow=TSAR&fp=chrome#bad';
+      final encoded = base64.encode(utf8.encode(decoded));
+
+      final sanitized = ProfileParser.sanitizeUnsupportedSubscriptionOptionsForTesting(encoded);
+
+      expect(sanitized, contains('vless://'));
+      expect(sanitized, contains('security=reality&fp=chrome#bad'));
+      expect(sanitized, isNot(contains('flow=TSAR')));
+      expect(sanitized, isNot(equals(encoded)));
     });
 
     test("Should use filename in url with no headers and fragment", () {

@@ -30,6 +30,7 @@ import 'package:meta/meta.dart';
 class ProfileParser {
   static const infiniteTrafficThreshold = 920_233_720_368;
   static const infiniteTimeThreshold = 92_233_720_368;
+  static const _supportedVlessFlow = 'xtls-rprx-vision';
   static const allowedOverrideConfigs = [
     'connection-test-url',
     'direct-dns-address',
@@ -66,8 +67,9 @@ class ProfileParser {
             cancelToken: CancelToken(),
             ref: _ref,
           );
+          await _sanitizeUnsupportedSubscriptionOptionsInFile(tempFilePath);
         }, (_, _) => const ProfileFailure.unexpected())
-        .flatMap((_) => TaskEither.fromEither(populateHeaders(content: content)))
+        .flatMap((_) => TaskEither.fromEither(populateHeaders(content: File(tempFilePath).readAsStringSync())))
         .flatMap(
           (populatedHeaders) => TaskEither.fromEither(
             parse(
@@ -134,12 +136,16 @@ class ProfileParser {
   Either<ProfileFailure, ProfileEntriesCompanion> offlineUpdate({
     required ProfileEntity profile,
     required String tempFilePath,
-  }) => profile
-      .map(
-        remote: (rp) => parse(profile: rp, tempFilePath: tempFilePath),
-        local: (lp) => parse(tempFilePath: tempFilePath, profile: lp),
-      )
-      .flatMap((profEntity) => Either.tryCatch(() => profEntity.toUpdateEntry(), ProfileFailure.unexpected));
+  }) =>
+      Either.tryCatch(() {
+            _sanitizeUnsupportedSubscriptionOptionsInFileSync(tempFilePath);
+            return profile.map(
+              remote: (rp) => parse(profile: rp, tempFilePath: tempFilePath),
+              local: (lp) => parse(tempFilePath: tempFilePath, profile: lp),
+            );
+          }, ProfileFailure.unexpected)
+          .flatMap((profile) => profile)
+          .flatMap((profEntity) => Either.tryCatch(() => profEntity.toUpdateEntry(), ProfileFailure.unexpected));
 
   TaskEither<ProfileFailure, Map<String, dynamic>> _downloadProfile(
     String url,
@@ -170,6 +176,7 @@ class ProfileParser {
       cancelToken: cancelToken ?? CancelToken(),
       ref: _ref,
     );
+    await _sanitizeUnsupportedSubscriptionOptionsInFile(tempFilePath);
     // fixing headers before return
     return rs.headers.map.map((key, value) {
       if (value.length == 1) return MapEntry(key, value.first);
@@ -247,6 +254,255 @@ class ProfileParser {
       return line.trim();
     }
     return null;
+  }
+
+  @visibleForTesting
+  static String sanitizeUnsupportedSubscriptionOptionsForTesting(String content) {
+    return _sanitizeUnsupportedSubscriptionOptions(content);
+  }
+
+  static Future<void> _sanitizeUnsupportedSubscriptionOptionsInFile(String tempFilePath) async {
+    final file = File(tempFilePath);
+    final content = await file.readAsString();
+    final sanitized = _sanitizeUnsupportedSubscriptionOptions(content);
+    if (sanitized != content) {
+      await file.writeAsString(sanitized);
+    }
+  }
+
+  static void _sanitizeUnsupportedSubscriptionOptionsInFileSync(String tempFilePath) {
+    final file = File(tempFilePath);
+    final content = file.readAsStringSync();
+    final sanitized = _sanitizeUnsupportedSubscriptionOptions(content);
+    if (sanitized != content) {
+      file.writeAsStringSync(sanitized);
+    }
+  }
+
+  static String _sanitizeUnsupportedSubscriptionOptions(String content) {
+    final decoded = _tryDecodeBase64Subscription(content);
+    if (decoded != null) {
+      final sanitizedDecoded = _sanitizeDecodedSubscriptionOptions(decoded);
+      if (sanitizedDecoded != decoded) {
+        return sanitizedDecoded;
+      }
+    }
+    return _sanitizeDecodedSubscriptionOptions(content);
+  }
+
+  static String? _tryDecodeBase64Subscription(String content) {
+    final compact = content.trim().replaceAll(RegExp(r'\s+'), '');
+    if (compact.length < 8 || !RegExp(r'^[A-Za-z0-9+/_-]+={0,2}$').hasMatch(compact)) {
+      return null;
+    }
+    try {
+      final decoded = utf8.decode(base64.decode(base64.normalize(compact)));
+      if (_looksLikeProxySubscription(decoded)) {
+        return decoded;
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
+  }
+
+  static bool _looksLikeProxySubscription(String content) {
+    return content.contains('vless://') ||
+        content.contains('vmess://') ||
+        content.contains('trojan://') ||
+        content.contains('proxies:');
+  }
+
+  static String _sanitizeDecodedSubscriptionOptions(String content) {
+    final lines = content.split('\n');
+    final sanitizedLines = List<String?>.from(lines);
+    var currentBlockIsVless = false;
+    final pendingBlockFlowIndexes = <int>[];
+
+    for (var index = 0; index < lines.length; index++) {
+      var line = sanitizedLines[index] ?? lines[index];
+
+      final inlineSanitized = _sanitizeInlineVlessYamlFlow(line);
+      if (inlineSanitized != line) {
+        sanitizedLines[index] = inlineSanitized;
+        line = inlineSanitized;
+      }
+
+      final uriSanitized = _sanitizeVlessUriLine(line);
+      if (uriSanitized != line) {
+        sanitizedLines[index] = uriSanitized;
+        line = uriSanitized;
+      }
+
+      if (_isYamlInlineMapLine(line)) {
+        currentBlockIsVless = false;
+        pendingBlockFlowIndexes.clear();
+        continue;
+      }
+
+      if (_isYamlListItemLine(line)) {
+        currentBlockIsVless = _containsYamlKeyValue(line, 'type', 'vless');
+        pendingBlockFlowIndexes.clear();
+      } else if (_isYamlTypeVlessLine(line)) {
+        currentBlockIsVless = true;
+        for (final pendingIndex in pendingBlockFlowIndexes) {
+          sanitizedLines[pendingIndex] = _sanitizeBlockVlessFlowLine(lines[pendingIndex]);
+        }
+        pendingBlockFlowIndexes.clear();
+      }
+
+      if (_isYamlFlowLine(line)) {
+        if (currentBlockIsVless) {
+          sanitizedLines[index] = _sanitizeBlockVlessFlowLine(line);
+        } else {
+          pendingBlockFlowIndexes.add(index);
+        }
+      }
+    }
+
+    return sanitizedLines.whereType<String>().join('\n');
+  }
+
+  static String _sanitizeVlessUriLine(String line) {
+    final trimmed = line.trim();
+    if (!trimmed.startsWith('vless://')) {
+      return line;
+    }
+    final uri = Uri.tryParse(trimmed);
+    final flow = uri?.queryParameters['flow'];
+    if (uri == null || flow == null || flow.isEmpty) {
+      return line;
+    }
+    final normalizedFlow = _normalizeVlessFlow(flow);
+    if (normalizedFlow == flow) {
+      return line;
+    }
+
+    final queryParameters = <String, dynamic>{};
+    for (final entry in uri.queryParametersAll.entries) {
+      if (entry.key == 'flow') {
+        if (normalizedFlow != null) {
+          queryParameters[entry.key] = normalizedFlow;
+        }
+        continue;
+      }
+      queryParameters[entry.key] = entry.value.length == 1 ? entry.value.first : entry.value;
+    }
+
+    final sanitizedUri = uri.replace(queryParameters: queryParameters.isEmpty ? null : queryParameters).toString();
+    return line.replaceFirst(trimmed, sanitizedUri);
+  }
+
+  static String _sanitizeInlineVlessYamlFlow(String line) {
+    if (!_isYamlInlineMapLine(line) || !_containsYamlKeyValue(line, 'type', 'vless')) {
+      return line;
+    }
+    var sanitized = line;
+    final flowMatches = RegExp(r'flow:\s*([^,}\n]+)').allMatches(line).toList().reversed;
+    for (final match in flowMatches) {
+      final rawValue = match.group(1)!;
+      final normalizedFlow = _normalizeVlessFlow(rawValue);
+      if (normalizedFlow == _unquoteYamlScalar(rawValue)) {
+        continue;
+      }
+      if (normalizedFlow != null) {
+        sanitized = sanitized.replaceRange(match.start + 'flow:'.length, match.end, ' $normalizedFlow');
+      } else {
+        sanitized = _removeInlineYamlField(sanitized, match.start, match.end);
+      }
+    }
+    return sanitized;
+  }
+
+  static String? _sanitizeBlockVlessFlowLine(String line) {
+    final match = RegExp(r'''^(\s*)flow:\s*([^#\s]+|'[^']*'|"[^"]*")(\s*(?:#.*)?)$''').firstMatch(line);
+    if (match == null) {
+      return line;
+    }
+    final rawValue = match.group(2)!;
+    final normalizedFlow = _normalizeVlessFlow(rawValue);
+    if (normalizedFlow == _unquoteYamlScalar(rawValue)) {
+      return line;
+    }
+    if (normalizedFlow == null) {
+      return null;
+    }
+    return '${match.group(1)}flow: $normalizedFlow${match.group(3)}';
+  }
+
+  static String _removeInlineYamlField(String line, int start, int end) {
+    var removeStart = start;
+    while (removeStart > 0 && _isHorizontalWhitespace(line.codeUnitAt(removeStart - 1))) {
+      removeStart--;
+    }
+    if (removeStart > 0 && line[removeStart - 1] == ',') {
+      removeStart--;
+      var removeEnd = end;
+      while (removeEnd < line.length && _isHorizontalWhitespace(line.codeUnitAt(removeEnd))) {
+        removeEnd++;
+      }
+      return line.replaceRange(removeStart, removeEnd, '');
+    }
+
+    var removeEnd = end;
+    while (removeEnd < line.length && _isHorizontalWhitespace(line.codeUnitAt(removeEnd))) {
+      removeEnd++;
+    }
+    if (removeEnd < line.length && line[removeEnd] == ',') {
+      removeEnd++;
+      while (removeEnd < line.length && _isHorizontalWhitespace(line.codeUnitAt(removeEnd))) {
+        removeEnd++;
+      }
+    }
+    return line.replaceRange(removeStart, removeEnd, '');
+  }
+
+  static bool _isHorizontalWhitespace(int codeUnit) {
+    return codeUnit == 0x20 || codeUnit == 0x09;
+  }
+
+  static bool _isYamlInlineMapLine(String line) {
+    return line.contains('{') && line.contains('}');
+  }
+
+  static bool _isYamlListItemLine(String line) {
+    return RegExp(r'^\s*-\s+').hasMatch(line);
+  }
+
+  static bool _isYamlTypeVlessLine(String line) {
+    return _containsYamlKeyValue(line, 'type', 'vless');
+  }
+
+  static bool _isYamlFlowLine(String line) {
+    return RegExp(r'^\s*flow:\s*').hasMatch(line);
+  }
+
+  static bool _containsYamlKeyValue(String line, String key, String value) {
+    final pattern = RegExp(
+      '(^|[,{\\s-])$key:\\s*[\\\'"]?${RegExp.escape(value)}[\\\'"]?(?=\\s*(,|}|#|\$))',
+      caseSensitive: false,
+    );
+    return pattern.hasMatch(line);
+  }
+
+  static String? _normalizeVlessFlow(String rawValue) {
+    final flow = _unquoteYamlScalar(rawValue);
+    if (flow.isEmpty || flow == _supportedVlessFlow) {
+      return flow;
+    }
+    if (flow == 'xtls-rprx-vision-udp443') {
+      return _supportedVlessFlow;
+    }
+    return null;
+  }
+
+  static String _unquoteYamlScalar(String value) {
+    final trimmed = value.trim();
+    if (trimmed.length >= 2 &&
+        ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"')))) {
+      return trimmed.substring(1, trimmed.length - 1).trim();
+    }
+    return trimmed;
   }
 
   static Either<ProfileFailure, Map<String, dynamic>> populateHeaders({

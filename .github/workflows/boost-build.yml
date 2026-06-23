@@ -739,6 +739,8 @@ jobs:
           - Fixed post-login subscription sync so the profile is imported before optional package, order, or device refresh failures can interrupt the account refresh.
           - Fixed account subscription sync so BOOST tries the next available subscription URL when the first profile import fails.
           - Fixed duplicate account subscription profiles by replacing previous account-owned profiles with the latest working backend subscription while preserving user update settings.
+          - Fixed VLESS Clash and URI subscription imports by sanitizing unsupported flow values before converting profiles to sing-box.
+          - Prevents account subscription sync from failing when backend subscriptions contain unsupported VLESS flow values such as TSAR or xtls-rprx-vision-udp443.
 
           Build and release:
           - Release version: ${RELEASE_VERSION}. Versioning starts at 1.0.0.
