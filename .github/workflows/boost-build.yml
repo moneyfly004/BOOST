@@ -726,7 +726,8 @@ jobs:
           - Replaced legacy user-facing branding with BOOST across app metadata, VPN session labels, Android service notifications, release files, and documentation.
           - Connected the account, login, dashboard, subscription, package, order, and device flows to https://new.moneyfly.top.
           - Automatically imports the active account subscription after login and selects it as the active local profile.
-          - Uses the backend Clash subscription URL first, then falls back through universal/base64 and Hiddify subscription URLs without touching sing-box when safer account URLs are available.
+          - Uses the backend Clash subscription URL first, then falls back through universal/base64 and Hiddify subscription URLs.
+          - Skips sing-box account subscription JSON during automatic account import because duplicated outbound tags in that format can block the profile parser.
           - Replaced the legacy hiddify:// import scheme with boost:// for BOOST deep links.
           - Removed tracked release/build outputs from the source repository. Release files are now generated only by GitHub Actions.
 
@@ -735,6 +736,7 @@ jobs:
           - Fixed the connection failure that could show "unable to determine config format" when a sing-box subscription response could not be parsed.
           - Fixed Clash YAML profile downloads so indentation is preserved before local validation.
           - Fixed the post-login flow so users are no longer asked to manually choose a profile after a valid account subscription is available.
+          - Fixed post-login subscription sync so the profile is imported before optional package, order, or device refresh failures can interrupt the account refresh.
           - Fixed account subscription sync so BOOST tries the next available subscription URL when the first profile import fails.
           - Fixed duplicate account subscription profiles by replacing previous account-owned profiles with the latest working backend subscription while preserving user update settings.
 

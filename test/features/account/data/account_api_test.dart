@@ -22,7 +22,7 @@ void main() {
     expect(subscription.canImport, isTrue);
   });
 
-  test('AccountSubscription only uses sing-box when no safer subscription URL exists', () {
+  test('AccountSubscription does not import sing-box subscriptions', () {
     final subscription = AccountSubscription.fromJson({
       'id': 7,
       'token_singbox_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox',
@@ -31,9 +31,22 @@ void main() {
       'is_active': true,
     });
 
-    expect(subscription.importUrls, [
-      'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=singbox',
-    ]);
+    expect(subscription.importUrls, isEmpty);
+    expect(subscription.canImport, isFalse);
+  });
+
+  test('AccountSubscription parses numeric active flag from backend', () {
+    final subscription = AccountSubscription.fromJson({
+      'id': 7,
+      'token_url': 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token',
+      'status': 'enabled',
+      'days_remaining': 30,
+      'is_active': 1,
+    });
+
+    expect(subscription.isActive, isTrue);
+    expect(subscription.canImport, isTrue);
+    expect(subscription.importUrl, 'https://new.moneyfly.top/api/v1/client/subscribe?token=account-token&type=clash');
   });
 
   test('AccountDevicesResult parses subscription device list response', () {

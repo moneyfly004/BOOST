@@ -454,21 +454,13 @@ class AccountSubscription {
   final bool isActive;
 
   List<String> get importUrls {
-    final preferredUrls = _uniqueImportableSubscriptionUrls([
+    return _uniqueImportableSubscriptionUrls([
       clashUrl,
       _typedVariant(tokenUrl, 'clash'),
       _typedVariant(universalUrl, 'clash'),
       tokenUrl,
       hiddifyUrl,
       universalUrl,
-    ]);
-    if (preferredUrls.isNotEmpty) {
-      return preferredUrls;
-    }
-    return _uniqueImportableSubscriptionUrls([
-      singboxUrl,
-      _typedVariant(tokenUrl, 'singbox'),
-      _typedVariant(universalUrl, 'singbox'),
     ]);
   }
 
@@ -508,7 +500,7 @@ class AccountSubscription {
       deviceLimit: _asInt(json['device_limit']),
       currentDevices: _asInt(json['current_devices']),
       onlineDevices: _asInt(json['online_devices']),
-      isActive: json['is_active'] == true || json['status'] == 'active',
+      isActive: _asBool(json['is_active']) || json['status'] == 'active',
     );
   }
 }
