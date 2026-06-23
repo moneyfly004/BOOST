@@ -722,6 +722,21 @@ jobs:
 
           Build number: ${APP_BUILD_NUMBER}
 
+          Highlights:
+          - Replaced the legacy client branding and documentation with BOOST and the new MoneyFly service endpoints.
+          - Connected the account subscription flow to https://new.moneyfly.top so a valid account subscription is imported automatically after login.
+          - Removed tracked release/build outputs from the source repository. Release files are now generated only by GitHub Actions.
+
+          Fixed:
+          - Fixed account subscriptions downloading the generic plain-text/base64 subscription instead of the sing-box JSON profile.
+          - Fixed the connection failure that could show "unable to determine config format" after login.
+          - Existing BOOST account subscription profiles are now migrated to the sing-box subscription URL while preserving user update settings.
+
+          Build and release:
+          - Versioning starts from ${RELEASE_VERSION}.
+          - GitHub Actions produces the Android, macOS, Windows, Windows 7 legacy, checksum, and appcast release files.
+          - The repository no longer stores generated artifacts such as appcast.xml, APK/AAB/DMG/PKG/EXE/ZIP files, or bundled build archives.
+
           Assets:
           - BOOST-Android-arm64-v8a.apk: smaller Android package for most modern phones
           - BOOST-Android-armeabi-v7a.apk: smaller Android package for older 32-bit phones
