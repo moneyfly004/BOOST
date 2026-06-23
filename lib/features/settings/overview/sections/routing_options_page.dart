@@ -7,6 +7,7 @@ import 'package:hiddify/core/model/region.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/per_app_proxy/model/per_app_proxy_mode.dart';
 import 'package:hiddify/features/per_app_proxy/overview/per_app_proxy_notifier.dart';
 import 'package:hiddify/features/route_rules/notifier/rules_notifier.dart';
@@ -85,21 +86,35 @@ class RoutingOptionsPage extends HookConsumerWidget {
               children: [
                 if (rules.isNotEmpty)
                   Positioned.fill(
-                    child: ReorderableListView.builder(
-                      padding: const EdgeInsets.only(bottom: 56 + 16 + 16),
-                      buildDefaultDragHandles: false,
-                      onReorder: ref.read(rulesNotifierProvider.notifier).reorder,
-                      itemBuilder: (context, index) => RuleTile(key: Key('$index'), index: index, rule: rules[index]),
-                      itemCount: rules.length,
+                    child: ResponsivePage(
+                      maxWidth: 820,
+                      padding: EdgeInsets.zero,
+                      child: ReorderableListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                        buildDefaultDragHandles: false,
+                        onReorder: ref.read(rulesNotifierProvider.notifier).reorder,
+                        itemBuilder: (context, index) => Padding(
+                          key: Key('${rules[index].listOrder}'),
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Card(
+                            child: RuleTile(index: index, rule: rules[index]),
+                          ),
+                        ),
+                        itemCount: rules.length,
+                      ),
                     ),
                   )
                 else
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        t.pages.settings.routing.routeRule.empty,
-                        style: theme.textTheme.bodyLarge!.copyWith(color: theme.colorScheme.onSurface),
+                  ResponsivePage(
+                    maxWidth: 520,
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                        child: Text(
+                          t.pages.settings.routing.routeRule.empty,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyLarge!.copyWith(color: theme.colorScheme.onSurface),
+                        ),
                       ),
                     ),
                   ),
@@ -166,73 +181,85 @@ class RoutingOptionsPage extends HookConsumerWidget {
             child: Column(
               children: [
                 Divider(height: 4, thickness: 4, color: theme.colorScheme.primaryContainer),
-                ChoicePreferenceWidget(
-                  selected: ref.watch(ConfigOptions.region),
-                  preferences: ref.watch(ConfigOptions.region.notifier),
-                  choices: Region.values,
-                  title: t.pages.settings.routing.generalOptions.region,
-                  showFlag: true,
-                  icon: Icons.place_rounded,
-                  presentChoice: (value) => value.present(t),
-                  onChanged: (val) async {
-                    await ref.read(ConfigOptions.directDnsAddress.notifier).reset();
-                    final autoRegion = ref.read(Preferences.autoAppsSelectionRegion);
-                    final mode = ref.read(Preferences.perAppProxyMode).toAppProxy();
-                    if (autoRegion != val &&
-                        autoRegion != null &&
-                        val != Region.other &&
-                        mode != null &&
-                        PlatformUtils.isAndroid) {
-                      await ref
-                          .read(dialogNotifierProvider.notifier)
-                          .showOk(
-                            t.pages.settings.routing.generalOptions.perAppProxy.autoSelection.dialog.title,
-                            t.pages.settings.routing.generalOptions.perAppProxy.autoSelection.dialog.msg(region: val.name),
-                          );
-                      await ref.read(PerAppProxyProvider(mode).notifier).clearAutoSelected();
-                    }
-                  },
-                ),
-                if (PlatformUtils.isAndroid)
-                  ListTile(
-                    title: Text(t.pages.settings.routing.generalOptions.perAppProxy.title),
-                    leading: const Icon(Icons.apps_rounded),
-                    trailing: Switch(
-                      value: perAppProxy,
-                      onChanged: (value) async {
-                        final newMode = perAppProxy ? PerAppProxyMode.off : PerAppProxyMode.exclude;
-                        await ref.read(Preferences.perAppProxyMode.notifier).update(newMode);
-                        if (!perAppProxy && context.mounted) context.goNamed('perAppProxy');
-                      },
+                ResponsivePage(
+                  maxWidth: 760,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: Card(
+                    child: Column(
+                      children: [
+                        ChoicePreferenceWidget(
+                          selected: ref.watch(ConfigOptions.region),
+                          preferences: ref.watch(ConfigOptions.region.notifier),
+                          choices: Region.values,
+                          title: t.pages.settings.routing.generalOptions.region,
+                          showFlag: true,
+                          icon: Icons.place_rounded,
+                          presentChoice: (value) => value.present(t),
+                          onChanged: (val) async {
+                            await ref.read(ConfigOptions.directDnsAddress.notifier).reset();
+                            final autoRegion = ref.read(Preferences.autoAppsSelectionRegion);
+                            final mode = ref.read(Preferences.perAppProxyMode).toAppProxy();
+                            if (autoRegion != val &&
+                                autoRegion != null &&
+                                val != Region.other &&
+                                mode != null &&
+                                PlatformUtils.isAndroid) {
+                              await ref
+                                  .read(dialogNotifierProvider.notifier)
+                                  .showOk(
+                                    t.pages.settings.routing.generalOptions.perAppProxy.autoSelection.dialog.title,
+                                    t.pages.settings.routing.generalOptions.perAppProxy.autoSelection.dialog.msg(
+                                      region: val.name,
+                                    ),
+                                  );
+                              await ref.read(PerAppProxyProvider(mode).notifier).clearAutoSelected();
+                            }
+                          },
+                        ),
+                        if (PlatformUtils.isAndroid)
+                          ListTile(
+                            title: Text(t.pages.settings.routing.generalOptions.perAppProxy.title),
+                            leading: const Icon(Icons.apps_rounded),
+                            trailing: Switch(
+                              value: perAppProxy,
+                              onChanged: (value) async {
+                                final newMode = perAppProxy ? PerAppProxyMode.off : PerAppProxyMode.exclude;
+                                await ref.read(Preferences.perAppProxyMode.notifier).update(newMode);
+                                if (!perAppProxy && context.mounted) context.goNamed('perAppProxy');
+                              },
+                            ),
+                            onTap: () async {
+                              if (!perAppProxy) {
+                                await ref.read(Preferences.perAppProxyMode.notifier).update(PerAppProxyMode.exclude);
+                              }
+                              if (context.mounted) context.goNamed('perAppProxy');
+                            },
+                          ),
+                        ChoicePreferenceWidget(
+                          title: t.pages.settings.routing.generalOptions.balancerStrategy.title,
+                          icon: Icons.balance_rounded,
+                          selected: ref.watch(ConfigOptions.balancerStrategy),
+                          preferences: ref.watch(ConfigOptions.balancerStrategy.notifier),
+                          choices: BalancerStrategy.values,
+                          presentChoice: (value) => value.present(t),
+                        ),
+                        SwitchListTile.adaptive(
+                          title: Text(t.pages.settings.routing.generalOptions.resolveDestination),
+                          secondary: const Icon(Icons.find_replace_rounded),
+                          value: ref.watch(ConfigOptions.resolveDestination),
+                          onChanged: ref.read(ConfigOptions.resolveDestination.notifier).update,
+                        ),
+                        ChoicePreferenceWidget(
+                          selected: ref.watch(ConfigOptions.ipv6Mode),
+                          preferences: ref.watch(ConfigOptions.ipv6Mode.notifier),
+                          choices: IPv6Mode.values,
+                          title: t.pages.settings.routing.generalOptions.ipv6Route,
+                          icon: Icons.looks_6_rounded,
+                          presentChoice: (value) => value.present(t),
+                        ),
+                      ],
                     ),
-                    onTap: () async {
-                      if (!perAppProxy) {
-                        await ref.read(Preferences.perAppProxyMode.notifier).update(PerAppProxyMode.exclude);
-                      }
-                      if (context.mounted) context.goNamed('perAppProxy');
-                    },
                   ),
-                ChoicePreferenceWidget(
-                  title: t.pages.settings.routing.generalOptions.balancerStrategy.title,
-                  icon: Icons.balance_rounded,
-                  selected: ref.watch(ConfigOptions.balancerStrategy),
-                  preferences: ref.watch(ConfigOptions.balancerStrategy.notifier),
-                  choices: BalancerStrategy.values,
-                  presentChoice: (value) => value.present(t),
-                ),
-                SwitchListTile.adaptive(
-                  title: Text(t.pages.settings.routing.generalOptions.resolveDestination),
-                  secondary: const Icon(Icons.find_replace_rounded),
-                  value: ref.watch(ConfigOptions.resolveDestination),
-                  onChanged: ref.read(ConfigOptions.resolveDestination.notifier).update,
-                ),
-                ChoicePreferenceWidget(
-                  selected: ref.watch(ConfigOptions.ipv6Mode),
-                  preferences: ref.watch(ConfigOptions.ipv6Mode.notifier),
-                  choices: IPv6Mode.values,
-                  title: t.pages.settings.routing.generalOptions.ipv6Route,
-                  icon: Icons.looks_6_rounded,
-                  presentChoice: (value) => value.present(t),
                 ),
               ],
             ),

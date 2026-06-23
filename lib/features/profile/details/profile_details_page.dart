@@ -10,6 +10,7 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/model/failures.dart';
 import 'package:hiddify/core/notification/in_app_notification_controller.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/profile/details/json_editor.dart';
 import 'package:hiddify/features/profile/details/profile_details_notifier.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
@@ -82,201 +83,219 @@ class ProfileDetailsPage extends HookConsumerWidget with PresLogger {
                 ],
               ),
               body: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 children: [
-                  Form(
-                    key: formKey,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: CustomTextFormField(
-                            maxLines: 1,
-                            initialValue: userOverride.name ?? data.profile.name,
-                            validator: (value) =>
-                                (value?.isEmpty ?? true) ? t.pages.profileDetails.form.emptyName : null,
-                            onChanged: (value) => ref
-                                .read(ProfileDetailsNotifierProvider(id).notifier)
-                                .setUserOverride(userOverride.copyWith(name: value)),
-                            label: t.common.name,
-                            hint: t.pages.profileDetails.form.nameHint,
-                          ),
-                        ),
-                        if (data.profile case RemoteProfileEntity(:final url))
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  t.common.url,
-                                  style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.onSurface),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const Gap(4),
-                                SelectableText(
-                                  url,
-                                  style: theme.textTheme.bodySmall!.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                                ),
-                              ],
+                  ResponsivePage(
+                    maxWidth: 820,
+                    padding: EdgeInsets.zero,
+                    child: Card(
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: CustomTextFormField(
+                                maxLines: 1,
+                                initialValue: userOverride.name ?? data.profile.name,
+                                validator: (value) =>
+                                    (value?.isEmpty ?? true) ? t.pages.profileDetails.form.emptyName : null,
+                                onChanged: (value) => ref
+                                    .read(ProfileDetailsNotifierProvider(id).notifier)
+                                    .setUserOverride(userOverride.copyWith(name: value)),
+                                label: t.common.name,
+                                hint: t.pages.profileDetails.form.nameHint,
+                              ),
                             ),
-                          ),
-                        const Divider(indent: 16, endIndent: 16),
-                        if (data.profile case RemoteProfileEntity(:final options)) ...[
-                          SwitchListTile.adaptive(
-                            title: Text(
-                              t.pages.profileDetails.form.disableAutoUpdate,
-                              style: theme.textTheme.titleSmall!.copyWith(color: theme.colorScheme.onSurface),
-                            ),
-                            value: userOverride.isAutoUpdateDisable,
-                            onChanged: (value) => ref
-                                .read(ProfileDetailsNotifierProvider(id).notifier)
-                                .setUserOverride(userOverride.copyWith(isAutoUpdateDisable: value)),
-                          ),
-                          AnimatedSize(
-                            alignment: Alignment.topCenter,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                            child: !userOverride.isAutoUpdateDisable
-                                ? Column(
-                                    children: [
-                                      const Divider(indent: 16, endIndent: 16),
-                                      const Gap(12),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                t.pages.profileDetails.form.autoUpdateInterval,
-                                                style: theme.textTheme.titleSmall!.copyWith(
-                                                  color: theme.colorScheme.onSurface,
+                            if (data.profile case RemoteProfileEntity(:final url))
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      t.common.url,
+                                      style: theme.textTheme.labelMedium!.copyWith(color: theme.colorScheme.onSurface),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const Gap(4),
+                                    SelectableText(
+                                      url,
+                                      style: theme.textTheme.bodySmall!.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            const Divider(indent: 16, endIndent: 16),
+                            if (data.profile case RemoteProfileEntity(:final options)) ...[
+                              SwitchListTile.adaptive(
+                                title: Text(
+                                  t.pages.profileDetails.form.disableAutoUpdate,
+                                  style: theme.textTheme.titleSmall!.copyWith(color: theme.colorScheme.onSurface),
+                                ),
+                                value: userOverride.isAutoUpdateDisable,
+                                onChanged: (value) => ref
+                                    .read(ProfileDetailsNotifierProvider(id).notifier)
+                                    .setUserOverride(userOverride.copyWith(isAutoUpdateDisable: value)),
+                              ),
+                              AnimatedSize(
+                                alignment: Alignment.topCenter,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                                child: !userOverride.isAutoUpdateDisable
+                                    ? Column(
+                                        children: [
+                                          const Divider(indent: 16, endIndent: 16),
+                                          const Gap(12),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    t.pages.profileDetails.form.autoUpdateInterval,
+                                                    style: theme.textTheme.titleSmall!.copyWith(
+                                                      color: theme.colorScheme.onSurface,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
+                                                Text(
+                                                  _genSliderText(t, userOverride.updateInterval ?? 0),
+                                                  style: theme.textTheme.labelSmall!.copyWith(
+                                                    color: theme.colorScheme.onSurfaceVariant,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            Text(
-                                              _genSliderText(t, userOverride.updateInterval ?? 0),
-                                              style: theme.textTheme.labelSmall!.copyWith(
-                                                color: theme.colorScheme.onSurfaceVariant,
-                                              ),
+                                          ),
+                                          const Gap(4),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                                            child: Slider(
+                                              focusNode: sliderFocusNode,
+                                              value:
+                                                  userOverride.updateInterval?.toDouble() ??
+                                                  options?.updateInterval.inHours.toDouble() ??
+                                                  0.0,
+                                              max: 96,
+                                              divisions: 96,
+                                              label: (userOverride.updateInterval ?? 0).toString(),
+                                              onChanged: (double value) => ref
+                                                  .read(ProfileDetailsNotifierProvider(id).notifier)
+                                                  .setUserOverride(
+                                                    userOverride.copyWith(updateInterval: value.toInt()),
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                              const Divider(indent: 16, endIndent: 16),
+                            ],
+                            ListTile(
+                              title: Text(t.pages.profileDetails.lastUpdate),
+                              leading: const Icon(FluentIcons.history_24_regular),
+                              subtitle: Text(data.profile.lastUpdate.format()),
+                              dense: true,
+                            ),
+                            if (data.profile case RemoteProfileEntity(:final subInfo?)) ...[
+                              const Divider(indent: 16, endIndent: 16),
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text.rich(
+                                        style: Theme.of(context).textTheme.bodySmall,
+                                        TextSpan(
+                                          children: [
+                                            _buildSubProp(
+                                              FluentIcons.arrow_upload_16_regular,
+                                              subInfo.upload.size(),
+                                              t.components.subscriptionInfo.upload,
+                                            ),
+                                            const TextSpan(text: "     "),
+                                            _buildSubProp(
+                                              FluentIcons.arrow_download_16_regular,
+                                              subInfo.download.size(),
+                                              t.components.subscriptionInfo.download,
+                                            ),
+                                            const TextSpan(text: "     "),
+                                            _buildSubProp(
+                                              FluentIcons.arrow_bidirectional_up_down_16_regular,
+                                              subInfo.total.size(),
+                                              t.components.subscriptionInfo.total,
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const Gap(4),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                                        child: Slider(
-                                          focusNode: sliderFocusNode,
-                                          value:
-                                              userOverride.updateInterval?.toDouble() ??
-                                              options?.updateInterval.inHours.toDouble() ??
-                                              0.0,
-                                          max: 96,
-                                          divisions: 96,
-                                          label: (userOverride.updateInterval ?? 0).toString(),
-                                          onChanged: (double value) => ref
-                                              .read(ProfileDetailsNotifierProvider(id).notifier)
-                                              .setUserOverride(userOverride.copyWith(updateInterval: value.toInt())),
+                                      const Gap(12),
+                                      Text.rich(
+                                        style: Theme.of(context).textTheme.bodySmall,
+                                        TextSpan(
+                                          children: [
+                                            _buildSubProp(
+                                              FluentIcons.clock_dismiss_20_regular,
+                                              subInfo.expire.format(),
+                                              t.components.subscriptionInfo.expireDate,
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                          const Divider(indent: 16, endIndent: 16),
-                        ],
-                        ListTile(
-                          title: Text(t.pages.profileDetails.lastUpdate),
-                          leading: const Icon(FluentIcons.history_24_regular),
-                          subtitle: Text(data.profile.lastUpdate.format()),
-                          dense: true,
-                        ),
-                        if (data.profile case RemoteProfileEntity(:final subInfo?)) ...[
-                          const Divider(indent: 16, endIndent: 16),
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text.rich(
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    TextSpan(
-                                      children: [
-                                        _buildSubProp(
-                                          FluentIcons.arrow_upload_16_regular,
-                                          subInfo.upload.size(),
-                                          t.components.subscriptionInfo.upload,
-                                        ),
-                                        const TextSpan(text: "     "),
-                                        _buildSubProp(
-                                          FluentIcons.arrow_download_16_regular,
-                                          subInfo.download.size(),
-                                          t.components.subscriptionInfo.download,
-                                        ),
-                                        const TextSpan(text: "     "),
-                                        _buildSubProp(
-                                          FluentIcons.arrow_bidirectional_up_down_16_regular,
-                                          subInfo.total.size(),
-                                          t.components.subscriptionInfo.total,
-                                        ),
-                                      ],
-                                    ),
                                   ),
-                                  const Gap(12),
-                                  Text.rich(
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    TextSpan(
-                                      children: [
-                                        _buildSubProp(
-                                          FluentIcons.clock_dismiss_20_regular,
-                                          subInfo.expire.format(),
-                                          t.components.subscriptionInfo.expireDate,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                        const Divider(),
-                      ],
+                            ],
+                            const Divider(),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.7,
-                    child: isJson(data.configContent)
-                        ? JsonEditor(
-                            expandedObjects: const ["outbounds", "endpoints"],
-                            onChanged: (value) {
-                              if (value == null) return;
-                              try {
-                                const encoder = JsonEncoder.withIndent('  ');
-                                ref.read(provider.notifier).setContent(encoder.convert(value));
-                              } catch (e) {
-                                ref.read(provider.notifier).setContent("$value");
-                              }
-                            },
-                            enableHorizontalScroll: true,
-                            json: data.configContent,
-                          )
-                        : TextFormField(
-                            onChanged: (value) {
-                              ref.read(provider.notifier).setContent(value);
-                            },
-                            maxLines: null,
-                            minLines: null,
-                            expands: true,
-                            textAlignVertical: TextAlignVertical.top,
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.only(left: 5, top: 8, bottom: 8),
-                            ),
-                          ),
+                  const Gap(12),
+                  ResponsivePage(
+                    maxWidth: 1120,
+                    padding: EdgeInsets.zero,
+                    child: Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: isJson(data.configContent)
+                            ? JsonEditor(
+                                expandedObjects: const ["outbounds", "endpoints"],
+                                onChanged: (value) {
+                                  if (value == null) return;
+                                  try {
+                                    const encoder = JsonEncoder.withIndent('  ');
+                                    ref.read(provider.notifier).setContent(encoder.convert(value));
+                                  } catch (e) {
+                                    ref.read(provider.notifier).setContent("$value");
+                                  }
+                                },
+                                enableHorizontalScroll: true,
+                                json: data.configContent,
+                              )
+                            : TextFormField(
+                                onChanged: (value) {
+                                  ref.read(provider.notifier).setContent(value);
+                                },
+                                maxLines: null,
+                                expands: true,
+                                textAlignVertical: TextAlignVertical.top,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(left: 12, top: 12, right: 12, bottom: 12),
+                                ),
+                              ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -284,20 +303,36 @@ class ProfileDetailsPage extends HookConsumerWidget with PresLogger {
           },
           error: (error, stackTrace) => Scaffold(
             appBar: AppBar(title: Text(t.pages.profileDetails.title)),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(FluentIcons.error_circle_12_filled),
-                  Text(t.presentShortError(error)),
-                  Text(error.toString()),
-                ],
+            body: ResponsivePage(
+              maxWidth: 520,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(FluentIcons.error_circle_12_filled),
+                      const Gap(12),
+                      Text(t.presentShortError(error), textAlign: TextAlign.center),
+                      const Gap(4),
+                      Text(error.toString(), textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
           loading: () => Scaffold(
             appBar: AppBar(title: Text(t.pages.profileDetails.title)),
-            body: const Center(child: CircularProgressIndicator()),
+            body: const ResponsivePage(
+              maxWidth: 520,
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+            ),
           ),
         );
   }

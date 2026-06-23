@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/optional_range.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/chain/model/chain_enum.dart';
 import 'package:hiddify/features/chain/notifier/chain_profile_notifier.dart';
 import 'package:hiddify/features/chain/overview/chain_timeline.dart';
@@ -23,7 +24,8 @@ class ChainOptionsPage extends HookConsumerWidget {
     final profiles = ref.watch(profilesNotifierProvider).value ?? [];
     return Scaffold(
       appBar: AppBar(title: Text(t.pages.settings.chain.title)),
-      body: ListView(
+      body: ResponsiveListPage(
+        maxWidth: 820,
         children: [
           const ChainTimeline(level: ChainTimelineLevel.app),
           ChainTimeline(

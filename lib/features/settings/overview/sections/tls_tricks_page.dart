@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/optional_range.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/features/settings/widget/preference_tile.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -24,7 +25,7 @@ class TlsTricksPage extends HookConsumerWidget {
     final canChangeOption = ref.watch(ConfigOptions.enableTlsFragment);
     return Scaffold(
       appBar: AppBar(title: Text(t.pages.settings.tlsTricks.title)),
-      body: ListView(
+      body: ResponsiveListPage(
         children: [
           SwitchListTile.adaptive(
             title: Text(t.pages.settings.tlsTricks.enable),
@@ -35,7 +36,7 @@ class TlsTricksPage extends HookConsumerWidget {
           ChoicePreferenceWidget(
             selected: ref.watch(ConfigOptions.fragmentPackets),
             preferences: ref.watch(ConfigOptions.fragmentPackets.notifier),
-            choices: ["tlshello", "1-1", "1-2", "1-3", "1-4", "1-5"],
+            choices: const ["tlshello", "1-1", "1-2", "1-3", "1-4", "1-5"],
             title: t.pages.settings.tlsTricks.packets,
             icon: Icons.layers_rounded,
             presentChoice: (value) => _presentFragmentPackets(t, value),

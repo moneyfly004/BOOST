@@ -9,6 +9,7 @@ import 'package:hiddify/core/model/region.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
 import 'package:hiddify/core/router/bottom_sheets/bottom_sheets_notifier.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/per_app_proxy/model/app_package_info.dart';
 import 'package:hiddify/features/per_app_proxy/model/per_app_proxy_mode.dart';
 import 'package:hiddify/features/per_app_proxy/model/pkg_flag.dart';
@@ -66,8 +67,9 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
         if (!(selectedApps.hasValue &&
             selectedApps is AsyncData &&
             asyncFilteredApps.hasData &&
-            asyncFilteredApps.connectionState == ConnectionState.done))
+            asyncFilteredApps.connectionState == ConnectionState.done)) {
           return const AsyncValue.loading();
+        }
         final appsList = asyncFilteredApps.requireData.toList();
         if (searchQuery.value.isBlank) {
           appsList.sort((a, b) {
@@ -233,50 +235,49 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
               ],
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(48),
-                child: Expanded(
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    children: [
-                      PopupMenuButton(
-                        borderRadius: BorderRadius.circular(8),
-                        position: PopupMenuPosition.under,
-                        tooltip: (mode?.toPerAppProxy() ?? PerAppProxyMode.off).present(t).message,
-                        initialValue: mode?.toPerAppProxy() ?? PerAppProxyMode.off,
-                        onSelected: (e) async {
-                          if (ref.read(Preferences.autoAppsSelectionRegion) != null)
-                            await ref.read(PerAppProxyProvider(mode).notifier).clearAutoSelected();
-                          if (e == PerAppProxyMode.off && context.mounted) context.pop();
-                          await ref.read(Preferences.perAppProxyMode.notifier).update(e);
-                        },
-                        itemBuilder: (context) => PerAppProxyMode.values
-                            .map((e) => PopupMenuItem(value: e, child: Text(e.present(t).message)))
-                            .toList(),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: theme.colorScheme.surface,
-                            border: Border.all(color: theme.colorScheme.outlineVariant),
-                          ),
-                          child: Row(
-                            children: [
-                              const Gap(16),
-                              Text(mode?.present(t).title ?? ''),
-                              const Gap(4),
-                              Icon(Icons.arrow_drop_down_rounded, color: theme.colorScheme.onSurfaceVariant),
-                              const Gap(8),
-                            ],
-                          ),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  children: [
+                    PopupMenuButton(
+                      borderRadius: BorderRadius.circular(8),
+                      position: PopupMenuPosition.under,
+                      tooltip: (mode?.toPerAppProxy() ?? PerAppProxyMode.off).present(t).message,
+                      initialValue: mode?.toPerAppProxy() ?? PerAppProxyMode.off,
+                      onSelected: (e) async {
+                        if (ref.read(Preferences.autoAppsSelectionRegion) != null) {
+                          await ref.read(PerAppProxyProvider(mode).notifier).clearAutoSelected();
+                        }
+                        if (e == PerAppProxyMode.off && context.mounted) context.pop();
+                        await ref.read(Preferences.perAppProxyMode.notifier).update(e);
+                      },
+                      itemBuilder: (context) => PerAppProxyMode.values
+                          .map((e) => PopupMenuItem(value: e, child: Text(e.present(t).message)))
+                          .toList(),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: theme.colorScheme.surface,
+                          border: Border.all(color: theme.colorScheme.outlineVariant),
+                        ),
+                        child: Row(
+                          children: [
+                            const Gap(16),
+                            Text(mode?.present(t).title ?? ''),
+                            const Gap(4),
+                            Icon(Icons.arrow_drop_down_rounded, color: theme.colorScheme.onSurfaceVariant),
+                            const Gap(8),
+                          ],
                         ),
                       ),
-                      const Gap(8),
-                      ChoiceChip(
-                        label: Text(t.pages.settings.routing.generalOptions.perAppProxy.hideSysApps),
-                        selected: hideSystemApps.value,
-                        onSelected: (value) => hideSystemApps.value = value,
-                      ),
-                    ],
-                  ),
+                    ),
+                    const Gap(8),
+                    ChoiceChip(
+                      label: Text(t.pages.settings.routing.generalOptions.perAppProxy.hideSysApps),
+                      selected: hideSystemApps.value,
+                      onSelected: (value) => hideSystemApps.value = value,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -299,43 +300,70 @@ class PerAppProxyPage extends HookConsumerWidget with PresLogger {
             )
           : null,
       body: displayedApps.when(
-        data: (packages) => ListView.builder(
-          padding: const EdgeInsets.only(bottom: 88),
-          controller: scrollController,
-          itemBuilder: (context, index) {
-            final package = packages[index];
-            final flag = selectedApps.requireValue[package.packageName];
-            return CheckboxListTile.adaptive(
-              title: Row(
-                children: [
-                  Flexible(child: Text(package.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                  if (flag != null && PkgFlag.forceDeselection.check(flag)) ...[
-                    const Gap(6),
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(color: theme.colorScheme.error, shape: BoxShape.circle),
-                    ),
-                  ],
-                ],
-              ),
-              subtitle: Text(
-                package.packageName,
-                style: Theme.of(context).textTheme.bodySmall,
-                maxLines: 1, overflow: TextOverflow.ellipsis,
-              ),
-              value: flag == null ? false : PkgFlag.checkboxValue(flag),
-              tristate: true,
-              onChanged: (_) => ref.read(PerAppProxyProvider(mode).notifier).updatePkg(package.packageName),
-              secondary: package.icon == null
-                  ? null
-                  : Image.memory(package.icon!, width: 48, height: 48, cacheWidth: 48, cacheHeight: 48),
-            );
-          },
-          itemCount: packages.length,
+        data: (packages) => ResponsivePage(
+          maxWidth: 860,
+          padding: EdgeInsets.zero,
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+            controller: scrollController,
+            itemBuilder: (context, index) {
+              final package = packages[index];
+              final flag = selectedApps.requireValue[package.packageName];
+              return Card(
+                child: CheckboxListTile.adaptive(
+                  title: Row(
+                    children: [
+                      Flexible(child: Text(package.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      if (flag != null && PkgFlag.forceDeselection.check(flag)) ...[
+                        const Gap(6),
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(color: theme.colorScheme.error, shape: BoxShape.circle),
+                        ),
+                      ],
+                    ],
+                  ),
+                  subtitle: Text(
+                    package.packageName,
+                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  value: flag == null ? false : PkgFlag.checkboxValue(flag),
+                  tristate: true,
+                  onChanged: (_) => ref.read(PerAppProxyProvider(mode).notifier).updatePkg(package.packageName),
+                  secondary: package.icon == null
+                      ? null
+                      : Image.memory(package.icon!, width: 48, height: 48, cacheWidth: 48, cacheHeight: 48),
+                ),
+              );
+            },
+            itemCount: packages.length,
+          ),
         ),
-        error: (error, _) => SliverErrorBodyPlaceholder(error.toString()),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => ResponsivePage(
+          maxWidth: 520,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Text(error.toString(), textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
+            ),
+          ),
+        ),
+        loading: () => const ResponsivePage(
+          maxWidth: 520,
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [SizedBox(width: 24, height: 24, child: CircularProgressIndicator())],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

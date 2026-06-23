@@ -34,6 +34,31 @@ class ResponsivePage extends StatelessWidget {
   }
 }
 
+class ResponsiveListPage extends StatelessWidget {
+  const ResponsiveListPage({
+    super.key,
+    required this.children,
+    this.maxWidth = 760,
+    this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 24),
+    this.safeAreaBottom = true,
+  });
+
+  final List<Widget> children;
+  final double maxWidth;
+  final EdgeInsetsGeometry padding;
+  final bool safeAreaBottom;
+
+  @override
+  Widget build(BuildContext context) {
+    return ResponsivePage(
+      maxWidth: maxWidth,
+      padding: EdgeInsets.zero,
+      safeAreaBottom: safeAreaBottom,
+      child: ListView(padding: padding, children: children),
+    );
+  }
+}
+
 class SliverResponsivePage extends StatelessWidget {
   const SliverResponsivePage({
     super.key,

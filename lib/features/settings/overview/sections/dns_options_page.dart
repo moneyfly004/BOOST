@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hiddify/core/localization/translations.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/features/settings/widget/preference_tile.dart';
 import 'package:hiddify/singbox/model/singbox_config_enum.dart';
@@ -12,7 +13,7 @@ class DnsOptionsPage extends HookConsumerWidget {
     final t = ref.watch(translationsProvider).requireValue;
     return Scaffold(
       appBar: AppBar(title: Text(t.pages.settings.dns.title)),
-      body: ListView(
+      body: ResponsiveListPage(
         children: [
           ValuePreferenceWidget(
             value: ref.watch(ConfigOptions.remoteDnsAddress),

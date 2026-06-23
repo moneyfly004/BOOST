@@ -9,6 +9,7 @@ import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/model/failures.dart';
 import 'package:hiddify/core/router/dialog/dialog_notifier.dart';
 import 'package:hiddify/core/widget/adaptive_icon.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/app_update/notifier/app_update_notifier.dart';
 import 'package:hiddify/features/app_update/notifier/app_update_state.dart';
 import 'package:hiddify/gen/assets.gen.dart';
@@ -83,38 +84,54 @@ class AboutPage extends HookConsumerWidget {
       ),
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Assets.images.logo.svg(width: 64, height: 64),
-                  const Gap(16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          SliverResponsivePage(
+            maxWidth: 640,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            sliver: SliverToBoxAdapter(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(t.common.appTitle, style: Theme.of(context).textTheme.titleLarge),
-                      const Gap(4),
-                      Text("${t.common.version} ${appInfo.presentVersion}"),
+                      Assets.images.logo.svg(width: 64, height: 64),
+                      const Gap(16),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(t.common.appTitle, style: Theme.of(context).textTheme.titleLarge),
+                            const Gap(4),
+                            Text("${t.common.version} ${appInfo.presentVersion}"),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-          SliverList(
-            delegate: SliverChildListDelegate([
-              ...conditionalTiles,
-              if (conditionalTiles.isNotEmpty) const Divider(),
-              ListTile(
-                title: Text(t.pages.about.sourceCode),
-                trailing: const Icon(FluentIcons.open_24_regular),
-                onTap: () async {
-                  await UriUtils.tryLaunch(Uri.parse(Constants.githubUrl));
-                },
+          SliverResponsivePage(
+            maxWidth: 640,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            sliver: SliverToBoxAdapter(
+              child: Card(
+                child: Column(
+                  children: [
+                    ...conditionalTiles,
+                    if (conditionalTiles.isNotEmpty) const Divider(),
+                    ListTile(
+                      title: Text(t.pages.about.sourceCode),
+                      trailing: const Icon(FluentIcons.open_24_regular),
+                      onTap: () async {
+                        await UriUtils.tryLaunch(Uri.parse(Constants.githubUrl));
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ]),
+            ),
           ),
         ],
       ),

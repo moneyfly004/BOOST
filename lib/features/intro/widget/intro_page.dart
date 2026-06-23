@@ -13,6 +13,7 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/model/region.dart';
 import 'package:hiddify/core/preferences/general_preferences.dart';
+import 'package:hiddify/core/widget/responsive_page.dart';
 import 'package:hiddify/features/common/general_pref_tiles.dart';
 import 'package:hiddify/features/settings/data/config_option_repository.dart';
 import 'package:hiddify/features/settings/widget/preference_tile.dart';
@@ -65,12 +66,13 @@ class IntroPage extends HookConsumerWidget with PresLogger {
     }, []);
 
     return Scaffold(
-      body: Center(
+      body: SafeArea(
         child: ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 620),
+          child: ResponsivePage(
+            maxWidth: 620,
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 112),
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -94,20 +96,26 @@ class IntroPage extends HookConsumerWidget with PresLogger {
                     ),
                   ),
                   const Gap(24),
-                  const LocalePrefTile(),
-                  ChoicePreferenceWidget(
-                    selected: ref.watch(ConfigOptions.region),
-                    preferences: ref.watch(ConfigOptions.region.notifier),
-                    choices: Region.values,
-                    title: t.pages.settings.routing.generalOptions.region,
-                    showFlag: true,
-                    icon: Icons.place_rounded,
-                    presentChoice: (value) => value.present(t),
-                    onChanged: (val) async {
-                      await ref.read(ConfigOptions.directDnsAddress.notifier).reset();
-                    },
+                  Card(
+                    child: Column(
+                      children: [
+                        const LocalePrefTile(),
+                        ChoicePreferenceWidget(
+                          selected: ref.watch(ConfigOptions.region),
+                          preferences: ref.watch(ConfigOptions.region.notifier),
+                          choices: Region.values,
+                          title: t.pages.settings.routing.generalOptions.region,
+                          showFlag: true,
+                          icon: Icons.place_rounded,
+                          presentChoice: (value) => value.present(t),
+                          onChanged: (val) async {
+                            await ref.read(ConfigOptions.directDnsAddress.notifier).reset();
+                          },
+                        ),
+                        const EnableAnalyticsPrefTile(),
+                      ],
+                    ),
                   ),
-                  const EnableAnalyticsPrefTile(),
                   const Gap(24),
                   Focus(
                     focusNode: focusNodes[IntroConst.termsAndConditionsKey],
@@ -162,7 +170,7 @@ class IntroPage extends HookConsumerWidget with PresLogger {
                   Focus(
                     focusNode: focusNodes[IntroConst.licenseKey],
                     onKeyEvent: (node, event) => _handleKeyEvent(event, IntroConst.licenseKey),
-                    child: const Gap(88),
+                    child: const Gap(24),
                   ),
                 ],
               ),
