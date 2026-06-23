@@ -726,6 +726,8 @@ jobs:
           - Fixed BOOST account integration with the v2 backend at https://new.moneyfly.top.
           - Restored dashboard refresh, package listing, payment methods, order history, device management, password changes, and logout.
           - Added an always-available logout action for signed-in accounts.
+          - Added remembered account login so BOOST can automatically sign in again after restart unless the user logs out manually.
+          - Clears account-owned subscription profiles when the app exits or leaves the foreground, then downloads fresh backend-approved profiles on the next automatic login.
           - Improved account subscription downloads so the backend can register the current device instead of treating the request as a browser visit.
           - Kept release artifacts out of the source repository. Release files are generated only by GitHub Actions.
 
@@ -734,9 +736,11 @@ jobs:
           - Fixed device count and device list refresh by supporting the backend's actual subscription device response format.
           - Fixed account refresh so package and payment loading are handled independently instead of leaving both empty when one endpoint fails.
           - Fixed logout so BOOST clears local account state and account-owned subscription profiles even if the remote logout request fails.
+          - Fixed automatic account recovery by falling back to saved login credentials when stored access or refresh tokens expire.
+          - Fixed stale account profile retention so expired, disabled, or over-limit accounts cannot keep using an old local account subscription after app exit.
           - Fixed profile import for account subscription URLs by using app User-Agent headers that the backend device tracker accepts.
           - Fixed subscription URL detection for the new.moneyfly.top v2 backend while preserving the existing behavior for external subscription links.
-          - Added focused tests for v2 account API parsing, account logout cleanup, and account subscription download headers.
+          - Added focused tests for v2 account API parsing, account auto-login, account logout cleanup, shutdown profile cleanup, and account subscription download headers.
 
           Build and release:
           - Release version: ${RELEASE_VERSION}. Versioning starts at 1.0.0.

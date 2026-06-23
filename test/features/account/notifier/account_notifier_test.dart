@@ -38,6 +38,76 @@ void main() {
     expect(preferences.getString('boost_account_refresh_token'), 'fresh-refresh-token');
   });
 
+  test('login stores credentials for startup auto login', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final preferences = await SharedPreferences.getInstance();
+    final api = _RefreshingAccountApi();
+    final sync = _FakeSubscriptionSync();
+
+    final notifier = AccountNotifier(api, sync, preferences);
+    await pumpEventQueue();
+    sync.reset();
+
+    await notifier.login(' fresh@example.com ', 'password');
+
+    expect(api.loginEmails, ['fresh@example.com']);
+    expect(api.loginPasswords, ['password']);
+    expect(preferences.getString('boost_account_email'), 'fresh@example.com');
+    expect(preferences.getString('boost_account_password'), 'password');
+    expect(preferences.getString('boost_account_access_token'), 'fresh-access-token');
+    expect(notifier.state.isAuthenticated, isTrue);
+  });
+
+  test('restore uses saved credentials to auto login and refresh subscription', () async {
+    const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
+    SharedPreferences.setMockInitialValues({
+      'boost_account_access_token': 'expired-access-token',
+      'boost_account_refresh_token': 'invalid-refresh-token',
+      'boost_account_user': jsonEncode(savedUser.toJson()),
+      'boost_account_email': 'saved@example.com',
+      'boost_account_password': 'saved-password',
+    });
+
+    final preferences = await SharedPreferences.getInstance();
+    final api = _RefreshingAccountApi()..refreshFailure = AccountApiException('invalid refresh token', statusCode: 401);
+    final sync = _FakeSubscriptionSync();
+
+    final notifier = AccountNotifier(api, sync, preferences);
+    await pumpEventQueue();
+
+    expect(api.loginEmails, ['saved@example.com']);
+    expect(api.loginPasswords, ['saved-password']);
+    expect(api.dashboardTokens, ['fresh-access-token']);
+    expect(sync.syncCalls, 1);
+    expect(notifier.state.isAuthenticated, isTrue);
+    expect(notifier.state.authExpired, isFalse);
+    expect(notifier.state.token, 'fresh-access-token');
+    expect(preferences.getString('boost_account_email'), 'saved@example.com');
+    expect(preferences.getString('boost_account_password'), 'saved-password');
+  });
+
+  test('restore auto logs in with saved credentials when tokens are missing', () async {
+    SharedPreferences.setMockInitialValues({
+      'boost_account_email': 'saved@example.com',
+      'boost_account_password': 'saved-password',
+    });
+
+    final preferences = await SharedPreferences.getInstance();
+    final api = _RefreshingAccountApi();
+    final sync = _FakeSubscriptionSync();
+
+    final notifier = AccountNotifier(api, sync, preferences);
+    await pumpEventQueue();
+
+    expect(api.loginEmails, ['saved@example.com']);
+    expect(api.loginPasswords, ['saved-password']);
+    expect(api.dashboardTokens, ['fresh-access-token']);
+    expect(sync.syncCalls, 1);
+    expect(notifier.state.isAuthenticated, isTrue);
+    expect(preferences.getString('boost_account_access_token'), 'fresh-access-token');
+  });
+
   test('login still syncs subscription when optional account data fails', () async {
     SharedPreferences.setMockInitialValues({});
 
@@ -61,7 +131,7 @@ void main() {
     expect(notifier.state.devices, isEmpty);
   });
 
-  test('login keeps auth expired state when optional refresh hits authorization failure', () async {
+  test('login uses saved credentials when optional refresh hits authorization failure', () async {
     SharedPreferences.setMockInitialValues({});
 
     final preferences = await SharedPreferences.getInstance();
@@ -77,7 +147,9 @@ void main() {
     await notifier.login('fresh@example.com', 'password');
 
     expect(sync.syncCalls, 1);
-    expect(notifier.state.authExpired, isTrue);
+    expect(api.loginEmails, ['fresh@example.com', 'fresh@example.com']);
+    expect(api.loginPasswords, ['password', 'password']);
+    expect(notifier.state.authExpired, isFalse);
   });
 
   test('manual sync refreshes expired access token and preserves stored subscription until success', () async {
@@ -163,6 +235,33 @@ void main() {
     expect(preferences.getString('boost_account_refresh_token'), 'invalid-refresh-token');
   });
 
+  test('saved credential auto login failure clears account subscription but keeps credentials', () async {
+    const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
+    SharedPreferences.setMockInitialValues({
+      'boost_account_access_token': 'expired-access-token',
+      'boost_account_refresh_token': 'invalid-refresh-token',
+      'boost_account_user': jsonEncode(savedUser.toJson()),
+      'boost_account_email': 'saved@example.com',
+      'boost_account_password': 'saved-password',
+    });
+
+    final preferences = await SharedPreferences.getInstance();
+    final api = _RefreshingAccountApi()
+      ..refreshFailure = AccountApiException('invalid refresh token', statusCode: 401)
+      ..loginFailure = AccountApiException('account disabled', statusCode: 403);
+    final sync = _FakeSubscriptionSync();
+
+    final notifier = AccountNotifier(api, sync, preferences);
+    await pumpEventQueue();
+
+    expect(api.loginEmails, ['saved@example.com']);
+    expect(sync.clearCalls, 1);
+    expect(notifier.state.isAuthenticated, isTrue);
+    expect(notifier.state.authExpired, isTrue);
+    expect(preferences.getString('boost_account_email'), 'saved@example.com');
+    expect(preferences.getString('boost_account_password'), 'saved-password');
+  });
+
   test('logout clears local account state when remote logout fails', () async {
     const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
     SharedPreferences.setMockInitialValues({
@@ -191,6 +290,35 @@ void main() {
     expect(preferences.getString('boost_account_access_token'), isNull);
     expect(preferences.getString('boost_account_refresh_token'), isNull);
     expect(preferences.getString('boost_account_user'), isNull);
+    expect(preferences.getString('boost_account_email'), isNull);
+    expect(preferences.getString('boost_account_password'), isNull);
+  });
+
+  test('shutdown cleanup removes account subscriptions without deleting saved credentials', () async {
+    const savedUser = AccountUser(id: 1, username: 'saved', email: 'saved@example.com');
+    SharedPreferences.setMockInitialValues({
+      'boost_account_access_token': 'fresh-access-token',
+      'boost_account_refresh_token': 'fresh-refresh-token',
+      'boost_account_user': jsonEncode(savedUser.toJson()),
+      'boost_account_email': 'saved@example.com',
+      'boost_account_password': 'saved-password',
+    });
+
+    final preferences = await SharedPreferences.getInstance();
+    final api = _RefreshingAccountApi();
+    final sync = _FakeSubscriptionSync();
+
+    final notifier = AccountNotifier(api, sync, preferences);
+    await pumpEventQueue();
+    api.reset();
+    sync.reset();
+
+    await notifier.clearAccountSubscriptionsForShutdown();
+
+    expect(sync.clearCalls, 1);
+    expect(notifier.state.isAuthenticated, isTrue);
+    expect(preferences.getString('boost_account_email'), 'saved@example.com');
+    expect(preferences.getString('boost_account_password'), 'saved-password');
   });
 
   test('silent subscription status refresh syncs active subscription from dashboard', () async {
@@ -229,9 +357,11 @@ class _RefreshingAccountApi extends AccountApi {
   final List<String> logoutTokens = [];
   final List<String?> logoutRefreshTokens = [];
   final List<String> loginEmails = [];
+  final List<String> loginPasswords = [];
   int refreshTokenCalls = 0;
   bool _expireFreshTokenOnce = false;
   bool holdDashboards = false;
+  AccountApiException? loginFailure;
   AccountApiException? refreshFailure;
   AccountApiException? logoutFailure;
   AccountApiException? ordersFailure;
@@ -245,9 +375,11 @@ class _RefreshingAccountApi extends AccountApi {
     logoutTokens.clear();
     logoutRefreshTokens.clear();
     loginEmails.clear();
+    loginPasswords.clear();
     refreshTokenCalls = 0;
     _expireFreshTokenOnce = false;
     holdDashboards = false;
+    loginFailure = null;
     refreshFailure = null;
     logoutFailure = null;
     ordersFailure = null;
@@ -262,6 +394,11 @@ class _RefreshingAccountApi extends AccountApi {
   @override
   Future<AccountAuthResponse> login({required String email, required String password}) async {
     loginEmails.add(email);
+    loginPasswords.add(password);
+    final failure = loginFailure;
+    if (failure != null) {
+      throw failure;
+    }
     return AccountAuthResponse(
       accessToken: 'fresh-access-token',
       refreshToken: 'fresh-refresh-token',

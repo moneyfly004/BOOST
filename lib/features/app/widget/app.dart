@@ -39,6 +39,12 @@ class App extends HookConsumerWidget with WidgetsBindingObserver, PresLogger {
   void onPause(WidgetRef ref) {
     if (PlatformUtils.isDesktop) return;
     isOnPauseCalled = true;
+    ref.read(accountNotifierProvider.notifier).clearAccountSubscriptionsForShutdown().catchError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
+      loggy.warning("error clearing account subscription on pause", error, stackTrace);
+    });
     ref.read(hiddifyCoreServiceProvider).closeFront();
   }
 

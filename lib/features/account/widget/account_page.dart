@@ -805,7 +805,7 @@ class _AuthExpiredBanner extends ConsumerWidget {
             const Gap(8),
             Expanded(
               child: Text(
-                '登录授权已失效，请重新登录后同步订阅。本地配置不会自动删除。',
+                '自动登录失败，请检查账号状态或手动退出后重新登录。账户订阅配置会在退出软件时清除。',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onErrorContainer,
                 ),

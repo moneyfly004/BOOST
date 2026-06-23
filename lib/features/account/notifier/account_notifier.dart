@@ -106,21 +106,17 @@ class AccountNotifier extends StateNotifier<AccountState> {
   final SharedPreferences _preferences;
   Future<void>? _accountRefreshOperation;
   Future<String>? _tokenRefreshOperation;
+  Future<String>? _savedCredentialLoginOperation;
 
   static const _tokenKey = 'boost_account_access_token';
   static const _refreshTokenKey = 'boost_account_refresh_token';
   static const _userKey = 'boost_account_user';
+  static const _emailKey = 'boost_account_email';
+  static const _passwordKey = 'boost_account_password';
 
   Future<void> login(String email, String password) async {
     await _run(() async {
-      final response = await _api.login(email: email.trim(), password: password);
-      state = state.copyWith(
-        token: response.accessToken,
-        refreshToken: response.refreshToken,
-        user: response.user,
-        authExpired: false,
-      );
-      await _persistAuth(response.accessToken, response.refreshToken, response.user);
+      await _loginWithCredentials(email.trim(), password, rememberCredentials: true);
       await _refreshAccountData();
     });
   }
@@ -146,6 +142,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
         user: response.user,
         authExpired: false,
       );
+      await _persistCredentials(email.trim(), password);
       await _persistAuth(response.accessToken, response.refreshToken, response.user);
       await _refreshAccountData();
     });
@@ -160,14 +157,29 @@ class AccountNotifier extends StateNotifier<AccountState> {
   }
 
   Future<String> resetPassword({required String email, required String verificationCode, required String newPassword}) {
-    return _runWithResult(
-      () =>
-          _api.resetPassword(email: email.trim(), verificationCode: verificationCode.trim(), newPassword: newPassword),
-    );
+    return _runWithResult(() async {
+      final normalizedEmail = email.trim();
+      final message = await _api.resetPassword(
+        email: normalizedEmail,
+        verificationCode: verificationCode.trim(),
+        newPassword: newPassword,
+      );
+      if (_savedEmail == normalizedEmail) {
+        await _persistCredentials(normalizedEmail, newPassword);
+      }
+      return message;
+    });
   }
 
   Future<void> refresh() async {
     if (!_hasAuthCredentials) {
+      if (_hasSavedLoginCredentials) {
+        await _runAccountRefresh(() async {
+          await _loginWithSavedCredentials();
+          await _refreshAccountData();
+        });
+        return;
+      }
       await loadPublicData();
       return;
     }
@@ -223,6 +235,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
         (token) => _api.changePassword(token: token, oldPassword: oldPassword, newPassword: newPassword),
       ),
     );
+    await _persistCurrentAccountPassword(newPassword);
     state = state.copyWith(message: message);
   }
 
@@ -317,11 +330,20 @@ class AccountNotifier extends StateNotifier<AccountState> {
       await _preferences.remove(_tokenKey);
       await _preferences.remove(_refreshTokenKey);
       await _preferences.remove(_userKey);
+      await _preferences.remove(_emailKey);
+      await _preferences.remove(_passwordKey);
       state = AccountState(packages: state.packages, paymentMethods: state.paymentMethods, message: '已退出登录');
     } catch (_) {
       state = state.copyWith(loading: false);
       rethrow;
     }
+  }
+
+  Future<void> clearAccountSubscriptionsForShutdown() async {
+    if (!_hasAuthCredentials && !_hasSavedLoginCredentials) {
+      return;
+    }
+    await _subscriptionSync.clearAccountSubscriptions();
   }
 
   Future<void> _syncSubscription(AccountDashboard dashboard, {String? successMessage}) async {
@@ -416,6 +438,20 @@ class AccountNotifier extends StateNotifier<AccountState> {
     }
     if ((token != null && token.isNotEmpty) || (refreshToken != null && refreshToken.isNotEmpty)) {
       state = state.copyWith(token: token, refreshToken: refreshToken, user: user, authExpired: false);
+    }
+    if (_hasSavedLoginCredentials) {
+      Future.microtask(() async {
+        try {
+          await _runAccountRefresh(() async {
+            await _loginWithSavedCredentials();
+            await _refreshAccountData();
+          });
+        } catch (_) {
+          await _clearAccountSubscriptionsSafely();
+          _markAuthExpired(message: '自动登录失败，请检查账号状态或手动退出后重新登录');
+        }
+      });
+    } else if (_hasAuthCredentials) {
       Future.microtask(() async {
         try {
           await refresh();
@@ -436,6 +472,20 @@ class AccountNotifier extends StateNotifier<AccountState> {
         (state.refreshToken != null && state.refreshToken!.isNotEmpty);
   }
 
+  bool get _hasSavedLoginCredentials {
+    return (_savedEmail?.isNotEmpty ?? false) && (_savedPassword?.isNotEmpty ?? false);
+  }
+
+  String? get _savedEmail {
+    final email = _preferences.getString(_emailKey)?.trim();
+    return email == null || email.isEmpty ? null : email;
+  }
+
+  String? get _savedPassword {
+    final password = _preferences.getString(_passwordKey);
+    return password == null || password.isEmpty ? null : password;
+  }
+
   Future<T> _withAuthenticatedToken<T>(Future<T> Function(String token) action) async {
     final token = await _availableToken();
     try {
@@ -444,13 +494,8 @@ class AccountNotifier extends StateNotifier<AccountState> {
       if (!_canRefreshAfter(error)) {
         rethrow;
       }
-      final refreshToken = state.refreshToken;
-      if (refreshToken == null || refreshToken.isEmpty) {
-        _markAuthExpired();
-        rethrow;
-      }
-      final refreshedToken = await _refreshAccessToken(refreshToken);
-      return action(refreshedToken);
+      final recoveredToken = await _recoverAccessToken(error);
+      return action(recoveredToken);
     }
   }
 
@@ -461,9 +506,43 @@ class AccountNotifier extends StateNotifier<AccountState> {
     }
     final refreshToken = state.refreshToken;
     if (refreshToken != null && refreshToken.isNotEmpty) {
-      return _refreshAccessToken(refreshToken);
+      try {
+        return await _refreshAccessToken(refreshToken);
+      } on AccountApiException catch (error) {
+        return _recoverAccessToken(error);
+      }
+    }
+    if (_hasSavedLoginCredentials) {
+      return _loginWithSavedCredentials();
     }
     throw AccountApiException('请先登录');
+  }
+
+  Future<String> _recoverAccessToken(AccountApiException originalError) async {
+    if (!_canRefreshAfter(originalError)) {
+      throw originalError;
+    }
+    final refreshToken = state.refreshToken;
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        return await _refreshAccessToken(refreshToken);
+      } on AccountApiException catch (refreshError) {
+        if (!_isExpiredAuthError(refreshError)) {
+          rethrow;
+        }
+      }
+    }
+    if (_hasSavedLoginCredentials) {
+      try {
+        return await _loginWithSavedCredentials();
+      } on AccountApiException {
+        await _clearAccountSubscriptionsSafely();
+        _markAuthExpired(message: '自动登录失败，请检查账号状态或手动退出后重新登录');
+        rethrow;
+      }
+    }
+    _markAuthExpired();
+    throw originalError;
   }
 
   Future<String> _refreshAccessToken(String refreshToken) {
@@ -508,6 +587,40 @@ class AccountNotifier extends StateNotifier<AccountState> {
     return response.accessToken;
   }
 
+  Future<String> _loginWithSavedCredentials() {
+    final existingOperation = _savedCredentialLoginOperation;
+    if (existingOperation != null) {
+      return existingOperation;
+    }
+    final email = _savedEmail;
+    final password = _savedPassword;
+    if (email == null || password == null) {
+      return Future.error(AccountApiException('请先登录'));
+    }
+    final operation = _loginWithCredentials(email, password, rememberCredentials: true);
+    _savedCredentialLoginOperation = operation;
+    return operation.whenComplete(() {
+      if (identical(_savedCredentialLoginOperation, operation)) {
+        _savedCredentialLoginOperation = null;
+      }
+    });
+  }
+
+  Future<String> _loginWithCredentials(String email, String password, {required bool rememberCredentials}) async {
+    final response = await _api.login(email: email.trim(), password: password);
+    state = state.copyWith(
+      token: response.accessToken,
+      refreshToken: response.refreshToken,
+      user: response.user,
+      authExpired: false,
+    );
+    if (rememberCredentials) {
+      await _persistCredentials(email.trim(), password);
+    }
+    await _persistAuth(response.accessToken, response.refreshToken, response.user);
+    return response.accessToken;
+  }
+
   bool _canRefreshAfter(AccountApiException error) {
     return error.statusCode == 401 || error.statusCode == 403;
   }
@@ -516,8 +629,26 @@ class AccountNotifier extends StateNotifier<AccountState> {
     return error.statusCode == 400 || error.statusCode == 401 || error.statusCode == 403;
   }
 
-  void _markAuthExpired() {
-    state = state.copyWith(authExpired: true, message: '登录授权已失效，请重新登录');
+  void _markAuthExpired({String message = '登录授权已失效，请重新登录'}) {
+    state = state.copyWith(authExpired: true, message: message);
+  }
+
+  Future<void> _persistCredentials(String email, String password) async {
+    if (email.trim().isNotEmpty) {
+      await _preferences.setString(_emailKey, email.trim());
+    }
+    if (password.isNotEmpty) {
+      await _preferences.setString(_passwordKey, password);
+    }
+  }
+
+  Future<void> _persistCurrentAccountPassword(String password) async {
+    final email = state.user?.email.trim();
+    if (email != null && email.isNotEmpty) {
+      await _persistCredentials(email, password);
+    } else if (_savedEmail != null) {
+      await _preferences.setString(_passwordKey, password);
+    }
   }
 
   Future<void> _persistAuth(String? token, String? refreshToken, AccountUser? user) async {
@@ -529,6 +660,14 @@ class AccountNotifier extends StateNotifier<AccountState> {
     }
     if (user != null) {
       await _preferences.setString(_userKey, jsonEncode(user.toJson()));
+    }
+  }
+
+  Future<void> _clearAccountSubscriptionsSafely() async {
+    try {
+      await _subscriptionSync.clearAccountSubscriptions();
+    } catch (_) {
+      // Authentication recovery must not get stuck because local cleanup failed.
     }
   }
 
