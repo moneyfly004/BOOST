@@ -1,6 +1,6 @@
 {
   "common": {
-    "appTitle": "MoneyFly",
+    "appTitle": "BOOST",
     "start": "Comenzar",
     "version": "Versión",
     "ok": "Aceptar",
@@ -94,7 +94,7 @@
   "intro": {
     "banner": "Todo lo que necesitas para un internet sin restricciones",
     "termsAndPolicyCaution(rich)": "Al continuar, aceptas los ${tap(@:pages.about.termsAndConditions)}",
-    "info(rich)": "Hecho con ❤️ por MoneyFly - ${tap_source(Código Abierto)} (${tap_license(Licencia)})"
+    "info(rich)": "Hecho con ❤️ por BOOST - ${tap_source(Código Abierto)} (${tap_license(Licencia)})"
   },
   "pages": {
     "home": {

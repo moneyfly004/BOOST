@@ -1,4 +1,5 @@
 name: CI
+
 on:
   workflow_dispatch:
   pull_request:
@@ -10,15 +11,39 @@ on:
       - 'appcast.xml'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  run:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    permissions: write-all
-    if: "${{!contains(github.event.head_commit.message, 'release: version')}}"
-    with:
-      upload-artifact: ${{ github.event_name == 'push' }}
-      
+  flutter:
+    name: Flutter Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: stable
+          cache: true
+
+      - name: Test and analyze
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter --version
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+          flutter test
+          flutter analyze --no-fatal-infos

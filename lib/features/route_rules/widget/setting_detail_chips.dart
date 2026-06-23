@@ -30,8 +30,10 @@ class SettingDetailChips<T extends Object> extends HookConsumerWidget {
 
     useEffect(() {
       void listener() {
-        showStartBtn.value = controller.position.pixels > controller.position.minScrollExtent;
-        showEndBtn.value = controller.position.pixels < controller.position.maxScrollExtent;
+        showStartBtn.value =
+            controller.position.pixels > controller.position.minScrollExtent;
+        showEndBtn.value =
+            controller.position.pixels < controller.position.maxScrollExtent;
       }
 
       controller.addListener(listener);
@@ -61,8 +63,12 @@ class SettingDetailChips<T extends Object> extends HookConsumerWidget {
             showStartBtn.value = false;
             showEndBtn.value = false;
           } else {
-            showStartBtn.value = controller.position.pixels > controller.position.minScrollExtent;
-            showEndBtn.value = controller.position.pixels < controller.position.maxScrollExtent;
+            showStartBtn.value =
+                controller.position.pixels >
+                controller.position.minScrollExtent;
+            showEndBtn.value =
+                controller.position.pixels <
+                controller.position.maxScrollExtent;
           }
         });
         return Container(
@@ -86,9 +92,11 @@ class SettingDetailChips<T extends Object> extends HookConsumerWidget {
                     ),
                     Row(
                       children: [
-                        if (showStartBtn.value) ScrollBtn(isStart: true, onTap: scrollToStart),
+                        if (showStartBtn.value)
+                          ScrollBtn(isStart: true, onTap: scrollToStart),
                         const Spacer(),
-                        if (showEndBtn.value) ScrollBtn(isStart: false, onTap: scrollToEnd),
+                        if (showEndBtn.value)
+                          ScrollBtn(isStart: false, onTap: scrollToEnd),
                       ],
                     ),
                   ],
@@ -131,7 +139,12 @@ class SettingDetailChip<T extends Object> extends ConsumerWidget {
       return Row(
         children: [
           tText('${value.key}', theme),
-          VerticalDivider(width: 12, color: theme.colorScheme.onSurfaceVariant, indent: 3, endIndent: 3),
+          VerticalDivider(
+            width: 12,
+            color: theme.colorScheme.onSurfaceVariant,
+            indent: 3,
+            endIndent: 3,
+          ),
           tText('${value.value}', theme),
         ],
       );
@@ -143,19 +156,29 @@ class SettingDetailChip<T extends Object> extends ConsumerWidget {
   Widget tText(String value, ThemeData theme) {
     String text = value;
     if (useEllipsis && value.length > 20) {
-      text = '${value.substring(0, 10)}...${value.substring(value.length - 10)}';
+      text =
+          '${value.substring(0, 10)}...${value.substring(value.length - 10)}';
     }
-    return Text(t == null ? text : t![text] ?? text, style: theme.textTheme.labelMedium);
+    return Text(
+      t == null ? text : t![text] ?? text,
+      style: theme.textTheme.labelMedium,
+    );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Container(
-      decoration: BoxDecoration(color: theme.colorScheme.surfaceVariant, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: isPackageName
           ? AndroidAppInfo(packageName: '$value')
-          : Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), child: valueByType(value, theme)),
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: valueByType(value, theme),
+            ),
     );
   }
 }
@@ -173,11 +196,14 @@ class AndroidAppInfo extends HookConsumerWidget {
     }
   }
 
-  Future<AppInfo?> getAppInfo() async => await InstalledApps.getAppInfo(packageName, BuiltWith.flutter);
+  Future<AppInfo?> getAppInfo() async =>
+      await InstalledApps.getAppInfo(packageName, BuiltWith.flutter);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final app = useFuture<AppInfo?>(useMemoized(() => getAppInfo(), [packageName]));
+    final app = useFuture<AppInfo?>(
+      useMemoized(() => getAppInfo(), [packageName]),
+    );
     if (app.hasData && app.data != null) {
       return Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 4),
@@ -185,22 +211,34 @@ class AndroidAppInfo extends HookConsumerWidget {
           children: [
             AspectRatio(
               aspectRatio: 1.0,
-              child: CircleAvatar(backgroundColor: Colors.transparent, child: Image.memory(app.data!.icon!)),
+              child: CircleAvatar(
+                backgroundColor: Colors.transparent,
+                child: Image.memory(app.data!.icon!),
+              ),
             ),
             const Gap(4),
-            Text(app.data!.name, style: Theme.of(context).textTheme.labelMedium),
+            Text(
+              app.data!.name,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
           ],
         ),
       );
     } else if (app.hasError || (app.hasData && app.data == null)) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Text(useEllipsis(), style: Theme.of(context).textTheme.labelMedium),
+        child: Text(
+          useEllipsis(),
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
       );
     } else {
       return const Padding(
         padding: EdgeInsets.all(4),
-        child: AspectRatio(aspectRatio: 1.0, child: CircularProgressIndicator()),
+        child: AspectRatio(
+          aspectRatio: 1.0,
+          child: CircularProgressIndicator(),
+        ),
       );
     }
   }
@@ -218,7 +256,10 @@ class ScrollBtn extends ConsumerWidget {
     const radius = Radius.circular(4);
     final borderRadius = isStart
         ? const BorderRadiusDirectional.only(topEnd: radius, bottomEnd: radius)
-        : const BorderRadiusDirectional.only(topStart: radius, bottomStart: radius);
+        : const BorderRadiusDirectional.only(
+            topStart: radius,
+            bottomStart: radius,
+          );
     return Material(
       borderRadius: borderRadius,
       child: InkWell(
@@ -230,7 +271,13 @@ class ScrollBtn extends ConsumerWidget {
           decoration: BoxDecoration(
             color: theme.colorScheme.primaryContainer,
             borderRadius: borderRadius,
-            boxShadow: [BoxShadow(color: theme.colorScheme.shadow, blurRadius: 12, offset: const Offset(0, 3))],
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.shadow,
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Icon(
             isStart ? Icons.arrow_left_rounded : Icons.arrow_right_rounded,

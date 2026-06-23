@@ -97,14 +97,6 @@ abstract class UserOverride with _$UserOverride {
   }
 
   static Map<String, dynamic> _migrate(Map<String, Object?> json) {
-    final version = json['version'] as int? ?? 1;
-
-    if (version < 2) {
-      if (json['name'] == 'MoneyFly 账户订阅' && json['updateInterval'] == 1) {
-        json['updateInterval'] = null;
-        json['isAutoUpdateDisable'] = true;
-      }
-    }
     json['version'] = latestUserOverrideVersion;
     return json;
   }

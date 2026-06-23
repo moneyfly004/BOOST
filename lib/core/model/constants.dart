@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:hiddify/utils/utils.dart';
 
 abstract class Constants {
-  static const appName = "MoneyFly";
-  static const githubUrl = "https://github.com/moneyfly004/cboard";
-  static const licenseUrl = "https://github.com/moneyfly004/cboard";
-  static const githubReleasesApiUrl = "https://api.github.com/repos/moneyfly004/cboard/releases";
-  static const githubLatestReleaseUrl = "https://github.com/moneyfly004/cboard/releases/latest";
-  static const appCastUrl = "https://github.com/moneyfly004/cboard/releases/latest/download/appcast.xml";
+  static const appName = "BOOST";
+  static const githubUrl = "https://github.com/moneyfly004/boost";
+  static const licenseUrl = "https://github.com/moneyfly004/boost";
+  static const githubReleasesApiUrl = "https://api.github.com/repos/moneyfly004/boost/releases";
+  static const githubLatestReleaseUrl = "https://github.com/moneyfly004/boost/releases/latest";
+  static const appCastUrl = "https://github.com/moneyfly004/boost/releases/latest/download/appcast.xml";
   static const telegramChannelUrl = "https://t.me/hiddify";
   static const privacyPolicyUrl = "https://hiddify.com/privacy-policy/";
   static const termsAndConditionsUrl = "https://hiddify.com/terms/";

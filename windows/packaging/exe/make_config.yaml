@@ -1,9 +1,9 @@
 app_id: 6L903538-42B1-4596-G479-BJ779F21A65D
-publisher: MoneyFly
-publisher_url: https://dy.moneyfly.top
-display_name: MoneyFly
+publisher: BOOST
+publisher_url: https://new.moneyfly.top
+display_name: BOOST
 create_desktop_icon: true
-install_dir_name: "{autopf64}\\MoneyFly"
+install_dir_name: "{autopf64}\\BOOST"
 setup_icon_file: windows\runner\resources\app_icon.ico
 locales:
   - zh

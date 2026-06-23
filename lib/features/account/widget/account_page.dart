@@ -12,7 +12,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-enum AccountSection { overview, packages, subscription, devices, password, orders }
+enum AccountSection {
+  overview,
+  packages,
+  subscription,
+  devices,
+  password,
+  orders,
+}
 
 class AccountPage extends ConsumerStatefulWidget {
   const AccountPage({super.key, this.section = AccountSection.overview});
@@ -43,14 +50,20 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         actions: [
           IconButton(
             tooltip: '刷新',
-            onPressed: state.loading ? null : () => _guard(context, ref.read(accountNotifierProvider.notifier).refresh),
+            onPressed: state.loading
+                ? null
+                : () => _guard(
+                    context,
+                    ref.read(accountNotifierProvider.notifier).refresh,
+                  ),
             icon: const Icon(Icons.refresh_rounded),
           ),
           const Gap(8),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _guard(context, ref.read(accountNotifierProvider.notifier).refresh),
+        onRefresh: () =>
+            _guard(context, ref.read(accountNotifierProvider.notifier).refresh),
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -62,7 +75,9 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   children: [
                     AnimatedSwitcher(
                       duration: kAnimationDuration,
-                      child: state.isAuthenticated ? _AccountSectionBody(section: widget.section) : const _AuthPanel(),
+                      child: state.isAuthenticated
+                          ? _AccountSectionBody(section: widget.section)
+                          : const _AuthPanel(),
                     ),
                   ],
                 ),
@@ -122,17 +137,34 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _ModeChip(label: '登录', selected: _mode == 0, onSelected: () => setState(() => _mode = 0)),
-              _ModeChip(label: '注册', selected: _mode == 1, onSelected: () => setState(() => _mode = 1)),
-              _ModeChip(label: '忘记密码', selected: _mode == 2, onSelected: () => setState(() => _mode = 2)),
+              _ModeChip(
+                label: '登录',
+                selected: _mode == 0,
+                onSelected: () => setState(() => _mode = 0),
+              ),
+              _ModeChip(
+                label: '注册',
+                selected: _mode == 1,
+                onSelected: () => setState(() => _mode = 1),
+              ),
+              _ModeChip(
+                label: '忘记密码',
+                selected: _mode == 2,
+                onSelected: () => setState(() => _mode = 2),
+              ),
             ],
           ),
           const Gap(20),
-          Text(switch (_mode) {
-            0 => '登录后可以购买套餐、查看订阅和管理设备。',
-            1 => '注册会直接对接你的网站账号系统。',
-            _ => '通过邮箱验证码重置网站账号密码。',
-          }, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(
+            switch (_mode) {
+              0 => '登录后可以购买套餐、查看订阅和管理设备。',
+              1 => '注册会直接对接你的网站账号系统。',
+              _ => '通过邮箱验证码重置网站账号密码。',
+            },
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const Gap(20),
           switch (_mode) {
             0 => _loginForm(context, state),
@@ -156,17 +188,27 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
           keyboardType: TextInputType.emailAddress,
         ),
         const Gap(12),
-        _TextField(controller: _loginPassword, label: '密码', icon: Icons.lock_rounded, obscureText: true),
+        _TextField(
+          controller: _loginPassword,
+          label: '密码',
+          icon: Icons.lock_rounded,
+          obscureText: true,
+        ),
         const Gap(18),
         FilledButton.icon(
           onPressed: state.loading
               ? null
               : () => _guard(
                   context,
-                  () => ref.read(accountNotifierProvider.notifier).login(_loginEmail.text, _loginPassword.text),
+                  () => ref
+                      .read(accountNotifierProvider.notifier)
+                      .login(_loginEmail.text, _loginPassword.text),
                 ),
           icon: state.loading
-              ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Icon(Icons.login_rounded),
           label: const Text('登录'),
         ),
@@ -178,7 +220,11 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _TextField(controller: _registerUsername, label: '用户名', icon: Icons.person_rounded),
+        _TextField(
+          controller: _registerUsername,
+          label: '用户名',
+          icon: Icons.person_rounded,
+        ),
         const Gap(12),
         _TextField(
           controller: _registerEmail,
@@ -187,19 +233,30 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
           keyboardType: TextInputType.emailAddress,
         ),
         const Gap(12),
-        _TextField(controller: _registerPassword, label: '密码', icon: Icons.lock_rounded, obscureText: true),
+        _TextField(
+          controller: _registerPassword,
+          label: '密码',
+          icon: Icons.lock_rounded,
+          obscureText: true,
+        ),
         const Gap(12),
         _VerificationCodeField(
           controller: _registerCode,
           label: '邮箱验证码',
           loading: state.loading,
           onSend: () => _guard(context, () async {
-            final message = await ref.read(accountNotifierProvider.notifier).sendRegisterCode(_registerEmail.text);
+            final message = await ref
+                .read(accountNotifierProvider.notifier)
+                .sendRegisterCode(_registerEmail.text);
             if (context.mounted) _showSnack(context, message);
           }),
         ),
         const Gap(12),
-        _TextField(controller: _inviteCode, label: '邀请码（如网站要求）', icon: Icons.card_giftcard_rounded),
+        _TextField(
+          controller: _inviteCode,
+          label: '邀请码（如网站要求）',
+          icon: Icons.card_giftcard_rounded,
+        ),
         const Gap(18),
         FilledButton.icon(
           onPressed: state.loading
@@ -239,12 +296,19 @@ class _AuthPanelState extends ConsumerState<_AuthPanel> {
           label: '验证码',
           loading: state.loading,
           onSend: () => _guard(context, () async {
-            final message = await ref.read(accountNotifierProvider.notifier).forgotPassword(_resetEmail.text);
+            final message = await ref
+                .read(accountNotifierProvider.notifier)
+                .forgotPassword(_resetEmail.text);
             if (context.mounted) _showSnack(context, message);
           }),
         ),
         const Gap(12),
-        _TextField(controller: _resetPassword, label: '新密码', icon: Icons.lock_reset_rounded, obscureText: true),
+        _TextField(
+          controller: _resetPassword,
+          label: '新密码',
+          icon: Icons.lock_reset_rounded,
+          obscureText: true,
+        ),
         const Gap(18),
         FilledButton.icon(
           onPressed: state.loading
@@ -315,7 +379,10 @@ class _AccountSectionBody extends ConsumerWidget {
         if (state.authExpired) ...[const _AuthExpiredBanner(), const Gap(14)],
         AnimatedSwitcher(
           duration: kAnimationDuration,
-          child: KeyedSubtree(key: ValueKey(section), child: _sectionContent(section)),
+          child: KeyedSubtree(
+            key: ValueKey(section),
+            child: _sectionContent(section),
+          ),
         ),
       ],
     );
@@ -342,7 +409,8 @@ class _AccountOverviewPanel extends ConsumerWidget {
     final theme = Theme.of(context);
     final user = state.user;
     final subscription = state.dashboard?.subscription;
-    final hasSubscription = subscription != null && subscription.status.isNotEmpty;
+    final hasSubscription =
+        subscription != null && subscription.status.isNotEmpty;
     final deviceText =
         '${subscription?.onlineDevices ?? subscription?.currentDevices ?? 0}/${subscription?.deviceLimit ?? 0}';
 
@@ -359,28 +427,38 @@ class _AccountOverviewPanel extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 26,
-                    child: Text((user?.name.isNotEmpty ?? false) ? user!.name.characters.first.toUpperCase() : 'U'),
+                    child: Text(
+                      (user?.name.isNotEmpty ?? false)
+                          ? user!.name.characters.first.toUpperCase()
+                          : 'U',
+                    ),
                   ),
                   const Gap(12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.name ?? '用户', style: theme.textTheme.titleLarge),
+                        Text(
+                          user?.name ?? '用户',
+                          style: theme.textTheme.titleLarge,
+                        ),
                         const Gap(2),
                         Text(
                           user?.email ?? '',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                         const Gap(8),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _Tag(text: user?.isVerified == true ? '已验证' : '未验证'),
-                            _Tag(text: user?.isActive == false ? '已停用' : '账号正常'),
+                            _Tag(
+                              text: user?.isActive == false ? '已停用' : '账号正常',
+                            ),
                           ],
                         ),
                       ],
@@ -390,9 +468,15 @@ class _AccountOverviewPanel extends ConsumerWidget {
                   OutlinedButton.icon(
                     onPressed: state.loading
                         ? null
-                        : () => _guard(context, ref.read(accountNotifierProvider.notifier).refresh),
+                        : () => _guard(
+                            context,
+                            ref.read(accountNotifierProvider.notifier).refresh,
+                          ),
                     icon: state.loading
-                        ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Icon(Icons.refresh_rounded),
                     label: const Text('刷新'),
                   ),
@@ -403,18 +487,33 @@ class _AccountOverviewPanel extends ConsumerWidget {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _Metric(label: '余额', value: '¥${(user?.balance ?? 0).toStringAsFixed(2)}'),
-                  _Metric(label: '订阅状态', value: _statusText(subscription?.status ?? 'none')),
-                  _Metric(label: '到期时间', value: subscription?.expireTime ?? '未开通'),
+                  _Metric(
+                    label: '余额',
+                    value: '¥${(user?.balance ?? 0).toStringAsFixed(2)}',
+                  ),
+                  _Metric(
+                    label: '订阅状态',
+                    value: _statusText(subscription?.status ?? 'none'),
+                  ),
+                  _Metric(
+                    label: '到期时间',
+                    value: subscription?.expireTime ?? '未开通',
+                  ),
                   _Metric(label: '在线设备', value: deviceText),
-                  _Metric(label: '累计消费', value: '¥${(state.dashboard?.totalSpent ?? 0).toStringAsFixed(2)}'),
+                  _Metric(
+                    label: '累计消费',
+                    value:
+                        '¥${(state.dashboard?.totalSpent ?? 0).toStringAsFixed(2)}',
+                  ),
                 ],
               ),
               const Gap(16),
               _OverviewSubscriptionStrip(
                 subscription: subscription,
                 syncing: state.syncingSubscription,
-                onOpenSubscription: () => context.goNamed(accountSectionRouteName(AccountSection.subscription)),
+                onOpenSubscription: () => context.goNamed(
+                  accountSectionRouteName(AccountSection.subscription),
+                ),
               ),
             ],
           ),
@@ -427,30 +526,44 @@ class _AccountOverviewPanel extends ConsumerWidget {
               _OverviewAction(
                 icon: Icons.inventory_2_rounded,
                 title: '购买套餐',
-                subtitle: state.packages.isEmpty ? '暂无可售套餐' : '${state.packages.length} 个套餐可选',
+                subtitle: state.packages.isEmpty
+                    ? '暂无可售套餐'
+                    : '${state.packages.length} 个套餐可选',
                 buttonLabel: '去购买',
-                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.packages)),
+                onPressed: () => context.goNamed(
+                  accountSectionRouteName(AccountSection.packages),
+                ),
               ),
               _OverviewAction(
                 icon: Icons.devices_rounded,
                 title: '设备管理',
-                subtitle: state.deviceTotal == 0 ? '暂无设备记录' : '${state.deviceTotal} 台设备记录',
+                subtitle: state.deviceTotal == 0
+                    ? '暂无设备记录'
+                    : '${state.deviceTotal} 台设备记录',
                 buttonLabel: '管理设备',
-                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.devices)),
+                onPressed: () => context.goNamed(
+                  accountSectionRouteName(AccountSection.devices),
+                ),
               ),
               _OverviewAction(
                 icon: Icons.password_rounded,
                 title: '密码修改',
                 subtitle: '修改当前网站账号密码',
                 buttonLabel: '去修改',
-                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.password)),
+                onPressed: () => context.goNamed(
+                  accountSectionRouteName(AccountSection.password),
+                ),
               ),
               _OverviewAction(
                 icon: Icons.receipt_long_rounded,
                 title: '订单记录',
-                subtitle: state.orders.isEmpty ? '暂无订单' : '最近 ${state.orders.length} 条订单',
+                subtitle: state.orders.isEmpty
+                    ? '暂无订单'
+                    : '最近 ${state.orders.length} 条订单',
                 buttonLabel: '查看订单',
-                onPressed: () => context.goNamed(accountSectionRouteName(AccountSection.orders)),
+                onPressed: () => context.goNamed(
+                  accountSectionRouteName(AccountSection.orders),
+                ),
               ),
             ];
             if (!twoColumns) {
@@ -492,7 +605,13 @@ class _AccountOverviewPanel extends ConsumerWidget {
         ),
         if (!hasSubscription) ...[
           const Gap(14),
-          _Surface(child: _EmptyLine(text: state.packages.isEmpty ? '当前没有开通中的订阅，可刷新或稍后查看套餐。' : '当前没有开通中的订阅，可先购买套餐。')),
+          _Surface(
+            child: _EmptyLine(
+              text: state.packages.isEmpty
+                  ? '当前没有开通中的订阅，可刷新或稍后查看套餐。'
+                  : '当前没有开通中的订阅，可先购买套餐。',
+            ),
+          ),
         ],
       ],
     );
@@ -521,7 +640,11 @@ class _OverviewSubscriptionStrip extends ConsumerWidget {
         color: active
             ? theme.colorScheme.primaryContainer.withValues(alpha: .42)
             : theme.colorScheme.surfaceContainerHighest.withValues(alpha: .42),
-        border: Border.all(color: active ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
+        border: Border.all(
+          color: active
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -529,14 +652,19 @@ class _OverviewSubscriptionStrip extends ConsumerWidget {
           children: [
             Icon(
               active ? Icons.check_circle_rounded : Icons.info_rounded,
-              color: active ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+              color: active
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
             const Gap(10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(active ? '订阅可同步' : '订阅未就绪', style: theme.textTheme.titleSmall),
+                  Text(
+                    active ? '订阅可同步' : '订阅未就绪',
+                    style: theme.textTheme.titleSmall,
+                  ),
                   const Gap(2),
                   Text(
                     subscription == null
@@ -544,7 +672,9 @@ class _OverviewSubscriptionStrip extends ConsumerWidget {
                         : '${subscription.packageName.isEmpty ? '当前套餐' : subscription.packageName} · ${_statusText(subscription.status)}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -553,7 +683,10 @@ class _OverviewSubscriptionStrip extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: syncing ? null : onOpenSubscription,
               icon: syncing
-                  ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.tune_rounded),
               label: const Text('管理'),
             ),
@@ -590,11 +723,19 @@ class _OverviewAction extends StatelessWidget {
           const Gap(10),
           Text(title, style: theme.textTheme.titleMedium),
           const Gap(4),
-          Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const Gap(14),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton.tonal(onPressed: onPressed, child: Text(buttonLabel)),
+            child: FilledButton.tonal(
+              onPressed: onPressed,
+              child: Text(buttonLabel),
+            ),
           ),
         ],
       ),
@@ -612,22 +753,32 @@ class _AuthExpiredBanner extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.colorScheme.error.withValues(alpha: .45)),
+        border: Border.all(
+          color: theme.colorScheme.error.withValues(alpha: .45),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Icon(Icons.lock_clock_rounded, color: theme.colorScheme.onErrorContainer),
+            Icon(
+              Icons.lock_clock_rounded,
+              color: theme.colorScheme.onErrorContainer,
+            ),
             const Gap(8),
             Expanded(
               child: Text(
                 '登录授权已失效，请重新登录后同步订阅。本地配置不会自动删除。',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onErrorContainer),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onErrorContainer,
+                ),
               ),
             ),
             TextButton(
-              onPressed: () => _guard(context, ref.read(accountNotifierProvider.notifier).logout),
+              onPressed: () => _guard(
+                context,
+                ref.read(accountNotifierProvider.notifier).logout,
+              ),
               child: const Text('退出'),
             ),
           ],
@@ -650,7 +801,9 @@ class _PackagesPanel extends ConsumerWidget {
           _SectionHeader(
             icon: Icons.inventory_2_rounded,
             title: '套餐购买',
-            subtitle: state.paymentMethods.isEmpty ? '暂无可用支付方式' : '支持 ${state.paymentMethods.length} 种支付方式',
+            subtitle: state.paymentMethods.isEmpty
+                ? '暂无可用支付方式'
+                : '支持 ${state.paymentMethods.length} 种支付方式',
           ),
           const Gap(12),
           if (state.packages.isEmpty)
@@ -677,7 +830,13 @@ class _PackageTile extends ConsumerWidget {
     final methods = ref.watch(accountNotifierProvider).paymentMethods;
     final loading = ref.watch(accountNotifierProvider).loading;
     final buyButton = FilledButton.tonalIcon(
-      onPressed: loading ? null : () => _showPaymentSheet(context, package: package, paymentMethods: methods),
+      onPressed: loading
+          ? null
+          : () => _showPaymentSheet(
+              context,
+              package: package,
+              paymentMethods: methods,
+            ),
       icon: const Icon(Icons.shopping_bag_rounded),
       label: const Text('购买'),
     );
@@ -685,7 +844,11 @@ class _PackageTile extends ConsumerWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: package.isRecommended ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
+        border: Border.all(
+          color: package.isRecommended
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant,
+        ),
         color: package.isRecommended
             ? theme.colorScheme.primaryContainer.withValues(alpha: .36)
             : theme.colorScheme.surfaceContainerHighest.withValues(alpha: .34),
@@ -701,8 +864,16 @@ class _PackageTile extends ConsumerWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(child: Text(package.name, style: theme.textTheme.titleMedium)),
-                    if (package.isRecommended) ...[const Gap(8), const _Tag(text: '推荐')],
+                    Flexible(
+                      child: Text(
+                        package.name,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    if (package.isRecommended) ...[
+                      const Gap(8),
+                      const _Tag(text: '推荐'),
+                    ],
                   ],
                 ),
                 const Gap(6),
@@ -710,7 +881,9 @@ class _PackageTile extends ConsumerWidget {
                   package.description.isEmpty
                       ? '${package.durationDays} 天 · ${package.deviceLimit} 台设备'
                       : package.description,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const Gap(10),
                 Wrap(
@@ -720,10 +893,18 @@ class _PackageTile extends ConsumerWidget {
                   children: [
                     Text(
                       '¥${package.price.toStringAsFixed(2)}',
-                      style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.primary),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
-                    _InlineFact(icon: Icons.schedule_rounded, text: '${package.durationDays} 天'),
-                    _InlineFact(icon: Icons.devices_rounded, text: '${package.deviceLimit} 台设备'),
+                    _InlineFact(
+                      icon: Icons.schedule_rounded,
+                      text: '${package.durationDays} 天',
+                    ),
+                    _InlineFact(
+                      icon: Icons.devices_rounded,
+                      text: '${package.deviceLimit} 台设备',
+                    ),
                   ],
                 ),
               ],
@@ -765,7 +946,12 @@ class _InlineFact extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
         const Gap(4),
-        Text(text, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          text,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }
@@ -787,7 +973,11 @@ class _SubscriptionPanel extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SectionHeader(icon: Icons.cloud_sync_rounded, title: '订阅同步', subtitle: '写入本机配置并刷新当前订阅'),
+          const _SectionHeader(
+            icon: Icons.cloud_sync_rounded,
+            title: '订阅同步',
+            subtitle: '写入本机配置并刷新当前订阅',
+          ),
           const Gap(14),
           if (subscription == null)
             const _EmptyLine(text: '当前没有可同步的订阅，购买套餐后会自动生成订阅信息。')
@@ -795,7 +985,9 @@ class _SubscriptionPanel extends ConsumerWidget {
             DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .36),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: .36,
+                ),
                 border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
               child: Padding(
@@ -806,8 +998,12 @@ class _SubscriptionPanel extends ConsumerWidget {
                     Row(
                       children: [
                         Icon(
-                          canImport ? Icons.verified_rounded : Icons.info_rounded,
-                          color: canImport ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                          canImport
+                              ? Icons.verified_rounded
+                              : Icons.info_rounded,
+                          color: canImport
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
                         const Gap(10),
                         Expanded(
@@ -815,7 +1011,9 @@ class _SubscriptionPanel extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                subscription.packageName.isEmpty ? '当前订阅' : subscription.packageName,
+                                subscription.packageName.isEmpty
+                                    ? '当前订阅'
+                                    : subscription.packageName,
                                 style: theme.textTheme.titleMedium,
                               ),
                               const Gap(2),
@@ -825,7 +1023,9 @@ class _SubscriptionPanel extends ConsumerWidget {
                                     : hasSyncUrl
                                     ? '同步后会写入服务端返回的状态配置'
                                     : '订阅暂不可导入，请检查状态或到期时间',
-                                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
@@ -837,9 +1037,20 @@ class _SubscriptionPanel extends ConsumerWidget {
                       spacing: 10,
                       runSpacing: 10,
                       children: [
-                        _Metric(label: '状态', value: _statusText(subscription.status)),
-                        _Metric(label: '到期时间', value: subscription.expireTime.isEmpty ? '未知' : subscription.expireTime),
-                        _Metric(label: '剩余天数', value: '${subscription.remainingDays} 天'),
+                        _Metric(
+                          label: '状态',
+                          value: _statusText(subscription.status),
+                        ),
+                        _Metric(
+                          label: '到期时间',
+                          value: subscription.expireTime.isEmpty
+                              ? '未知'
+                              : subscription.expireTime,
+                        ),
+                        _Metric(
+                          label: '剩余天数',
+                          value: '${subscription.remainingDays} 天',
+                        ),
                         _Metric(
                           label: '设备',
                           value:
@@ -861,16 +1072,29 @@ class _SubscriptionPanel extends ConsumerWidget {
               final syncButton = FilledButton.icon(
                 onPressed: syncing || !hasSyncUrl
                     ? null
-                    : () => _guard(context, ref.read(accountNotifierProvider.notifier).syncSubscription),
+                    : () => _guard(
+                        context,
+                        ref
+                            .read(accountNotifierProvider.notifier)
+                            .syncSubscription,
+                      ),
                 icon: syncing
-                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.cloud_upload_rounded),
                 label: const Text('同步到本机'),
               );
               final refreshButton = OutlinedButton.icon(
                 onPressed: syncing || !hasSyncUrl
                     ? null
-                    : () => _guard(context, ref.read(accountNotifierProvider.notifier).refreshActiveSubscription),
+                    : () => _guard(
+                        context,
+                        ref
+                            .read(accountNotifierProvider.notifier)
+                            .refreshActiveSubscription,
+                      ),
                 icon: const Icon(Icons.update_rounded),
                 label: const Text('刷新当前订阅'),
               );
@@ -913,7 +1137,11 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   bool _openingPayment = false;
 
   String? get _qrCodeValue {
-    final value = _payment?.paymentQrCode ?? _order?.paymentQrCode ?? _payment?.paymentUrl ?? _order?.paymentUrl;
+    final value =
+        _payment?.paymentQrCode ??
+        _order?.paymentQrCode ??
+        _payment?.paymentUrl ??
+        _order?.paymentUrl;
     return value?.isEmpty ?? true ? null : value;
   }
 
@@ -927,7 +1155,9 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedMethod = widget.paymentMethods.isEmpty ? null : widget.paymentMethods.first;
+    _selectedMethod = widget.paymentMethods.isEmpty
+        ? null
+        : widget.paymentMethods.first;
   }
 
   @override
@@ -955,7 +1185,9 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
               DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .42),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: .42,
+                  ),
                   border: Border.all(color: theme.colorScheme.outlineVariant),
                 ),
                 child: Padding(
@@ -963,16 +1195,23 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.package.name, style: theme.textTheme.titleMedium),
+                      Text(
+                        widget.package.name,
+                        style: theme.textTheme.titleMedium,
+                      ),
                       const Gap(4),
                       Text(
                         '${widget.package.durationDays} 天 · ${widget.package.deviceLimit} 台设备',
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const Gap(8),
                       Text(
                         '¥${widget.package.price.toStringAsFixed(2)}',
-                        style: theme.textTheme.headlineSmall?.copyWith(color: theme.colorScheme.primary),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -999,7 +1238,9 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                      ),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(10),
@@ -1013,31 +1254,46 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
                       ? '用支付宝扫码，或点击“打开支付”跳转到手机支付应用。支付完成后本窗口会自动刷新状态。'
                       : '电脑端请使用支付宝扫码支付，本软件不会自动打开浏览器。支付完成后本窗口会自动刷新状态。',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
               if (_status != null || order != null) ...[
                 const Gap(12),
-                _PaymentStatusLine(status: _status?.status ?? order?.status ?? 'pending'),
+                _PaymentStatusLine(
+                  status: _status?.status ?? order?.status ?? 'pending',
+                ),
               ],
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: _busy ? null : () => Navigator.of(context).pop(), child: const Text('关闭')),
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+          child: const Text('关闭'),
+        ),
         if (_canOpenExternalPayment && externalPaymentUrl != null)
           OutlinedButton.icon(
             onPressed: _openingPayment ? null : _openPaymentUrl,
             icon: _openingPayment
-                ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.open_in_new_rounded),
             label: const Text('打开支付'),
           ),
         FilledButton.icon(
-          onPressed: _busy || widget.paymentMethods.isEmpty ? null : _startPayment,
+          onPressed: _busy || widget.paymentMethods.isEmpty
+              ? null
+              : _startPayment,
           icon: _busy
-              ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Icon(Icons.qr_code_2_rounded),
           label: Text(qrCodeValue == null ? '生成支付二维码' : '重新生成'),
         ),
@@ -1052,9 +1308,17 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     setState(() => _busy = true);
     try {
       final notifier = ref.read(accountNotifierProvider.notifier);
-      final order = _order?.id == 0 || _order == null ? await notifier.createPackageOrder(widget.package) : _order!;
-      final payment = order.id > 0
-          ? await notifier.createOrderPayment(orderId: order.id, paymentMethod: method)
+      final order = _order?.id == 0 || _order == null
+          ? await notifier.createPackageOrder(widget.package)
+          : _order!;
+      final payment = method.key == 'balance'
+          ? await notifier.payOrderWithBalance(order.orderNo)
+          : order.id > 0
+          ? await notifier.createOrderPayment(
+              orderId: order.id,
+              paymentMethod: method,
+              isMobile: PlatformUtils.isMobile,
+            )
           : order;
       if (!mounted) return;
       setState(() {
@@ -1065,6 +1329,13 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
           status: payment.status.isEmpty ? 'pending' : payment.status,
         );
       });
+      if (method.key == 'balance') {
+        await notifier.refreshAfterPayment();
+        if (!mounted) return;
+        _showSnack(context, '余额支付成功，套餐已自动开通并同步订阅');
+        Navigator.of(context).pop();
+        return;
+      }
       _startPolling(payment.orderNo);
       final url = _externalPaymentUrl;
       if (_canOpenExternalPayment && url != null) {
@@ -1083,19 +1354,25 @@ class _PaymentSheetState extends ConsumerState<_PaymentSheet> {
     _pollTimer?.cancel();
     if (orderNo.isEmpty) return;
     _pollStartedAt = DateTime.now();
-    _pollTimer = Timer.periodic(_paymentPollInterval, (_) => _checkStatus(orderNo));
+    _pollTimer = Timer.periodic(
+      _paymentPollInterval,
+      (_) => _checkStatus(orderNo),
+    );
     unawaited(_checkStatus(orderNo));
   }
 
   Future<void> _checkStatus(String orderNo) async {
     final startedAt = _pollStartedAt;
-    if (startedAt != null && DateTime.now().difference(startedAt) >= _paymentPollTimeout) {
+    if (startedAt != null &&
+        DateTime.now().difference(startedAt) >= _paymentPollTimeout) {
       _pollTimer?.cancel();
       if (mounted) _showSnack(context, '支付状态查询超时，请稍后在订单列表刷新查看');
       return;
     }
     try {
-      final status = await ref.read(accountNotifierProvider.notifier).checkOrderStatus(orderNo);
+      final status = await ref
+          .read(accountNotifierProvider.notifier)
+          .checkOrderStatus(orderNo);
       if (!mounted) return;
       setState(() => _status = status);
       if (status.isPaid) {
@@ -1146,18 +1423,26 @@ class _PaymentStatusLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final paid = status == 'paid';
+    final paid = status == 'paid' || status == 'completed';
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: paid ? theme.colorScheme.primaryContainer : theme.colorScheme.surface,
-        border: Border.all(color: paid ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
+        color: paid
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surface,
+        border: Border.all(
+          color: paid
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
-            Icon(paid ? Icons.check_circle_rounded : Icons.hourglass_top_rounded),
+            Icon(
+              paid ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
+            ),
             const Gap(8),
             Expanded(child: Text('支付状态：${_statusText(status)}')),
           ],
@@ -1191,16 +1476,26 @@ class _PaymentMethodOption extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: selected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
-            color: selected ? theme.colorScheme.primaryContainer.withValues(alpha: .42) : theme.colorScheme.surface,
+            border: Border.all(
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant,
+            ),
+            color: selected
+                ? theme.colorScheme.primaryContainer.withValues(alpha: .42)
+                : theme.colorScheme.surface,
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
                 Icon(
-                  selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
-                  color: selected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                  selected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: selected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
                 const Gap(10),
                 Expanded(
@@ -1211,7 +1506,9 @@ class _PaymentMethodOption extends StatelessWidget {
                       if (method.key.isNotEmpty)
                         Text(
                           method.key,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                     ],
                   ),
@@ -1246,9 +1543,17 @@ class _DevicesPanel extends ConsumerWidget {
               final refreshButton = OutlinedButton.icon(
                 onPressed: state.loading
                     ? null
-                    : () => _guard(context, ref.read(accountNotifierProvider.notifier).refreshDevices),
+                    : () => _guard(
+                        context,
+                        ref
+                            .read(accountNotifierProvider.notifier)
+                            .refreshDevices,
+                      ),
                 icon: state.loading
-                    ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.refresh_rounded),
                 label: const Text('刷新'),
               );
@@ -1283,7 +1588,10 @@ class _DevicesPanel extends ConsumerWidget {
           if (devices.isEmpty)
             const _EmptyLine(text: '暂无设备记录。设备首次拉取订阅配置后会显示在这里。')
           else
-            for (final device in devices) ...[_DeviceTile(device: device), if (device != devices.last) const Gap(10)],
+            for (final device in devices) ...[
+              _DeviceTile(device: device),
+              if (device != devices.last) const Gap(10),
+            ],
         ],
       ),
     );
@@ -1321,7 +1629,10 @@ class _DeviceTile extends ConsumerWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(_deviceIcon(device.deviceType), color: theme.colorScheme.primary),
+                    Icon(
+                      _deviceIcon(device.deviceType),
+                      color: theme.colorScheme.primary,
+                    ),
                     const Gap(10),
                     Expanded(
                       child: Column(
@@ -1335,10 +1646,14 @@ class _DeviceTile extends ConsumerWidget {
                           ),
                           const Gap(3),
                           Text(
-                            subtitle.isEmpty ? _truncateText(device.userAgent, 80) : subtitle,
+                            subtitle.isEmpty
+                                ? _truncateText(device.userAgent, 80)
+                                : subtitle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -1352,13 +1667,30 @@ class _DeviceTile extends ConsumerWidget {
                   spacing: 10,
                   runSpacing: 6,
                   children: [
-                    _InlineFact(icon: Icons.category_rounded, text: _deviceTypeText(device.deviceType)),
-                    if (device.ipAddress.isNotEmpty) _InlineFact(icon: Icons.public_rounded, text: device.ipAddress),
-                    if (device.location.isNotEmpty) _InlineFact(icon: Icons.location_on_rounded, text: device.location),
+                    _InlineFact(
+                      icon: Icons.category_rounded,
+                      text: _deviceTypeText(device.deviceType),
+                    ),
+                    if (device.ipAddress.isNotEmpty)
+                      _InlineFact(
+                        icon: Icons.public_rounded,
+                        text: device.ipAddress,
+                      ),
+                    if (device.location.isNotEmpty)
+                      _InlineFact(
+                        icon: Icons.location_on_rounded,
+                        text: device.location,
+                      ),
                     if (device.accessLabel.isNotEmpty)
-                      _InlineFact(icon: Icons.schedule_rounded, text: device.accessLabel),
+                      _InlineFact(
+                        icon: Icons.schedule_rounded,
+                        text: device.accessLabel,
+                      ),
                     if (device.accessCount > 0)
-                      _InlineFact(icon: Icons.query_stats_rounded, text: '${device.accessCount} 次访问'),
+                      _InlineFact(
+                        icon: Icons.query_stats_rounded,
+                        text: '${device.accessCount} 次访问',
+                      ),
                   ],
                 ),
                 if (device.remark.isNotEmpty) ...[
@@ -1367,7 +1699,9 @@ class _DeviceTile extends ConsumerWidget {
                     device.remark,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ],
@@ -1375,7 +1709,10 @@ class _DeviceTile extends ConsumerWidget {
             final actions = _DeviceActions(device: device);
 
             if (compact) {
-              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [info, const Gap(12), actions]);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [info, const Gap(12), actions],
+              );
             }
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1407,13 +1744,19 @@ class _DeviceActions extends ConsumerWidget {
       alignment: WrapAlignment.end,
       children: [
         OutlinedButton.icon(
-          onPressed: state.loading ? null : () => _showDeviceRemarkDialog(context, ref, device),
+          onPressed: state.loading
+              ? null
+              : () => _showDeviceRemarkDialog(context, ref, device),
           icon: const Icon(Icons.edit_note_rounded),
           label: Text(device.remark.isEmpty ? '备注' : '改备注'),
         ),
         OutlinedButton.icon(
-          onPressed: state.loading ? null : () => _confirmDeleteDevice(context, ref, device),
-          style: OutlinedButton.styleFrom(foregroundColor: theme.colorScheme.error),
+          onPressed: state.loading
+              ? null
+              : () => _confirmDeleteDevice(context, ref, device),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: theme.colorScheme.error,
+          ),
           icon: const Icon(Icons.delete_outline_rounded),
           label: const Text('移除'),
         ),
@@ -1431,8 +1774,12 @@ class _DeviceStatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final normal = device.isActive && device.isAllowed;
-    final background = normal ? theme.colorScheme.primaryContainer : theme.colorScheme.errorContainer;
-    final foreground = normal ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onErrorContainer;
+    final background = normal
+        ? theme.colorScheme.primaryContainer
+        : theme.colorScheme.errorContainer;
+    final foreground = normal
+        ? theme.colorScheme.onPrimaryContainer
+        : theme.colorScheme.onErrorContainer;
     final border = normal
         ? theme.colorScheme.primary.withValues(alpha: .35)
         : theme.colorScheme.error.withValues(alpha: .35);
@@ -1444,7 +1791,10 @@ class _DeviceStatusPill extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        child: Text(normal ? '允许' : '受限', style: theme.textTheme.labelSmall?.copyWith(color: foreground)),
+        child: Text(
+          normal ? '允许' : '受限',
+          style: theme.textTheme.labelSmall?.copyWith(color: foreground),
+        ),
       ),
     );
   }
@@ -1475,11 +1825,25 @@ class _PasswordPanelState extends ConsumerState<_PasswordPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SectionHeader(icon: Icons.password_rounded, title: '密码修改', subtitle: '修改当前网站账号密码'),
+          const _SectionHeader(
+            icon: Icons.password_rounded,
+            title: '密码修改',
+            subtitle: '修改当前网站账号密码',
+          ),
           const Gap(14),
-          _TextField(controller: _oldPassword, label: '当前密码', icon: Icons.lock_open_rounded, obscureText: true),
+          _TextField(
+            controller: _oldPassword,
+            label: '当前密码',
+            icon: Icons.lock_open_rounded,
+            obscureText: true,
+          ),
           const Gap(10),
-          _TextField(controller: _newPassword, label: '新密码', icon: Icons.lock_reset_rounded, obscureText: true),
+          _TextField(
+            controller: _newPassword,
+            label: '新密码',
+            icon: Icons.lock_reset_rounded,
+            obscureText: true,
+          ),
           const Gap(12),
           FilledButton.icon(
             onPressed: state.loading
@@ -1487,7 +1851,10 @@ class _PasswordPanelState extends ConsumerState<_PasswordPanel> {
                 : () => _guard(context, () async {
                     await ref
                         .read(accountNotifierProvider.notifier)
-                        .changePassword(oldPassword: _oldPassword.text, newPassword: _newPassword.text);
+                        .changePassword(
+                          oldPassword: _oldPassword.text,
+                          newPassword: _newPassword.text,
+                        );
                     _oldPassword.clear();
                     _newPassword.clear();
                   }),
@@ -1511,7 +1878,11 @@ class _OrdersPanel extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _SectionHeader(icon: Icons.receipt_long_rounded, title: '最近订单', subtitle: '显示最近 20 条'),
+          const _SectionHeader(
+            icon: Icons.receipt_long_rounded,
+            title: '最近订单',
+            subtitle: '显示最近 20 条',
+          ),
           const Gap(12),
           if (orders.isEmpty)
             const _EmptyLine(text: '暂无订单')
@@ -1556,24 +1927,37 @@ class _OrderTile extends StatelessWidget {
                 ),
                 const Gap(4),
                 Text(
-                  [order.orderNo, order.createdAt].where((value) => value.isNotEmpty).join(' · '),
+                  [
+                    order.orderNo,
+                    order.createdAt,
+                  ].where((value) => value.isNotEmpty).join(' · '),
                   maxLines: compact ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             );
             final amount = Column(
-              crossAxisAlignment: compact ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+              crossAxisAlignment: compact
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.end,
               children: [
-                Text('¥${order.amount.toStringAsFixed(2)}', style: theme.textTheme.titleSmall),
+                Text(
+                  '¥${order.amount.toStringAsFixed(2)}',
+                  style: theme.textTheme.titleSmall,
+                ),
                 const Gap(4),
                 _StatusPill(status: order.status),
               ],
             );
 
             if (compact) {
-              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [info, const Gap(10), amount]);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [info, const Gap(10), amount],
+              );
             }
 
             return Row(
@@ -1610,7 +1994,10 @@ class _SubscriptionSyncStatus extends ConsumerWidget {
         child: Row(
           children: [
             if (syncing)
-              const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              const SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             else
               const Icon(Icons.cloud_sync_rounded),
             const Gap(8),
@@ -1625,7 +2012,12 @@ class _SubscriptionSyncStatus extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: syncing
                   ? null
-                  : () => _guard(context, ref.read(accountNotifierProvider.notifier).syncSubscription),
+                  : () => _guard(
+                      context,
+                      ref
+                          .read(accountNotifierProvider.notifier)
+                          .syncSubscription,
+                    ),
               icon: const Icon(Icons.update_rounded),
               label: const Text('同步'),
             ),
@@ -1637,7 +2029,10 @@ class _SubscriptionSyncStatus extends ConsumerWidget {
 }
 
 class _Surface extends StatelessWidget {
-  const _Surface({required this.child, this.padding = const EdgeInsets.all(16)});
+  const _Surface({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -1657,7 +2052,11 @@ class _Surface extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title, required this.subtitle});
+  const _SectionHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
   final IconData icon;
   final String title;
@@ -1676,7 +2075,12 @@ class _SectionHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title, style: theme.textTheme.titleMedium),
-              Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
         ),
@@ -1707,9 +2111,19 @@ class _Metric extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               const Gap(4),
-              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleMedium),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium,
+              ),
             ],
           ),
         ),
@@ -1761,7 +2175,9 @@ class _TextField extends StatelessWidget {
         hintText: hintText,
         helperText: helperText,
         counterText: maxLength == null ? null : '',
-        border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+        border: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+        ),
       ),
     );
   }
@@ -1791,7 +2207,10 @@ class _VerificationCodeField extends StatelessWidget {
       autofillHints: const [AutofillHints.oneTimeCode],
       maxLength: 6,
       helperText: '6 位数字验证码',
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(6),
+      ],
     );
 
     final button = SizedBox(
@@ -1799,7 +2218,10 @@ class _VerificationCodeField extends StatelessWidget {
       child: OutlinedButton.icon(
         onPressed: loading ? null : onSend,
         icon: loading
-            ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+            ? const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             : const Icon(Icons.mark_email_read_rounded),
         label: const Text('发送验证码'),
       ),
@@ -1808,7 +2230,10 @@ class _VerificationCodeField extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 360) {
-          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [field, const Gap(8), button]);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [field, const Gap(8), button],
+          );
         }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1824,7 +2249,11 @@ class _VerificationCodeField extends StatelessWidget {
 }
 
 class _ModeChip extends StatelessWidget {
-  const _ModeChip({required this.label, required this.selected, required this.onSelected});
+  const _ModeChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
 
   final String label;
   final bool selected;
@@ -1832,7 +2261,11 @@ class _ModeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(label: Text(label), selected: selected, onSelected: (_) => onSelected());
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onSelected(),
+    );
   }
 }
 
@@ -1845,10 +2278,18 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(color: theme.colorScheme.primary, borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary,
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        child: Text(text, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onPrimary)),
+        child: Text(
+          text,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onPrimary,
+          ),
+        ),
       ),
     );
   }
@@ -1863,7 +2304,8 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final paid = status == 'paid' || status == 'active';
-    final failed = status == 'failed' || status == 'expired' || status == 'cancelled';
+    final failed =
+        status == 'failed' || status == 'expired' || status == 'cancelled';
     final background = paid
         ? theme.colorScheme.primaryContainer
         : failed
@@ -1888,7 +2330,10 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        child: Text(_statusText(status), style: theme.textTheme.labelSmall?.copyWith(color: foreground)),
+        child: Text(
+          _statusText(status),
+          style: theme.textTheme.labelSmall?.copyWith(color: foreground),
+        ),
       ),
     );
   }
@@ -1908,7 +2353,10 @@ class _EmptyLine extends StatelessWidget {
   }
 }
 
-Future<void> _guard(BuildContext context, Future<void> Function() action) async {
+Future<void> _guard(
+  BuildContext context,
+  Future<void> Function() action,
+) async {
   try {
     await action();
     if (context.mounted) _showSnack(context, '操作成功');
@@ -1926,18 +2374,26 @@ Future<void> _showPaymentSheet(
 }) {
   return showDialog<void>(
     context: context,
-    builder: (context) => _PaymentSheet(package: package, paymentMethods: paymentMethods),
+    builder: (context) =>
+        _PaymentSheet(package: package, paymentMethods: paymentMethods),
   );
 }
 
-Future<void> _confirmDeleteDevice(BuildContext context, WidgetRef ref, AccountDevice device) async {
+Future<void> _confirmDeleteDevice(
+  BuildContext context,
+  WidgetRef ref,
+  AccountDevice device,
+) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('移除设备'),
       content: Text('确定移除“${device.displayName}”吗？移除后该设备需要重新拉取订阅配置才会再次登记。'),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('取消'),
+        ),
         FilledButton.icon(
           onPressed: () => Navigator.of(context).pop(true),
           icon: const Icon(Icons.delete_outline_rounded),
@@ -1949,10 +2405,17 @@ Future<void> _confirmDeleteDevice(BuildContext context, WidgetRef ref, AccountDe
   if (confirmed != true || !context.mounted) {
     return;
   }
-  await _guard(context, () => ref.read(accountNotifierProvider.notifier).deleteDevice(device.id));
+  await _guard(
+    context,
+    () => ref.read(accountNotifierProvider.notifier).deleteDevice(device.id),
+  );
 }
 
-Future<void> _showDeviceRemarkDialog(BuildContext context, WidgetRef ref, AccountDevice device) async {
+Future<void> _showDeviceRemarkDialog(
+  BuildContext context,
+  WidgetRef ref,
+  AccountDevice device,
+) async {
   final controller = TextEditingController(text: device.remark);
   final remark = await showDialog<String>(
     context: context,
@@ -1968,12 +2431,17 @@ Future<void> _showDeviceRemarkDialog(BuildContext context, WidgetRef ref, Accoun
           decoration: const InputDecoration(
             labelText: '备注',
             prefixIcon: Icon(Icons.edit_note_rounded),
-            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
         FilledButton.icon(
           onPressed: () => Navigator.of(context).pop(controller.text),
           icon: const Icon(Icons.save_rounded),
@@ -1982,12 +2450,16 @@ Future<void> _showDeviceRemarkDialog(BuildContext context, WidgetRef ref, Accoun
       ],
     ),
   ).whenComplete(controller.dispose);
-  if (remark == null || !context.mounted || remark.trim() == device.remark.trim()) {
+  if (remark == null ||
+      !context.mounted ||
+      remark.trim() == device.remark.trim()) {
     return;
   }
   await _guard(
     context,
-    () => ref.read(accountNotifierProvider.notifier).updateDeviceRemark(id: device.id, remark: remark),
+    () => ref
+        .read(accountNotifierProvider.notifier)
+        .updateDeviceRemark(id: device.id, remark: remark),
   );
 }
 

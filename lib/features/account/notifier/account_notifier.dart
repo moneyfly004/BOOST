@@ -8,13 +8,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final accountApiProvider = Provider<AccountApi>((ref) => AccountApi());
 
-final accountNotifierProvider = StateNotifierProvider<AccountNotifier, AccountState>((ref) {
-  return AccountNotifier(
-    ref.watch(accountApiProvider),
-    ref.watch(accountSubscriptionSyncProvider),
-    ref.watch(sharedPreferencesProvider).requireValue,
-  );
-});
+final accountNotifierProvider =
+    StateNotifierProvider<AccountNotifier, AccountState>((ref) {
+      return AccountNotifier(
+        ref.watch(accountApiProvider),
+        ref.watch(accountSubscriptionSyncProvider),
+        ref.watch(sharedPreferencesProvider).requireValue,
+      );
+    });
 
 class AccountState {
   const AccountState({
@@ -54,7 +55,8 @@ class AccountState {
   final String? message;
 
   bool get isAuthenticated =>
-      (token != null && token!.isNotEmpty) || (refreshToken != null && refreshToken!.isNotEmpty);
+      (token != null && token!.isNotEmpty) ||
+      (refreshToken != null && refreshToken!.isNotEmpty);
 
   AccountState copyWith({
     String? token,
@@ -97,7 +99,8 @@ class AccountState {
 }
 
 class AccountNotifier extends StateNotifier<AccountState> {
-  AccountNotifier(this._api, this._subscriptionSync, this._preferences) : super(const AccountState()) {
+  AccountNotifier(this._api, this._subscriptionSync, this._preferences)
+    : super(const AccountState()) {
     _restore();
   }
 
@@ -107,20 +110,27 @@ class AccountNotifier extends StateNotifier<AccountState> {
   Future<void>? _accountRefreshOperation;
   Future<String>? _tokenRefreshOperation;
 
-  static const _tokenKey = 'cboard_account_access_token';
-  static const _refreshTokenKey = 'cboard_account_refresh_token';
-  static const _userKey = 'cboard_account_user';
+  static const _tokenKey = 'boost_account_access_token';
+  static const _refreshTokenKey = 'boost_account_refresh_token';
+  static const _userKey = 'boost_account_user';
 
   Future<void> login(String email, String password) async {
     await _run(() async {
-      final response = await _api.login(email: email.trim(), password: password);
+      final response = await _api.login(
+        email: email.trim(),
+        password: password,
+      );
       state = state.copyWith(
         token: response.accessToken,
         refreshToken: response.refreshToken,
         user: response.user,
         authExpired: false,
       );
-      await _persistAuth(response.accessToken, response.refreshToken, response.user);
+      await _persistAuth(
+        response.accessToken,
+        response.refreshToken,
+        response.user,
+      );
       await _refreshAccountData();
     });
   }
@@ -146,7 +156,11 @@ class AccountNotifier extends StateNotifier<AccountState> {
         user: response.user,
         authExpired: false,
       );
-      await _persistAuth(response.accessToken, response.refreshToken, response.user);
+      await _persistAuth(
+        response.accessToken,
+        response.refreshToken,
+        response.user,
+      );
       await _refreshAccountData();
     });
   }
@@ -159,10 +173,17 @@ class AccountNotifier extends StateNotifier<AccountState> {
     return _runWithResult(() => _api.forgotPassword(email.trim()));
   }
 
-  Future<String> resetPassword({required String email, required String verificationCode, required String newPassword}) {
+  Future<String> resetPassword({
+    required String email,
+    required String verificationCode,
+    required String newPassword,
+  }) {
     return _runWithResult(
-      () =>
-          _api.resetPassword(email: email.trim(), verificationCode: verificationCode.trim(), newPassword: newPassword),
+      () => _api.resetPassword(
+        email: email.trim(),
+        verificationCode: verificationCode.trim(),
+        newPassword: newPassword,
+      ),
     );
   }
 
@@ -177,7 +198,11 @@ class AccountNotifier extends StateNotifier<AccountState> {
   Future<void> syncSubscription() async {
     await _runAccountRefresh(() async {
       final dashboard = await _withAuthenticatedToken(_api.getDashboard);
-      state = state.copyWith(user: dashboard.user, dashboard: dashboard, authExpired: false);
+      state = state.copyWith(
+        user: dashboard.user,
+        dashboard: dashboard,
+        authExpired: false,
+      );
       await _persistAuth(state.token, state.refreshToken, dashboard.user);
       await _syncSubscription(dashboard, successMessage: '订阅已同步');
     });
@@ -187,7 +212,11 @@ class AccountNotifier extends StateNotifier<AccountState> {
     await _runAccountRefresh(() async {
       state = state.copyWith(syncingSubscription: true);
       final dashboard = await _withAuthenticatedToken(_api.getDashboard);
-      state = state.copyWith(user: dashboard.user, dashboard: dashboard, authExpired: false);
+      state = state.copyWith(
+        user: dashboard.user,
+        dashboard: dashboard,
+        authExpired: false,
+      );
       await _persistAuth(state.token, state.refreshToken, dashboard.user);
       await _subscriptionSync.refreshActiveSubscription(dashboard);
       state = state.copyWith(syncingSubscription: false, message: '订阅已更新');
@@ -198,7 +227,11 @@ class AccountNotifier extends StateNotifier<AccountState> {
     if (!_hasAuthCredentials) return;
     await _runAccountRefresh(() async {
       final dashboard = await _withAuthenticatedToken(_api.getDashboard);
-      state = state.copyWith(user: dashboard.user, dashboard: dashboard, authExpired: false);
+      state = state.copyWith(
+        user: dashboard.user,
+        dashboard: dashboard,
+        authExpired: false,
+      );
       await _persistAuth(state.token, state.refreshToken, dashboard.user);
       await _subscriptionSync.refreshActiveSubscription(dashboard);
     });
@@ -206,7 +239,10 @@ class AccountNotifier extends StateNotifier<AccountState> {
 
   Future<void> loadPublicData() async {
     await _run(() async {
-      final results = await Future.wait<Object>([_api.getPackages(), _api.getPaymentMethods()]);
+      final results = await Future.wait<Object>([
+        _api.getPackages(),
+        _api.getPaymentMethods(),
+      ]);
       state = state.copyWith(
         packages: results[0] as List<AccountPackage>,
         paymentMethods: results[1] as List<PaymentMethod>,
@@ -214,24 +250,48 @@ class AccountNotifier extends StateNotifier<AccountState> {
     });
   }
 
-  Future<void> changePassword({required String oldPassword, required String newPassword}) async {
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
     final message = await _runWithResult(
       () => _withAuthenticatedToken(
-        (token) => _api.changePassword(token: token, oldPassword: oldPassword, newPassword: newPassword),
+        (token) => _api.changePassword(
+          token: token,
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+        ),
       ),
     );
     state = state.copyWith(message: message);
   }
 
-  Future<OrderResult> buyPackage({required AccountPackage package, PaymentMethod? paymentMethod}) {
+  Future<OrderResult> buyPackage({
+    required AccountPackage package,
+    PaymentMethod? paymentMethod,
+  }) {
     return _runWithResult(() async {
       final order = await _withAuthenticatedToken(
-        (token) => _api.createOrder(token: token, packageId: package.id, paymentMethod: paymentMethod?.key),
+        (token) => _api.createOrder(token: token, packageId: package.id),
       );
       OrderResult result = order;
-      if ((result.paymentUrl == null || result.paymentUrl!.isEmpty) && paymentMethod != null && order.id > 0) {
+      if (paymentMethod?.key == 'balance' && order.orderNo.isNotEmpty) {
         result = await _withAuthenticatedToken(
-          (token) => _api.createPayment(token: token, orderId: order.id, paymentMethodId: paymentMethod.id),
+          (token) => _api.payOrder(
+            token: token,
+            orderNo: order.orderNo,
+            paymentMethod: 'balance',
+          ),
+        );
+      } else if ((result.paymentUrl == null || result.paymentUrl!.isEmpty) &&
+          paymentMethod != null &&
+          order.id > 0) {
+        result = await _withAuthenticatedToken(
+          (token) => _api.createPayment(
+            token: token,
+            orderId: order.id,
+            paymentMethodId: paymentMethod.id,
+          ),
         );
       }
       await _refreshAccountData();
@@ -241,20 +301,45 @@ class AccountNotifier extends StateNotifier<AccountState> {
 
   Future<OrderResult> createPackageOrder(AccountPackage package) {
     return _runWithResult(
-      () => _withAuthenticatedToken((token) => _api.createOrder(token: token, packageId: package.id)),
+      () => _withAuthenticatedToken(
+        (token) => _api.createOrder(token: token, packageId: package.id),
+      ),
     );
   }
 
-  Future<OrderResult> createOrderPayment({required int orderId, required PaymentMethod paymentMethod}) {
+  Future<OrderResult> createOrderPayment({
+    required int orderId,
+    required PaymentMethod paymentMethod,
+    bool isMobile = false,
+  }) {
     return _runWithResult(
       () => _withAuthenticatedToken(
-        (token) => _api.createPayment(token: token, orderId: orderId, paymentMethodId: paymentMethod.id),
+        (token) => _api.createPayment(
+          token: token,
+          orderId: orderId,
+          paymentMethodId: paymentMethod.id,
+          isMobile: isMobile,
+        ),
+      ),
+    );
+  }
+
+  Future<OrderResult> payOrderWithBalance(String orderNo) {
+    return _runWithResult(
+      () => _withAuthenticatedToken(
+        (token) => _api.payOrder(
+          token: token,
+          orderNo: orderNo,
+          paymentMethod: 'balance',
+        ),
       ),
     );
   }
 
   Future<AccountOrderStatus> checkOrderStatus(String orderNo) {
-    return _withAuthenticatedToken((token) => _api.getOrderStatus(token: token, orderNo: orderNo));
+    return _withAuthenticatedToken(
+      (token) => _api.getOrderStatus(token: token, orderNo: orderNo),
+    );
   }
 
   Future<void> refreshDevices() async {
@@ -263,17 +348,23 @@ class AccountNotifier extends StateNotifier<AccountState> {
 
   Future<void> deleteDevice(int id) async {
     final message = await _runWithResult(() async {
-      final result = await _withAuthenticatedToken((token) => _api.deleteDevice(token: token, id: id));
+      final result = await _withAuthenticatedToken(
+        (token) => _api.deleteDevice(token: token, id: id),
+      );
       await _refreshAccountSummaryAndDevices();
       return result;
     });
     state = state.copyWith(message: message);
   }
 
-  Future<void> updateDeviceRemark({required int id, required String remark}) async {
+  Future<void> updateDeviceRemark({
+    required int id,
+    required String remark,
+  }) async {
     final message = await _runWithResult(() async {
       final result = await _withAuthenticatedToken(
-        (token) => _api.updateDeviceRemark(token: token, id: id, remark: remark),
+        (token) =>
+            _api.updateDeviceRemark(token: token, id: id, remark: remark),
       );
       await _refreshDevicesOnly();
       return result;
@@ -292,18 +383,28 @@ class AccountNotifier extends StateNotifier<AccountState> {
       await _preferences.remove(_tokenKey);
       await _preferences.remove(_refreshTokenKey);
       await _preferences.remove(_userKey);
-      state = AccountState(packages: state.packages, paymentMethods: state.paymentMethods, message: '已退出登录');
+      state = AccountState(
+        packages: state.packages,
+        paymentMethods: state.paymentMethods,
+        message: '已退出登录',
+      );
     } catch (_) {
       state = state.copyWith(loading: false);
       rethrow;
     }
   }
 
-  Future<void> _syncSubscription(AccountDashboard dashboard, {String? successMessage}) async {
+  Future<void> _syncSubscription(
+    AccountDashboard dashboard, {
+    String? successMessage,
+  }) async {
     state = state.copyWith(syncingSubscription: true);
     try {
       await _subscriptionSync.sync(dashboard);
-      state = state.copyWith(syncingSubscription: false, message: successMessage);
+      state = state.copyWith(
+        syncingSubscription: false,
+        message: successMessage,
+      );
     } catch (_) {
       state = state.copyWith(syncingSubscription: false);
       rethrow;
@@ -341,7 +442,10 @@ class AccountNotifier extends StateNotifier<AccountState> {
 
   Future<void> _refreshAccountSummaryAndDevices() async {
     final results = await _withAuthenticatedToken(
-      (token) => Future.wait<Object>([_api.getDashboard(token), _api.getDevices(token)]),
+      (token) => Future.wait<Object>([
+        _api.getDashboard(token),
+        _api.getDevices(token),
+      ]),
     );
     final dashboard = results[0] as AccountDashboard;
     final devices = results[1] as AccountDevicesResult;
@@ -359,7 +463,9 @@ class AccountNotifier extends StateNotifier<AccountState> {
   }
 
   Future<void> _refreshDevicesOnly() async {
-    final devices = await _withAuthenticatedToken((token) => _api.getDevices(token));
+    final devices = await _withAuthenticatedToken(
+      (token) => _api.getDevices(token),
+    );
     state = state.copyWith(
       devices: devices.devices,
       deviceTotal: devices.total,
@@ -385,8 +491,14 @@ class AccountNotifier extends StateNotifier<AccountState> {
         _preferences.remove(_userKey);
       }
     }
-    if ((token != null && token.isNotEmpty) || (refreshToken != null && refreshToken.isNotEmpty)) {
-      state = state.copyWith(token: token, refreshToken: refreshToken, user: user, authExpired: false);
+    if ((token != null && token.isNotEmpty) ||
+        (refreshToken != null && refreshToken.isNotEmpty)) {
+      state = state.copyWith(
+        token: token,
+        refreshToken: refreshToken,
+        user: user,
+        authExpired: false,
+      );
       Future.microtask(() async {
         try {
           await refresh();
@@ -407,7 +519,9 @@ class AccountNotifier extends StateNotifier<AccountState> {
         (state.refreshToken != null && state.refreshToken!.isNotEmpty);
   }
 
-  Future<T> _withAuthenticatedToken<T>(Future<T> Function(String token) action) async {
+  Future<T> _withAuthenticatedToken<T>(
+    Future<T> Function(String token) action,
+  ) async {
     final token = await _availableToken();
     try {
       return await action(token);
@@ -465,7 +579,8 @@ class AccountNotifier extends StateNotifier<AccountState> {
       _markAuthExpired();
       throw AccountApiException('登录状态已过期，请重新登录', statusCode: 401);
     }
-    final nextRefreshToken = (response.refreshToken != null && response.refreshToken!.isNotEmpty)
+    final nextRefreshToken =
+        (response.refreshToken != null && response.refreshToken!.isNotEmpty)
         ? response.refreshToken
         : refreshToken;
     final nextUser = response.user.id == 0 ? state.user : response.user;
@@ -484,14 +599,20 @@ class AccountNotifier extends StateNotifier<AccountState> {
   }
 
   bool _isExpiredAuthError(AccountApiException error) {
-    return error.statusCode == 400 || error.statusCode == 401 || error.statusCode == 403;
+    return error.statusCode == 400 ||
+        error.statusCode == 401 ||
+        error.statusCode == 403;
   }
 
   void _markAuthExpired() {
     state = state.copyWith(authExpired: true, message: '登录授权已失效，请重新登录');
   }
 
-  Future<void> _persistAuth(String? token, String? refreshToken, AccountUser? user) async {
+  Future<void> _persistAuth(
+    String? token,
+    String? refreshToken,
+    AccountUser? user,
+  ) async {
     if (token != null && token.isNotEmpty) {
       await _preferences.setString(_tokenKey, token);
     }

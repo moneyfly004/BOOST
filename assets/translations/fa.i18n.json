@@ -1,6 +1,6 @@
 {
   "common": {
-    "appTitle": "MoneyFly",
+    "appTitle": "BOOST",
     "start": "شروع",
     "version": "نسخه",
     "ok": "باشه",
@@ -94,7 +94,7 @@
   "intro": {
     "banner": "هرآنچه برای اینترنت بدون محدودیت نیاز دارید",
     "termsAndPolicyCaution(rich)": "با ادامه، شما با ${tap(@:pages.about.termsAndConditions)} موافقت می‌کنید",
-    "info(rich)": "ساخته شده با ❤️ توسط MoneyFly - ${tap_source(متن‌باز)} (${tap_license(مجوز)})"
+    "info(rich)": "ساخته شده با ❤️ توسط BOOST - ${tap_source(متن‌باز)} (${tap_license(مجوز)})"
   },
   "pages": {
     "home": {

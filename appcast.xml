@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
     <channel>
-        <title>MoneyFly Release</title>
+        <title>BOOST Release</title>
         <item>
-            <title>Version 1.0.1</title>
-            <pubDate>Mon, 22 Jun 2026 00:00:00 +0000</pubDate>
+            <title>Version 1.0.0</title>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
-                url="https://github.com/moneyfly004/cboard/releases/latest/download/MoneyFly-Android-universal.apk"
-                sparkle:version="1.0.1" sparkle:os="android" />
+                url="https://github.com/moneyfly004/boost/releases/latest/download/BOOST-Android-universal.apk"
+                sparkle:version="1.0.0" sparkle:os="android" />
         </item>
         <item>
-            <title>Version 1.0.1</title>
-            <pubDate>Mon, 22 Jun 2026 00:00:00 +0000</pubDate>
+            <title>Version 1.0.0</title>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
-                url="https://github.com/moneyfly004/cboard/releases/latest/download/MoneyFly-Windows-x64-Setup.exe"
-                sparkle:version="1.0.1" sparkle:os="windows" />
+                url="https://github.com/moneyfly004/boost/releases/latest/download/BOOST-Windows-x64-Setup.exe"
+                sparkle:version="1.0.0" sparkle:os="windows" />
         </item>
         <item>
-            <title>Version 1.0.1</title>
-            <pubDate>Mon, 22 Jun 2026 00:00:00 +0000</pubDate>
+            <title>Version 1.0.0</title>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
-                url="https://github.com/moneyfly004/cboard/releases/latest/download/MoneyFly-macOS-universal.dmg"
-                sparkle:version="1.0.1" sparkle:os="macos" />
+                url="https://github.com/moneyfly004/boost/releases/latest/download/BOOST-macOS-universal.dmg"
+                sparkle:version="1.0.0" sparkle:os="macos" />
         </item>
         <item>
-            <title>Version 1.0.1</title>
-            <pubDate>Mon, 22 Jun 2026 00:00:00 +0000</pubDate>
+            <title>Version 1.0.0</title>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 +0000</pubDate>
             <enclosure
-                url="https://github.com/moneyfly004/cboard/releases/latest"
-                sparkle:version="1.0.1" sparkle:os="linux" />
+                url="https://github.com/moneyfly004/boost/releases/latest"
+                sparkle:version="1.0.0" sparkle:os="linux" />
         </item>
     </channel>
 </rss>

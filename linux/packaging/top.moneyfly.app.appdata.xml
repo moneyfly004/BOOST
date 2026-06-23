@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>top.moneyfly.app</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>BOOST</name>
+  <summary>Proxy and VPN client for BOOST</summary>
+
+  <developer_name>BOOST</developer_name>
+  <update_contact>support@moneyfly.top</update_contact>
+
+  <description>
+    <p>
+      BOOST is a cross-platform proxy and VPN client connected to the BOOST
+      account and subscription service.
+    </p>
+    <p>
+      It provides profile import, connection control, account subscription
+      synchronization, and desktop/mobile client packaging.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">boost.desktop</launchable>
+
+  <icon type="stock">boost</icon>
+
+  <categories>
+    <category>Network</category>
+  </categories>
+
+  <keywords>
+    <keyword>BOOST</keyword>
+    <keyword>Proxy</keyword>
+    <keyword>VPN</keyword>
+  </keywords>
+
+  <mime-types>
+    <mime-type>x-scheme-handler/boost</mime-type>
+    <mime-type>x-scheme-handler/v2ray</mime-type>
+    <mime-type>x-scheme-handler/v2rayn</mime-type>
+    <mime-type>x-scheme-handler/v2rayng</mime-type>
+    <mime-type>x-scheme-handler/clash</mime-type>
+    <mime-type>x-scheme-handler/clashmeta</mime-type>
+    <mime-type>x-scheme-handler/sing-box</mime-type>
+  </mime-types>
+
+  <url type="homepage">https://new.moneyfly.top</url>
+  <url type="bugtracker">https://github.com/moneyfly004/boost/issues</url>
+  <url type="help">https://new.moneyfly.top</url>
+
+  <provides>
+    <binary>boost</binary>
+  </provides>
+
+  <releases>
+    <release version="1.0.0" date="2026-06-23">
+      <description>
+        <p>Initial BOOST release.</p>
+      </description>
+    </release>
+  </releases>
+
+  <translation type="gettext">boost</translation>
+
+  <custom>
+    <value key="PackageName">boost</value>
+    <value key="Priority">optional</value>
+    <value key="Section">x11</value>
+    <value key="InstalledSize">6604</value>
+    <value key="Essential">false</value>
+  </custom>
+</component>

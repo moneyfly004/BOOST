@@ -7,9 +7,13 @@ abstract class GithubReleaseParser {
   static RemoteVersionEntity parse(Map<String, dynamic> json) {
     final fullTag = json['tag_name'] as String;
     final automatedBuildNumber = _parseAutomatedBuildNumber(fullTag);
-    final versionParts = automatedBuildNumber == null ? fullTag.removePrefix("v").split("-").first.split("+") : null;
+    final versionParts = automatedBuildNumber == null
+        ? fullTag.removePrefix("v").split("-").first.split("+")
+        : null;
     var version = versionParts?.firstOrNull ?? "0.0.0";
-    var buildNumber = versionParts?.elementAtOrElse(1, (index) => "") ?? automatedBuildNumber.toString();
+    var buildNumber =
+        versionParts?.elementAtOrElse(1, (index) => "") ??
+        automatedBuildNumber.toString();
     var flavor = Environment.prod;
     for (final env in Environment.values) {
       final suffix = ".${env.name}";
@@ -25,7 +29,8 @@ abstract class GithubReleaseParser {
     }
     final preRelease = json["prerelease"] as bool;
     final publishedAt = DateTime.parse(json["published_at"] as String);
-    final assets = (json["assets"] as List? ?? const []).whereType<Map<String, dynamic>>();
+    final assets = (json["assets"] as List? ?? const [])
+        .whereType<Map<String, dynamic>>();
     final downloadUrl = _selectDownloadUrl(assets);
     return RemoteVersionEntity(
       version: version,
@@ -41,7 +46,7 @@ abstract class GithubReleaseParser {
   }
 
   static int? _parseAutomatedBuildNumber(String tag) {
-    final match = RegExp(r'^moneyfly-build-(\d+)$').firstMatch(tag);
+    final match = RegExp(r'^boost-build-(\d+)$').firstMatch(tag);
     return match == null ? null : int.tryParse(match.group(1)!);
   }
 
@@ -54,20 +59,34 @@ abstract class GithubReleaseParser {
 
     String? firstMatching(List<String> patterns) {
       for (final pattern in patterns) {
-        final match = namedUrls.entries.firstOrNullWhere((entry) => entry.key.contains(pattern));
+        final match = namedUrls.entries.firstOrNullWhere(
+          (entry) => entry.key.contains(pattern),
+        );
         if (match != null) return match.value;
       }
       return null;
     }
 
     if (PlatformUtils.isAndroid) {
-      return firstMatching(["Android-universal.apk", "Android-arm64-v8a.apk", "Android"]);
+      return firstMatching([
+        "Android-universal.apk",
+        "Android-arm64-v8a.apk",
+        "Android",
+      ]);
     }
     if (PlatformUtils.isWindows) {
-      return firstMatching(["Windows-x64-Setup.exe", "Windows-x64-Portable.zip", "Windows"]);
+      return firstMatching([
+        "Windows-x64-Setup.exe",
+        "Windows-x64-Portable.zip",
+        "Windows",
+      ]);
     }
     if (PlatformUtils.isMacOS) {
-      return firstMatching(["macOS-universal.dmg", "macOS-universal.pkg", "macOS"]);
+      return firstMatching([
+        "macOS-universal.dmg",
+        "macOS-universal.pkg",
+        "macOS",
+      ]);
     }
     if (PlatformUtils.isLinux) {
       return firstMatching(["Linux", "AppImage", ".deb", ".rpm"]);

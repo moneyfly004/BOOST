@@ -1,4 +1,4 @@
-name: MoneyFly Build
+name: BOOST Build
 
 on:
   workflow_dispatch:
@@ -33,17 +33,17 @@ on:
       - main
       - master
       - dev
-      - moneyfly-build
+      - boost-build
 
 permissions:
   contents: write
 
 concurrency:
-  group: moneyfly-build-${{ github.ref }}
+  group: boost-build-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  APP_NAME: "MoneyFly"
+  APP_NAME: "BOOST"
   FLUTTER_VERSION: "3.38.5"
   JAVA_VERSION: "17"
   ANDROID_NDK_VERSION: "28.2.13676358"
@@ -100,7 +100,7 @@ jobs:
             echo "release_tag=${release_tag}"
           } >> "${GITHUB_OUTPUT}"
 
-          echo "Resolved MoneyFly version ${app_version} (${app_build_number})."
+          echo "Resolved BOOST version ${app_version} (${app_build_number})."
 
   quality:
     name: Quality
@@ -208,9 +208,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -n "${ANDROID_SIGNING_KEY:-}" && -n "${ANDROID_SIGNING_STORE_PASSWORD:-}" && -n "${ANDROID_SIGNING_KEY_PASSWORD:-}" && -n "${ANDROID_SIGNING_KEY_ALIAS:-}" ]]; then
-            echo "${ANDROID_SIGNING_KEY}" | base64 --decode > android/moneyfly-release.jks
+            echo "${ANDROID_SIGNING_KEY}" | base64 --decode > android/boost-release.jks
             {
-              echo "storeFile=$(pwd)/android/moneyfly-release.jks"
+              echo "storeFile=$(pwd)/android/boost-release.jks"
               echo "storePassword=${ANDROID_SIGNING_STORE_PASSWORD}"
               echo "keyPassword=${ANDROID_SIGNING_KEY_PASSWORD}"
               echo "keyAlias=${ANDROID_SIGNING_KEY_ALIAS}"
@@ -218,19 +218,19 @@ jobs:
             echo "Using Android signing key from repository secrets."
           else
             keytool -genkeypair -v \
-              -keystore android/moneyfly-ci-release.jks \
-              -storepass moneyfly-ci-store-password \
-              -keypass moneyfly-ci-store-password \
-              -alias moneyfly-ci \
+              -keystore android/boost-ci-release.jks \
+              -storepass boost-ci-store-password \
+              -keypass boost-ci-store-password \
+              -alias boost-ci \
               -keyalg RSA \
               -keysize 2048 \
               -validity 10000 \
-              -dname "CN=MoneyFly CI, OU=MoneyFly, O=MoneyFly, L=Shenzhen, ST=Guangdong, C=CN"
+              -dname "CN=BOOST CI, OU=BOOST, O=BOOST, L=Shenzhen, ST=Guangdong, C=CN"
             {
-              echo "storeFile=$(pwd)/android/moneyfly-ci-release.jks"
-              echo "storePassword=moneyfly-ci-store-password"
-              echo "keyPassword=moneyfly-ci-store-password"
-              echo "keyAlias=moneyfly-ci"
+              echo "storeFile=$(pwd)/android/boost-ci-release.jks"
+              echo "storePassword=boost-ci-store-password"
+              echo "keyPassword=boost-ci-store-password"
+              echo "keyAlias=boost-ci"
             } > android/key.properties
             echo "Using generated CI Android signing key. Add ANDROID_SIGNING_* secrets for production signing."
           fi
@@ -240,7 +240,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p build/moneyfly-apk-cache
+          mkdir -p build/boost-apk-cache
           flutter build apk \
             --release \
             --target "${BUILD_TARGET}" \
@@ -248,9 +248,9 @@ jobs:
             --build-name="${APP_VERSION}" \
             --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/android/universal \
-            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
+            --dart-define="boost_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
-          cp build/app/outputs/flutter-apk/app-release.apk build/moneyfly-apk-cache/app-release.apk
+          cp build/app/outputs/flutter-apk/app-release.apk build/boost-apk-cache/app-release.apk
           flutter build apk \
             --release \
             --split-per-abi \
@@ -259,7 +259,7 @@ jobs:
             --build-name="${APP_VERSION}" \
             --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/android/split \
-            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
+            --dart-define="boost_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Build AAB
@@ -272,7 +272,7 @@ jobs:
             --build-name="${APP_VERSION}" \
             --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/android/aab \
-            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
+            --dart-define="boost_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Collect Android artifacts
@@ -280,7 +280,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/android
-          cp build/moneyfly-apk-cache/app-release.apk "artifacts/android/${APP_NAME}-Android-universal.apk"
+          cp build/boost-apk-cache/app-release.apk "artifacts/android/${APP_NAME}-Android-universal.apk"
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "artifacts/android/${APP_NAME}-Android-armeabi-v7a.apk"
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "artifacts/android/${APP_NAME}-Android-arm64-v8a.apk"
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk "artifacts/android/${APP_NAME}-Android-x86_64.apk"
@@ -294,7 +294,7 @@ jobs:
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: moneyfly-android
+          name: boost-android
           path: artifacts/android/*
           retention-days: 14
           overwrite: true
@@ -357,7 +357,7 @@ jobs:
             --build-name="${APP_VERSION}" \
             --build-number="${APP_BUILD_NUMBER}" \
             --split-debug-info=build/debug-info/macos \
-            --dart-define="moneyfly_build_number=${APP_BUILD_NUMBER}" \
+            --dart-define="boost_build_number=${APP_BUILD_NUMBER}" \
             --dart-define=sentry_dsn=
 
       - name: Collect macOS artifacts
@@ -365,9 +365,6 @@ jobs:
         run: |
           set -euo pipefail
           APP_PATH="build/macos/Build/Products/Release/${APP_NAME}.app"
-          if [[ ! -d "${APP_PATH}" ]]; then
-            APP_PATH="build/macos/Build/Products/Release/Hiddify.app"
-          fi
           test -d "${APP_PATH}"
           SOURCE_ICONSET="macos/Runner/Assets.xcassets/AppIcon.appiconset"
           python3 scripts/rebuild_macos_icns.py "${SOURCE_ICONSET}" "${APP_PATH}/Contents/Resources/AppIcon.icns"
@@ -412,7 +409,7 @@ jobs:
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: moneyfly-macos
+          name: boost-macos
           path: artifacts/macos/*
           retention-days: 14
           overwrite: true
@@ -469,7 +466,7 @@ jobs:
             --build-name="${env:APP_VERSION}" `
             --build-number="${env:APP_BUILD_NUMBER}" `
             --split-debug-info=build\debug-info\windows `
-            --dart-define="moneyfly_build_number=${env:APP_BUILD_NUMBER}" `
+            --dart-define="boost_build_number=${env:APP_BUILD_NUMBER}" `
             --dart-define=sentry_dsn=
 
       - name: Install Inno Setup
@@ -493,17 +490,17 @@ jobs:
           $sourceDir = (Resolve-Path $releaseDir).Path
           $outputDir = (Resolve-Path artifacts\windows).Path
           $iconPath = (Resolve-Path "windows\runner\resources\app_icon.ico").Path
-          $issPath = Join-Path $env:RUNNER_TEMP "moneyfly-installer.iss"
+          $issPath = Join-Path $env:RUNNER_TEMP "boost-installer.iss"
           @"
           [Setup]
           AppId={{A826F4E6-E142-4B9D-9F9D-17304829F2B1}
           AppName=${env:APP_NAME}
           AppVersion=$appVersion
-          AppPublisher=MoneyFly
-          AppPublisherURL=https://dy.moneyfly.top
-          AppSupportURL=https://dy.moneyfly.top
-          AppUpdatesURL=https://dy.moneyfly.top
-          DefaultDirName={autopf64}\MoneyFly
+          AppPublisher=BOOST
+          AppPublisherURL=https://new.moneyfly.top
+          AppSupportURL=https://new.moneyfly.top
+          AppUpdatesURL=https://new.moneyfly.top
+          DefaultDirName={autopf64}\BOOST
           MinVersion=10.0
           DisableProgramGroupPage=yes
           OutputDir=$outputDir
@@ -533,17 +530,14 @@ jobs:
           Filename: "{app}\${env:APP_NAME}.exe"; Description: "{cm:LaunchProgram,${env:APP_NAME}}"; Flags: nowait postinstall skipifsilent
 
           [UninstallDelete]
-          Type: filesandordirs; Name: "{userappdata}\MoneyFly"
+          Type: filesandordirs; Name: "{userappdata}\BOOST"
 
           [Code]
           function InitializeSetup(): Boolean;
           var
             ResultCode: Integer;
           begin
-            Exec('taskkill', '/F /IM MoneyFly.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-            Exec('taskkill', '/F /IM hiddify.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-            Exec('net', 'stop "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-            Exec('sc.exe', 'delete "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('taskkill', '/F /IM BOOST.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
             Result := True;
           end;
           "@ | Set-Content -Path $issPath -Encoding UTF8
@@ -575,7 +569,7 @@ jobs:
           if (Test-Path "build\windows") {
             Remove-Item -Recurse -Force "build\windows"
           }
-          $env:MONEYFLY_WINDOWS7_LEGACY = "1"
+          $env:BOOST_WINDOWS7_LEGACY = "1"
           flutter build windows `
             --release `
             --no-pub `
@@ -583,7 +577,7 @@ jobs:
             --build-name="${env:APP_VERSION}" `
             --build-number="${env:APP_BUILD_NUMBER}" `
             --split-debug-info=build\debug-info\windows7 `
-            --dart-define="moneyfly_build_number=${env:APP_BUILD_NUMBER}" `
+            --dart-define="boost_build_number=${env:APP_BUILD_NUMBER}" `
             --dart-define=sentry_dsn=
 
           $releaseDir = "build\windows\x64\runner\Release"
@@ -608,17 +602,17 @@ jobs:
           $sourceDir = (Resolve-Path $releaseDir).Path
           $outputDir = (Resolve-Path artifacts\windows).Path
           $iconPath = (Resolve-Path "windows\runner\resources\app_icon.ico").Path
-          $issPath = Join-Path $env:RUNNER_TEMP "moneyfly-windows7-installer.iss"
+          $issPath = Join-Path $env:RUNNER_TEMP "boost-windows7-installer.iss"
           @"
           [Setup]
           AppId={{A826F4E6-E142-4B9D-9F9D-17304829F2B1}
           AppName=${env:APP_NAME}
           AppVersion=$appVersion
-          AppPublisher=MoneyFly
-          AppPublisherURL=https://dy.moneyfly.top
-          AppSupportURL=https://dy.moneyfly.top
-          AppUpdatesURL=https://dy.moneyfly.top
-          DefaultDirName={autopf64}\MoneyFly
+          AppPublisher=BOOST
+          AppPublisherURL=https://new.moneyfly.top
+          AppSupportURL=https://new.moneyfly.top
+          AppUpdatesURL=https://new.moneyfly.top
+          DefaultDirName={autopf64}\BOOST
           MinVersion=6.1
           DisableProgramGroupPage=yes
           OutputDir=$outputDir
@@ -648,17 +642,14 @@ jobs:
           Filename: "{app}\${env:APP_NAME}.exe"; Description: "{cm:LaunchProgram,${env:APP_NAME}}"; Flags: nowait postinstall skipifsilent
 
           [UninstallDelete]
-          Type: filesandordirs; Name: "{userappdata}\MoneyFly"
+          Type: filesandordirs; Name: "{userappdata}\BOOST"
 
           [Code]
           function InitializeSetup(): Boolean;
           var
             ResultCode: Integer;
           begin
-            Exec('taskkill', '/F /IM MoneyFly.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-            Exec('taskkill', '/F /IM hiddify.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-            Exec('net', 'stop "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-            Exec('sc.exe', 'delete "HiddifyTunnelService"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+            Exec('taskkill', '/F /IM BOOST.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
             Result := True;
           end;
           "@ | Set-Content -Path $issPath -Encoding UTF8
@@ -673,7 +664,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: moneyfly-windows7-compatibility
+          name: boost-windows7-compatibility
           path: artifacts/windows7-check/*
           retention-days: 14
           overwrite: true
@@ -681,7 +672,7 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: moneyfly-windows
+          name: boost-windows
           path: artifacts/windows/*
           retention-days: 14
           overwrite: true
@@ -727,27 +718,27 @@ jobs:
           RELEASE_VERSION="${APP_VERSION}"
           TAG="${RELEASE_TAG}"
           cat > release-notes.md <<EOF
-          MoneyFly ${RELEASE_VERSION} automated build from commit ${GITHUB_SHA}.
+          BOOST ${RELEASE_VERSION} automated build from commit ${GITHUB_SHA}.
 
           Build number: ${APP_BUILD_NUMBER}
 
           Assets:
-          - MoneyFly-Android-arm64-v8a.apk: smaller Android package for most modern phones
-          - MoneyFly-Android-armeabi-v7a.apk: smaller Android package for older 32-bit phones
-          - MoneyFly-Android-x86_64.apk: Android package for x86_64 devices/emulators
-          - MoneyFly-Android-universal.apk: larger Android package containing all CPU architectures
-          - MoneyFly-Android.aab: Android App Bundle for store upload
-          - MoneyFly-macOS-universal.dmg: macOS drag-and-drop installer for Intel and Apple Silicon when supported by the bundled core
-          - MoneyFly-macOS-universal.pkg: macOS package installer
-          - MoneyFly-Windows-x64-Setup.exe: Windows 10/11 x64 installer
-          - MoneyFly-Windows-x64-Portable.zip: Windows 10/11 x64 portable package
-          - MoneyFly-Windows7-x64-Setup.exe: Windows 7 SP1 x64 legacy installer
-          - MoneyFly-Windows7-x64-Portable.zip: Windows 7 SP1 x64 legacy portable package
+          - BOOST-Android-arm64-v8a.apk: smaller Android package for most modern phones
+          - BOOST-Android-armeabi-v7a.apk: smaller Android package for older 32-bit phones
+          - BOOST-Android-x86_64.apk: Android package for x86_64 devices/emulators
+          - BOOST-Android-universal.apk: larger Android package containing all CPU architectures
+          - BOOST-Android.aab: Android App Bundle for store upload
+          - BOOST-macOS-universal.dmg: macOS drag-and-drop installer for Intel and Apple Silicon when supported by the bundled core
+          - BOOST-macOS-universal.pkg: macOS package installer
+          - BOOST-Windows-x64-Setup.exe: Windows 10/11 x64 installer
+          - BOOST-Windows-x64-Portable.zip: Windows 10/11 x64 portable package
+          - BOOST-Windows7-x64-Setup.exe: Windows 7 SP1 x64 legacy installer
+          - BOOST-Windows7-x64-Portable.zip: Windows 7 SP1 x64 legacy portable package
           - SHA256SUMS.txt: checksums for all release assets
 
           Windows 7 legacy downloads:
-          - Installer: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/MoneyFly-Windows7-x64-Setup.exe
-          - Portable ZIP: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/MoneyFly-Windows7-x64-Portable.zip
+          - Installer: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/BOOST-Windows7-x64-Setup.exe
+          - Portable ZIP: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/BOOST-Windows7-x64-Portable.zip
 
           Note: Windows 7/8 are not supported by the current Flutter 3.38.5 desktop toolchain. The Windows 7 legacy package is gated by static compatibility checks and still requires runtime verification in a real Windows 7 SP1 VM.
           EOF
@@ -773,6 +764,6 @@ jobs:
           gh release create "${TAG}" \
             release-assets/* \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "MoneyFly ${RELEASE_VERSION}" \
+            --title "BOOST ${RELEASE_VERSION}" \
             --notes-file release-notes.md \
             --latest

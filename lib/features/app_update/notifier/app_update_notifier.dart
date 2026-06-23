@@ -12,33 +12,39 @@ import 'package:version/version.dart';
 
 part 'app_update_notifier.g.dart';
 
-const _moneyflyBuildNumber = int.fromEnvironment("moneyfly_build_number");
+const _boostBuildNumber = int.fromEnvironment("boost_build_number");
 
 @visibleForTesting
 bool isRemoteVersionNewer({
   required RemoteVersionEntity remote,
   required String currentVersion,
   required String currentBuildNumber,
-  int compiledBuildNumber = _moneyflyBuildNumber,
+  int compiledBuildNumber = _boostBuildNumber,
 }) {
   if (remote.automatedBuildNumber case final int automatedBuildNumber) {
     final installedAutomatedBuild = installedBuildNumber(currentBuildNumber, compiledBuildNumber: compiledBuildNumber);
-    if (installedAutomatedBuild == null || installedAutomatedBuild <= 0) return true;
+    if (installedAutomatedBuild == null || installedAutomatedBuild <= 0) {
+      return true;
+    }
     return automatedBuildNumber > installedAutomatedBuild;
   }
 
   final latestVersion = Version.parse(remote.version);
   final installedVersion = Version.parse(currentVersion);
-  if (latestVersion != installedVersion) return latestVersion > installedVersion;
+  if (latestVersion != installedVersion) {
+    return latestVersion > installedVersion;
+  }
 
   final latestBuild = int.tryParse(remote.buildNumber);
   final installedBuild = installedBuildNumber(currentBuildNumber, compiledBuildNumber: compiledBuildNumber);
-  if (latestBuild != null && installedBuild != null) return latestBuild > installedBuild;
+  if (latestBuild != null && installedBuild != null) {
+    return latestBuild > installedBuild;
+  }
   return false;
 }
 
 @visibleForTesting
-int? installedBuildNumber(String currentBuildNumber, {int compiledBuildNumber = _moneyflyBuildNumber}) {
+int? installedBuildNumber(String currentBuildNumber, {int compiledBuildNumber = _boostBuildNumber}) {
   return compiledBuildNumber > 0 ? compiledBuildNumber : int.tryParse(currentBuildNumber);
 }
 
