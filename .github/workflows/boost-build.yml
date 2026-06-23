@@ -723,17 +723,22 @@ jobs:
           Build number: ${APP_BUILD_NUMBER}
 
           Highlights:
-          - Replaced the legacy client branding and documentation with BOOST and the new MoneyFly service endpoints.
-          - Connected the account subscription flow to https://new.moneyfly.top so a valid account subscription is imported automatically after login.
+          - Replaced legacy user-facing branding with BOOST across app metadata, VPN session labels, Android service notifications, release files, and documentation.
+          - Connected the account, login, dashboard, subscription, package, order, and device flows to https://new.moneyfly.top.
+          - Automatically imports the active account subscription after login and selects it as the active local profile.
+          - Uses the backend sing-box subscription endpoint with type=singbox so BOOST receives a JSON profile that the client can load directly.
+          - Replaced the legacy hiddify:// import scheme with boost:// for BOOST deep links.
           - Removed tracked release/build outputs from the source repository. Release files are now generated only by GitHub Actions.
 
           Fixed:
           - Fixed account subscriptions downloading the generic plain-text/base64 subscription instead of the sing-box JSON profile.
           - Fixed the connection failure that could show "unable to determine config format" after login.
-          - Existing BOOST account subscription profiles are now migrated to the sing-box subscription URL while preserving user update settings.
+          - Fixed the post-login flow so users are no longer asked to manually choose a profile after a valid account subscription is available.
+          - Fixed duplicate account subscription profiles by replacing the previous account-owned profile with the latest backend subscription.
+          - Existing BOOST account subscription profiles are migrated to the sing-box subscription URL while preserving user update settings.
 
           Build and release:
-          - Versioning starts from ${RELEASE_VERSION}.
+          - Release version: ${RELEASE_VERSION}. Versioning starts at 1.0.0.
           - GitHub Actions produces the Android, macOS, Windows, Windows 7 legacy, checksum, and appcast release files.
           - The repository no longer stores generated artifacts such as appcast.xml, APK/AAB/DMG/PKG/EXE/ZIP files, or bundled build archives.
 

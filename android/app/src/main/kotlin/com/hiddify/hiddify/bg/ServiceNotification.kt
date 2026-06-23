@@ -109,7 +109,7 @@ class ServiceNotification(private val status: MutableLiveData<Status>, private v
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Application.notification.createNotificationChannel(
                 NotificationChannel(
-                    notificationChannel, "hiddify service", NotificationManager.IMPORTANCE_LOW
+                    notificationChannel, "BOOST service", NotificationManager.IMPORTANCE_LOW
                 )
             )
         }
